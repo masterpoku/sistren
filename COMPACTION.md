@@ -2,38 +2,40 @@
 
 ## [CONVERSATION_SUMMARY]
 
-Built Next.js 16.2.2 school info system with feature-based architecture. Compared ORMs - Drizzle won (5.1M weekly downloads vs Prisma 4.3M, smaller bundle, better edge support). Researched auth libs - decided on Better Auth for 10-day deadline (works out of box with Drizzle adapter). Moved all pages from `src/app/(app)/` to `src/features/` (SSR re-exports remain in app). Added breadcrumb to header, SidebarInset wrapper, role-based dashboard cards.
+Implemented complete Drizzle ORM database schema based on old PHP Laravel analysis. Created 15 tables with proper FKs, indexes, and relationships in `src/lib/db/schema/`. Fixed type compatibility issues with Drizzle column definitions (bigint mode config). Generated migration, pushed to dev MySQL Docker container, and seeded initial data (roles, majors, classes, semesters, subjects, payment_methods, system_configs). Build and typecheck pass.
 
 ## [CURRENT_SCOPE]
 
-Implementing Better Auth with Drizzle adapter. Working on auth schema and Drizzle connection setup.
+All schema implementation complete. Database is ready for UI integration (queries to replace mock data in `src/constants.ts` and feature pages). Next: connect Better Auth to custom users table and implement authentication flows.
 
 ## [COMPLETED]
 
-- Feature-based architecture: `src/features/` for all page components
-- `src/app/(app)/` - Thin SSR re-exports only
-- `.env.example` / `.env` - DB config (MySQL root:root@localhost:3306)
-- `src/features/layout/AppLayout.tsx` - Breadcrumb, SidebarInset, responsive header
-- `src/components/ui/avatar.tsx` - Fallback visibility fix
-- `src/app/(app)/announcements/page.tsx` - Matched reference layout
-- `src/app/(app)/profile/page.tsx` - 2-column grid with avatar card
-- **Installed:** drizzle-orm, mysql2, better-auth, @auth/drizzle-adapter
-- **Added:** `src/lib/auth/index.ts` - Better Auth configuration
+- Schema directory: `src/lib/db/schema/` with 15 table definitions + relations
+  - Core: `roles`, `users`, `profiles`, `profile_assets`
+  - Academic: `majors`, `classes`, `subjects`, `semesters`, `enrollments`, `grades`
+  - Business: `payment_methods`, `payments`, `announcements`, `announcement_recipients`, `system_configs`
+- Fixed Drizzle v0.45 type issues: `bigint('col', { mode: 'number' })`, `int` for integers, proper imports
+- Barrel export: `src/lib/db/schema/index.ts`
+- DB connection: `src/lib/db/index.ts` using `drizzle-orm/mysql2`
+- Migration: `drizzle/migrations/0000_remarkable_patch.sql` generated and pushed
+- Seeding: `src/lib/db/seed.ts` with initial reference data
+- Dev DB: MySQL 8.0 running in Docker (sistren database)
+- Verified: `bun typecheck` passes, `bun run build` succeeds (14 routes)
 
 ## [DECISIONS]
 
-- **ORM:** Drizzle (5.1M weekly downloads vs Prisma 4.3M, smaller bundle, better edge support)
-- **Auth:** Better Auth (works out of box, Drizzle adapter, quick MVP)
-- **Password hashing:** Argon2id (mentioned but not implemented yet)
-- **Architecture:** `src/features/` for client pages, `src/app/` only SSR entry points
-- **UI:** Phosphor icons, Tailwind v4, removed all shadows
+- **bigint config:** must include `{ mode: 'number' }` per Drizzle v0.45 type requirements
+- **int type:** replaced deprecated `integer` with `int` from `drizzle-orm/mysql-core`
+- **db driver:** used `drizzle-orm/mysql2` entry point with PoolOptions connection config
+- **Seed approach:** simple sequential inserts (no conflict handling) — assumes fresh DB
+- **Migration order:** followed dependency order from docs/table.md (15 tables)
+- **Naming:** Drizzle standard plural snake_case (e.g., `announcement_recipients`), no `res_` prefix
 
 ## [PENDING]
 
-1. Create Drizzle config and connection (lib/db)
-2. Build auth schema (users, sessions, accounts tables) for Better Auth
-3. Set up Docker/MySQL "sistren" database
-4. Configure Better Auth with Drizzle adapter
-5. Create auth routes (sign-in, sign-up, sign-out)
-6. Add middleware for protected routes
-7. Update login UI to use Better Auth
+1. Connect Better Auth to custom `users` table (Drizzle adapter configuration)
+2. Replace mock data in `src/constants.ts` with real DB queries in feature pages
+3. Implement authentication UI (sign-in, sign-up, sign-out) using Better Auth routes
+4. Add middleware for protected routes
+5. Consider adding blog tables if needed (not in current spec)
+6. Add DB connection health check / error handling
