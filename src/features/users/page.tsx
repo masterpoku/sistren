@@ -2,8 +2,8 @@
 
 import * as React from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { MOCK_USERS_LIST } from '@/util/mock/users';
-import type { UserManagement } from '@/util/mock/users';
+import { MOCK_USERS_LIST } from '@/constants';
+import type { UserManagement } from '@/constants';
 import { DataTable } from '@/components/ui/data-table';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';

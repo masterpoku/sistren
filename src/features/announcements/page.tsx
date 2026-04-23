@@ -1,4 +1,6 @@
-import { MOCK_ANNOUNCEMENTS } from '@/util/mock/announcements';
+'use client';
+
+import { MOCK_ANNOUNCEMENTS } from '@/constants';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 

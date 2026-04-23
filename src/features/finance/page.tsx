@@ -2,8 +2,8 @@
 
 import * as React from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { MOCK_PAYMENTS } from '@/util/mock/finance';
-import type { Payment } from '@/util/mock/finance';
+import { MOCK_PAYMENTS } from '@/constants';
+import type { Payment } from '@/constants';
 import { DataTable } from '@/components/ui/data-table';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';

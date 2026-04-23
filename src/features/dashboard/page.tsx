@@ -1,12 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { MOCK_STUDENTS } from '@/util/mock/students';
-import { MOCK_TEACHERS } from '@/util/mock/teachers';
-import { MOCK_PAYMENTS } from '@/util/mock/finance';
-import { MOCK_ANNOUNCEMENTS } from '@/util/mock/announcements';
-import { MOCK_ACADEMIC_RECORDS } from '@/util/mock/academic';
-import type { User } from '@/util/mock/users';
+import { MOCK_STUDENTS, MOCK_TEACHERS, MOCK_PAYMENTS, MOCK_ANNOUNCEMENTS, MOCK_ACADEMIC_RECORDS } from '@/constants';
+import type { User } from '@/constants';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {

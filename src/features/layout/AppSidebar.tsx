@@ -3,8 +3,8 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { NAV_ITEMS } from '@/util/mock/navigation';
-import type { User } from '@/util/mock/users';
+import { NAV_ITEMS } from '@/constants';
+import type { User } from '@/constants';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,

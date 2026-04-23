@@ -1,4 +1,6 @@
-import { MOCK_ACADEMIC_RECORDS, MOCK_COURSES } from '@/util/mock/academic';
+'use client';
+
+import { MOCK_ACADEMIC_RECORDS, MOCK_COURSES } from '@/constants';
 import {
   Card,
   CardContent,
@@ -9,10 +11,12 @@ import {
 
 export default function AcademicPage() {
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Akademik</h1>
-        <p className="text-muted-foreground">Data akademik dan nilai siswa</p>
+    <div className="flex flex-col gap-6 p-4 md:p-6">
+      <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-2xl font-bold">Akademik</h1>
+          <p className="text-muted-foreground">Data akademik dan nilai siswa</p>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
@@ -48,7 +52,7 @@ export default function AcademicPage() {
         </Card>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>Rekam Akademik</CardTitle>
