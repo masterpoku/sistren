@@ -1,5 +1,7 @@
 .next
 .kilo
+docs/oldphp
+docs/references
 
 # Logs
 logs
