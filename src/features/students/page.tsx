@@ -1,13 +1,12 @@
-'use client';
+'use client'
 
-import * as React from 'react';
-import { ColumnDef } from '@tanstack/react-table';
-import { MOCK_STUDENTS } from '@/constants';
-import type { Student } from '@/constants';
-import { DataTable } from '@/components/ui/data-table';
-import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Button } from '@/components/ui/button';
+import * as React from 'react'
+import { ColumnDef } from '@tanstack/react-table'
+import { fetchStudents } from '@/actions/students'
+import { DataTable } from '@/components/ui/data-table'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,7 +14,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@/components/ui/dropdown-menu'
 import {
   ArrowsDownUp,
   DotsThree,
@@ -23,7 +22,14 @@ import {
   Pencil,
   Trash,
   Plus,
-} from 'phosphor-react';
+} from 'phosphor-react'
+
+interface Student {
+  id: number
+  name: string
+  email: string
+  roleId: number | null
+}
 
 export const columns: ColumnDef<Student>[] = [
   {
@@ -46,17 +52,17 @@ export const columns: ColumnDef<Student>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: 'studentId',
+    accessorKey: 'id',
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
         >
-          NIS
+          ID
           <ArrowsDownUp className="ml-2 h-4 w-4" />
         </Button>
-      );
+      )
     },
   },
   {
@@ -67,42 +73,13 @@ export const columns: ColumnDef<Student>[] = [
     ),
   },
   {
-    accessorKey: 'class',
-    header: 'Kelas',
-  },
-  {
     accessorKey: 'email',
     header: 'Email',
   },
   {
-    accessorKey: 'status',
-    header: 'Status',
-    cell: ({ row }) => {
-      const status = row.getValue('status') as string;
-      return (
-        <Badge
-          variant={
-            status === 'aktif'
-              ? 'default'
-              : status === 'lulus'
-                ? 'secondary'
-                : 'destructive'
-          }
-          className="capitalize"
-        >
-          {status}
-        </Badge>
-      );
-    },
-  },
-  {
-    accessorKey: 'joinDate',
-    header: 'Tanggal Masuk',
-  },
-  {
     id: 'actions',
     cell: ({ row }) => {
-      const student = row.original;
+      const student = row.original
 
       return (
         <DropdownMenu>
@@ -115,7 +92,7 @@ export const columns: ColumnDef<Student>[] = [
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Aksi</DropdownMenuLabel>
             <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(student.studentId)}
+              onClick={() => navigator.clipboard.writeText(String(student.id))}
               className="cursor-pointer"
             >
               <Eye className="mr-2 h-4 w-4" /> Lihat Detail
@@ -129,22 +106,28 @@ export const columns: ColumnDef<Student>[] = [
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-      );
+      )
     },
   },
-];
+]
 
 export default function StudentsPage() {
-  const [students, setStudents] = React.useState(MOCK_STUDENTS);
+  const [students, setStudents] = React.useState<Student[]>([])
+  const [loading, setLoading] = React.useState(true)
 
-  const activeStudents = students.filter((s) => s.status === 'aktif');
-  const inactiveStudents = students.filter((s) => s.status === 'non-aktif');
-  const graduatedStudents = students.filter((s) => s.status === 'lulus');
-
-  const handleImport = (data: unknown[]) => {
-    console.log('Imported data:', data);
-    setStudents((prev) => [...prev, ...(data as Student[])]);
-  };
+  React.useEffect(() => {
+    async function loadStudents() {
+      try {
+        const data = await fetchStudents()
+        setStudents(data)
+      } catch (error) {
+        console.error('Failed to fetch students:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadStudents()
+  }, [])
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6">
@@ -161,32 +144,37 @@ export default function StudentsPage() {
         </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <div className="rounded-lg border bg-card p-6">
-          <div className="text-sm font-medium text-muted-foreground">
-            Siswa Aktif
+      {loading ? (
+        <div className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="rounded-lg border bg-card p-6">
+                <Skeleton className="h-4 w-24 mb-2" />
+                <Skeleton className="h-8 w-12" />
+              </div>
+            ))}
           </div>
-          <div className="text-2xl font-bold">{activeStudents.length}</div>
+          <Skeleton className="h-96 w-full rounded-lg" />
         </div>
-        <div className="rounded-lg border bg-card p-6">
-          <div className="text-sm font-medium text-muted-foreground">
-            Non-Aktif
+      ) : (
+        <>
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="rounded-lg border bg-card p-6">
+              <div className="text-sm font-medium text-muted-foreground">
+                Total Siswa
+              </div>
+              <div className="text-2xl font-bold">{students.length}</div>
+            </div>
           </div>
-          <div className="text-2xl font-bold">{inactiveStudents.length}</div>
-        </div>
-        <div className="rounded-lg border bg-card p-6">
-          <div className="text-sm font-medium text-muted-foreground">Lulus</div>
-          <div className="text-2xl font-bold">{graduatedStudents.length}</div>
-        </div>
-      </div>
 
-      <DataTable
-        columns={columns}
-        data={students}
-        searchKey="name"
-        exportFilename="data-siswa-sistren"
-        onImport={handleImport}
-      />
+          <DataTable
+            columns={columns}
+            data={students}
+            searchKey="name"
+            exportFilename="data-siswa-sistren"
+          />
+        </>
+      )}
     </div>
-  );
+  )
 }

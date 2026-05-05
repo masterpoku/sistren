@@ -1,13 +1,13 @@
-'use client';
+'use client'
 
-import * as React from 'react';
-import { ColumnDef } from '@tanstack/react-table';
-import { MOCK_USERS_LIST } from '@/constants';
-import type { UserManagement } from '@/constants';
-import { DataTable } from '@/components/ui/data-table';
-import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Button } from '@/components/ui/button';
+import * as React from 'react'
+import { ColumnDef } from '@tanstack/react-table'
+import { fetchAllUsers } from '@/actions/users'
+import { DataTable } from '@/components/ui/data-table'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,7 +15,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@/components/ui/dropdown-menu'
 import {
   ArrowsDownUp,
   DotsThree,
@@ -23,28 +23,34 @@ import {
   Pencil,
   Trash,
   UserPlus,
-} from 'phosphor-react';
+} from 'phosphor-react'
 
-const roleLabels: Record<string, string> = {
-  superadmin: 'Super Admin',
-  administrator: 'Administrator',
-  guru: 'Guru',
-  siswa: 'Siswa',
-  alumni: 'Alumni',
-};
+interface User {
+  id: number
+  name: string | null
+  email: string
+  roleId: number | null
+  confirmed: boolean | null
+  createdAt: Date | null
+}
 
-const roleBadgeVariant: Record<
-  string,
-  'default' | 'secondary' | 'destructive' | 'outline'
-> = {
-  superadmin: 'destructive',
-  administrator: 'default',
-  guru: 'secondary',
-  siswa: 'outline',
-  alumni: 'outline',
-};
+const roleLabels: Record<number, string> = {
+  1: 'Super Admin',
+  2: 'Administrator',
+  3: 'Guru',
+  4: 'Siswa',
+  5: 'Alumni',
+}
 
-export const columns: ColumnDef<UserManagement>[] = [
+const roleBadgeVariant: Record<number, 'default' | 'secondary' | 'destructive' | 'outline'> = {
+  1: 'destructive',
+  2: 'default',
+  3: 'secondary',
+  4: 'outline',
+  5: 'outline',
+}
+
+export const columns: ColumnDef<User>[] = [
   {
     id: 'select',
     header: ({ table }) => (
@@ -65,20 +71,24 @@ export const columns: ColumnDef<UserManagement>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: 'name',
+    accessorKey: 'id',
     header: ({ column }) => {
       return (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
         >
-          Nama
+          ID
           <ArrowsDownUp className="ml-2 h-4 w-4" />
         </Button>
-      );
+      )
     },
+  },
+  {
+    accessorKey: 'name',
+    header: 'Nama',
     cell: ({ row }) => (
-      <div className="font-medium">{row.getValue('name')}</div>
+      <div className="font-medium">{row.getValue('name') || '-'}</div>
     ),
   },
   {
@@ -86,28 +96,36 @@ export const columns: ColumnDef<UserManagement>[] = [
     header: 'Email',
   },
   {
-    accessorKey: 'role',
+    accessorKey: 'roleId',
     header: 'Role',
     cell: ({ row }) => {
-      const role = row.getValue('role') as string;
+      const roleId = row.getValue('roleId') as number | null
       return (
         <Badge
-          variant={roleBadgeVariant[role] || 'outline'}
+          variant={roleId ? (roleBadgeVariant[roleId] || 'outline') : 'outline'}
           className="capitalize"
         >
-          {roleLabels[role] || role}
+          {roleId ? roleLabels[roleId] || `Role ${roleId}` : 'Unknown'}
         </Badge>
-      );
+      )
     },
   },
   {
-    accessorKey: 'lastLogin',
-    header: 'Login Terakhir',
+    accessorKey: 'confirmed',
+    header: 'Status',
+    cell: ({ row }) => {
+      const confirmed = row.getValue('confirmed') as boolean | null
+      return (
+        <Badge variant={confirmed ? 'default' : 'secondary'}>
+          {confirmed ? 'Aktif' : 'Pending'}
+        </Badge>
+      )
+    },
   },
   {
     id: 'actions',
     cell: ({ row }) => {
-      const user = row.original;
+      const user = row.original
 
       return (
         <DropdownMenu>
@@ -134,26 +152,34 @@ export const columns: ColumnDef<UserManagement>[] = [
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-      );
+      )
     },
   },
-];
+]
 
 export default function UsersPage() {
-  const [users, setUsers] = React.useState(MOCK_USERS_LIST);
+  const [users, setUsers] = React.useState<User[]>([])
+  const [loading, setLoading] = React.useState(true)
 
-  const roleCounts = users.reduce(
-    (acc, user) => {
-      acc[user.role] = (acc[user.role] || 0) + 1;
-      return acc;
-    },
-    {} as Record<string, number>
-  );
+  React.useEffect(() => {
+    async function loadUsers() {
+      try {
+        const data = await fetchAllUsers()
+        setUsers(data)
+      } catch (error) {
+        console.error('Failed to fetch users:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadUsers()
+  }, [])
 
-  const handleImport = (data: unknown[]) => {
-    console.log('Imported data:', data);
-    setUsers((prev) => [...prev, ...(data as UserManagement[])]);
-  };
+  const roleCounts = users.reduce((acc, user) => {
+    const roleId = user.roleId || 0
+    acc[roleId] = (acc[roleId] || 0) + 1
+    return acc
+  }, {} as Record<number, number>)
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6">
@@ -170,24 +196,39 @@ export default function UsersPage() {
         </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-5">
-        {Object.entries(roleCounts).map(([role, count]) => (
-          <div key={role} className="rounded-lg border bg-card p-6">
-            <div className="text-sm font-medium text-muted-foreground">
-              {roleLabels[role] || role}
-            </div>
-            <div className="text-2xl font-bold">{count}</div>
+      {loading ? (
+        <div className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-5">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="rounded-lg border bg-card p-6">
+                <Skeleton className="h-4 w-24 mb-2" />
+                <Skeleton className="h-8 w-12" />
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+          <Skeleton className="h-96 w-full rounded-lg" />
+        </div>
+      ) : (
+        <>
+          <div className="grid gap-4 md:grid-cols-5">
+            {[1, 2, 3, 4, 5].map((roleId) => (
+              <div key={roleId} className="rounded-lg border bg-card p-6">
+                <div className="text-sm font-medium text-muted-foreground">
+                  {roleLabels[roleId] || `Role ${roleId}`}
+                </div>
+                <div className="text-2xl font-bold">{roleCounts[roleId] || 0}</div>
+              </div>
+            ))}
+          </div>
 
-      <DataTable
-        columns={columns}
-        data={users}
-        searchKey="name"
-        exportFilename="data-pengguna-sistren"
-        onImport={handleImport}
-      />
+          <DataTable
+            columns={columns}
+            data={users}
+            searchKey="name"
+            exportFilename="data-pengguna-sistren"
+          />
+        </>
+      )}
     </div>
-  );
+  )
 }

@@ -1,13 +1,13 @@
-'use client';
+'use client'
 
-import * as React from 'react';
-import { ColumnDef } from '@tanstack/react-table';
-import { MOCK_PAYMENTS } from '@/constants';
-import type { Payment } from '@/constants';
-import { DataTable } from '@/components/ui/data-table';
-import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Button } from '@/components/ui/button';
+import * as React from 'react'
+import { ColumnDef } from '@tanstack/react-table'
+import { fetchPayments } from '@/actions/payments'
+import { DataTable } from '@/components/ui/data-table'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,16 +15,31 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { DotsThree, Eye, Pencil, Trash, Plus } from 'phosphor-react';
+} from '@/components/ui/dropdown-menu'
+import { DotsThree, Eye, Pencil, Trash, Plus } from 'phosphor-react'
 
-const formatCurrency = (amount: number) => {
+interface Payment {
+  id: number
+  studentId: number
+  code: string
+  description: string
+  price: string
+  quantity: number | null
+  total: string
+  orderData: unknown
+  status: 'draft' | 'pending' | 'paid' | 'cancelled' | null
+  paidAt: Date | null
+  createdAt: Date | null
+}
+
+const formatCurrency = (amount: string) => {
+  const num = parseFloat(amount)
   return new Intl.NumberFormat('id-ID', {
     style: 'currency',
     currency: 'IDR',
     minimumFractionDigits: 0,
-  }).format(amount);
-};
+  }).format(num)
+}
 
 export const columns: ColumnDef<Payment>[] = [
   {
@@ -47,58 +62,51 @@ export const columns: ColumnDef<Payment>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: 'studentName',
-    header: 'Siswa',
-    cell: ({ row }) => (
-      <div className="font-medium">{row.getValue('studentName')}</div>
-    ),
+    accessorKey: 'id',
+    header: 'ID',
   },
   {
     accessorKey: 'studentId',
-    header: 'NIS',
+    header: 'ID Siswa',
   },
   {
-    accessorKey: 'type',
-    header: 'Jenis',
+    accessorKey: 'description',
+    header: 'Deskripsi',
   },
   {
-    accessorKey: 'amount',
-    header: 'Jumlah',
-    cell: ({ row }) => formatCurrency(row.getValue('amount')),
-  },
-  {
-    accessorKey: 'date',
-    header: 'Tanggal',
+    accessorKey: 'total',
+    header: 'Total',
+    cell: ({ row }) => formatCurrency(row.getValue('total')),
   },
   {
     accessorKey: 'status',
     header: 'Status',
     cell: ({ row }) => {
-      const status = row.getValue('status') as string;
+      const status = row.getValue('status') as string
       return (
         <Badge
           variant={
-            status === 'lunas'
+            status === 'paid'
               ? 'default'
-              : status === 'belum-lunas'
+              : status === 'pending'
                 ? 'destructive'
                 : 'secondary'
           }
           className="capitalize"
         >
-          {status === 'lunas'
-            ? 'Lunas'
-            : status === 'belum-lunas'
-              ? 'Belum Lunas'
-              : 'Menunggu'}
+          {status || 'draft'}
         </Badge>
-      );
+      )
     },
+  },
+  {
+    accessorKey: 'code',
+    header: 'Kode',
   },
   {
     id: 'actions',
     cell: ({ row }) => {
-      const payment = row.original;
+      const payment = row.original
 
       return (
         <DropdownMenu>
@@ -111,7 +119,7 @@ export const columns: ColumnDef<Payment>[] = [
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Aksi</DropdownMenuLabel>
             <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(payment.id)}
+              onClick={() => navigator.clipboard.writeText(String(payment.id))}
               className="cursor-pointer"
             >
               <Eye className="mr-2 h-4 w-4" /> Lihat Detail
@@ -125,26 +133,33 @@ export const columns: ColumnDef<Payment>[] = [
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-      );
+      )
     },
   },
-];
+]
 
 export default function FinancePage() {
-  const [payments, setPayments] = React.useState(MOCK_PAYMENTS);
+  const [payments, setPayments] = React.useState<Payment[]>([])
+  const [loading, setLoading] = React.useState(true)
 
-  const paidPayments = payments.filter((p) => p.status === 'lunas');
-  const unpaidPayments = payments.filter((p) => p.status === 'belum-lunas');
-  const pendingPayments = payments.filter(
-    (p) => p.status === 'menunggu-konfirmasi'
-  );
+  React.useEffect(() => {
+    async function loadPayments() {
+      try {
+        const data = await fetchPayments()
+        setPayments(data)
+      } catch (error) {
+        console.error('Failed to fetch payments:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadPayments()
+  }, [])
 
-  const totalPaid = paidPayments.reduce((sum, p) => sum + p.amount, 0);
-
-  const handleImport = (data: unknown[]) => {
-    console.log('Imported data:', data);
-    setPayments((prev) => [...prev, ...(data as Payment[])]);
-  };
+  const paidPayments = payments.filter((p) => p.status === 'paid')
+  const pendingPayments = payments.filter((p) => p.status === 'pending')
+  const draftPayments = payments.filter((p) => p.status === 'draft')
+  const totalPaidAmount = paidPayments.reduce((sum, p) => sum + parseFloat(p.total || '0'), 0)
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6">
@@ -161,38 +176,53 @@ export default function FinancePage() {
         </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-lg border bg-card p-6">
-          <div className="text-sm font-medium text-muted-foreground">Lunas</div>
-          <div className="text-2xl font-bold">{paidPayments.length}</div>
-        </div>
-        <div className="rounded-lg border bg-card p-6">
-          <div className="text-sm font-medium text-muted-foreground">
-            Belum Lunas
+      {loading ? (
+        <div className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="rounded-lg border bg-card p-6">
+                <Skeleton className="h-4 w-24 mb-2" />
+                <Skeleton className="h-8 w-12" />
+              </div>
+            ))}
           </div>
-          <div className="text-2xl font-bold">{unpaidPayments.length}</div>
+          <Skeleton className="h-96 w-full rounded-lg" />
         </div>
-        <div className="rounded-lg border bg-card p-6">
-          <div className="text-sm font-medium text-muted-foreground">
-            Menunggu Konfirmasi
+      ) : (
+        <>
+          <div className="grid gap-4 md:grid-cols-4">
+            <div className="rounded-lg border bg-card p-6">
+              <div className="text-sm font-medium text-muted-foreground">Lunas</div>
+              <div className="text-2xl font-bold">{paidPayments.length}</div>
+            </div>
+            <div className="rounded-lg border bg-card p-6">
+              <div className="text-sm font-medium text-muted-foreground">
+                Pending
+              </div>
+              <div className="text-2xl font-bold">{pendingPayments.length}</div>
+            </div>
+            <div className="rounded-lg border bg-card p-6">
+              <div className="text-sm font-medium text-muted-foreground">
+                Draft
+              </div>
+              <div className="text-2xl font-bold">{draftPayments.length}</div>
+            </div>
+            <div className="rounded-lg border bg-card p-6">
+              <div className="text-sm font-medium text-muted-foreground">
+                Total Pendapatan
+              </div>
+              <div className="text-2xl font-bold">{formatCurrency(String(totalPaidAmount))}</div>
+            </div>
           </div>
-          <div className="text-2xl font-bold">{pendingPayments.length}</div>
-        </div>
-        <div className="rounded-lg border bg-card p-6">
-          <div className="text-sm font-medium text-muted-foreground">
-            Total Pendapatan
-          </div>
-          <div className="text-2xl font-bold">{formatCurrency(totalPaid)}</div>
-        </div>
-      </div>
 
-      <DataTable
-        columns={columns}
-        data={payments}
-        searchKey="studentName"
-        exportFilename="data-pembayaran-sistren"
-        onImport={handleImport}
-      />
+          <DataTable
+            columns={columns}
+            data={payments}
+            searchKey="description"
+            exportFilename="data-pembayaran-sistren"
+          />
+        </>
+      )}
     </div>
-  );
+  )
 }
