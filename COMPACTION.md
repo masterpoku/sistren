@@ -2,40 +2,58 @@
 
 ## [CONVERSATION_SUMMARY]
 
-Implemented complete Drizzle ORM database schema based on old PHP Laravel analysis. Created 15 tables with proper FKs, indexes, and relationships in `src/lib/db/schema/`. Fixed type compatibility issues with Drizzle column definitions (bigint mode config). Generated migration, pushed to dev MySQL Docker container, and seeded initial data (roles, majors, classes, semesters, subjects, payment_methods, system_configs). Build and typecheck pass.
+Implemented complete RBAC system with Better Auth integration. Created 21 database tables (6 new RBAC tables: permissions, role_permissions, user_permissions, accounts, sessions, verifications; plus enhanced roles with level/is_default). Configured Better Auth with Drizzle adapter, created auth route handler, permission utilities, route middleware, React hooks, and permission wrapper components. Build passes with 16 routes (including /auth/[...better-auth], /api/auth/permissions, /unauthorized, login, register).
 
 ## [CURRENT_SCOPE]
 
-All schema implementation complete. Database is ready for UI integration (queries to replace mock data in `src/constants.ts` and feature pages). Next: connect Better Auth to custom users table and implement authentication flows.
+RBAC system fully implemented and integrated. Auth pages (login, register) updated to use Better Auth. Admin users seeded. Dashboard queries created. Session cleanup event migration created.
 
 ## [COMPLETED]
 
-- Schema directory: `src/lib/db/schema/` with 15 table definitions + relations
-  - Core: `roles`, `users`, `profiles`, `profile_assets`
-  - Academic: `majors`, `classes`, `subjects`, `semesters`, `enrollments`, `grades`
-  - Business: `payment_methods`, `payments`, `announcements`, `announcement_recipients`, `system_configs`
-- Fixed Drizzle v0.45 type issues: `bigint('col', { mode: 'number' })`, `int` for integers, proper imports
-- Barrel export: `src/lib/db/schema/index.ts`
-- DB connection: `src/lib/db/index.ts` using `drizzle-orm/mysql2`
-- Migration: `drizzle/migrations/0000_remarkable_patch.sql` generated and pushed
-- Seeding: `src/lib/db/seed.ts` with initial reference data
-- Dev DB: MySQL 8.0 running in Docker (sistren database)
-- Verified: `bun typecheck` passes, `bun run build` succeeds (14 routes)
+- Schema: 21 tables in `src/lib/db/schema/` (6 new RBAC + 3 Better Auth tables)
+  - RBAC: `permissions`, `role_permissions`, `user_permissions`
+  - Enhanced: `roles` (added `level`, `is_default`)
+  - Better Auth: `accounts`, `sessions`, `verifications`
+- Migration: `drizzle/migrations/0001_natural_ultron.sql` pushed
+- RBAC Seeding: 47 permissions, role_permission assignments for admin/guru/siswa/alumni
+- Auth Infrastructure:
+  - `src/lib/auth/index.ts` configured with drizzleAdapter (mysql, usePlural: true)
+  - `src/app/auth/[...better-auth]/route.ts` auth handler
+  - `src/lib/auth/permissions.ts` server-side permission functions
+  - `src/lib/auth/route-permissions.ts` route-permission mapping
+  - `src/middleware.ts` auth + permission enforcement
+  - `src/hooks/use-permissions.ts` client-side hook
+  - `src/components/auth/RequirePermission.tsx` wrapper components
+  - `src/app/api/auth/permissions/route.ts` permissions API
+- Auth Pages:
+  - `src/app/(auth)/login/page.tsx` updated with Better Auth signIn()
+  - `src/app/(auth)/register/page.tsx` updated with Better Auth signUp()
+  - `src/app/unauthorized/page.tsx` access denied page
+- Layout: `src/app/(app)/layout.tsx` updated to use Better Auth session
+- DB Queries: `src/lib/db/queries.ts` with getDashboardStats, getStudents, getTeachers, getAnnouncements, getPayments, etc.
+- Server Actions: `src/actions/` with fetchDashboardStats, fetchStudents, fetchTeachers, fetchAnnouncements, fetchAllUsers, fetchPayments, fetchAcademic, fetchUserProfile
+- API Routes: `/api/auth/permissions` only (permissions check)
+- Environment: `BETTER_AUTH_SECRET` added to .env and .env.example
+- Admin seed: superadmin@sister.com and admin@sister.com seeded with Password123!
+- Cleanup: `drizzle/migrations/0002_cleanup_events.sql` MySQL event
+- Dashboard: Updated to use Better Auth session + Server Action fetchDashboardStats
+- Build: passes (16 routes)
 
 ## [DECISIONS]
 
-- **bigint config:** must include `{ mode: 'number' }` per Drizzle v0.45 type requirements
-- **int type:** replaced deprecated `integer` with `int` from `drizzle-orm/mysql-core`
-- **db driver:** used `drizzle-orm/mysql2` entry point with PoolOptions connection config
-- **Seed approach:** simple sequential inserts (no conflict handling) — assumes fresh DB
-- **Migration order:** followed dependency order from docs/table.md (15 tables)
-- **Naming:** Drizzle standard plural snake_case (e.g., `announcement_recipients`), no `res_` prefix
+- **Permission model:** Hybrid role+user_override (role_permissions base + user_permissions for exceptions)
+- **Superadmin bypass:** role.level >= 100 grants all permissions implicitly
+- **Better Auth adapter:** drizzleAdapter with provider: 'mysql', usePlural: true
+- **Session cleanup:** MySQL Event Scheduler approach (event created in migration 0002)
+- **auth.handler():** Better Auth exposes handler() method directly (not toNextJsHandler)
+- **Auth pages:** Updated existing (auth) group pages to use Better Auth client
+- **Layout:** Uses Better Auth session with fallback to DiceBear avatar
+- **Admin credentials:** superadmin@sister.com and admin@sister.com with Password123!
 
 ## [PENDING]
 
-1. Connect Better Auth to custom `users` table (Drizzle adapter configuration)
-2. Replace mock data in `src/constants.ts` with real DB queries in feature pages
-3. Implement authentication UI (sign-in, sign-up, sign-out) using Better Auth routes
-4. Add middleware for protected routes
-5. Consider adding blog tables if needed (not in current spec)
-6. Add DB connection health check / error handling
+1. Update feature pages (dashboard, students, teachers, users, finance, academic, profile) to use real DB queries
+2. Wrap action buttons with RequirePermission components
+3. Test full login/register/logout flow
+4. Add profile_assets upload functionality
+5. Student two-step registration completion form (deferred from old PHP)
