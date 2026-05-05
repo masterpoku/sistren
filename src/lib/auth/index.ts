@@ -1,14 +1,22 @@
-import { betterAuth } from 'better-auth';
+import { betterAuth } from 'better-auth'
+import { drizzleAdapter } from 'better-auth/adapters/drizzle'
+import { db } from '@/lib/db'
+import * as schema from '@/lib/db/schema'
 
 export const auth = betterAuth({
+  baseURL: process.env.BETTER_AUTH_URL || 'http://localhost:3000',
+  secret: process.env.BETTER_AUTH_SECRET,
+  adapter: drizzleAdapter(db, {
+    provider: 'mysql',
+    schema,
+    usePlural: true,
+  }),
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: false,
   },
   session: {
-    expiresIn: 60 * 60 * 24 * 7, // 7 days
-    updateAge: 60 * 60 * 24, // 1 day
+    expiresIn: 60 * 60 * 24 * 7,
+    updateAge: 60 * 60 * 24,
   },
-});
-
-// Types will be inferred when we use them
+})

@@ -1,48 +1,60 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { MOCK_ACCOUNTS } from '@/util/mock/users';
-import {
-  GraduationCap,
-  UserPlus,
-  ShieldCheck,
-  Student,
-} from '@phosphor-icons/react';
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { createAuthClient } from 'better-auth/client'
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { Label } from '@/components/ui/label'
+import { GraduationCap, ShieldCheck, Student } from '@phosphor-icons/react'
+
+const authClient = createAuthClient({
+  baseURL: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+})
 
 export default function LoginPage() {
-  const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const router = useRouter()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (MOCK_ACCOUNTS[email]) {
-      const user = MOCK_ACCOUNTS[email];
-      localStorage.setItem('sistren_user', JSON.stringify(user));
-      router.push('/dashboard');
-    } else {
-      setError('Email atau password salah.');
+  useEffect(() => {
+    authClient.getSession().then((session) => {
+      if (session?.data) {
+        router.push('/dashboard')
+      }
+    })
+  }, [router])
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+
+    try {
+      const result = await authClient.signIn.email({
+        email,
+        password,
+      })
+
+      if (result.error) {
+        setError(result.error.message || 'Email atau password salah.')
+      } else {
+        router.push('/dashboard')
+      }
+    } catch (err) {
+      setError('Terjadi kesalahan. Silakan coba lagi.')
+    } finally {
+      setLoading(false)
     }
-  };
+  }
 
-  const quickLogin = (email: string) => {
-    const user = MOCK_ACCOUNTS[email];
-    localStorage.setItem('sistren_user', JSON.stringify(user));
-    router.push('/dashboard');
-  };
+  const quickLogin = async (email: string) => {
+    setEmail(email)
+    setPassword('Password123!')
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
@@ -96,24 +108,8 @@ export default function LoginPage() {
               </div>
             </CardContent>
             <CardFooter className="flex flex-col gap-4">
-              <Button type="submit" className="w-full h-11">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="mr-2"
-                >
-                  <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
-                  <polyline points="10 17 15 12 10 7" />
-                  <line x1="15" x2="3" y1="12" y2="12" />
-                </svg>
-                Masuk
+              <Button type="submit" className="w-full h-11" disabled={loading}>
+                {loading ? 'Memuat...' : 'Masuk'}
               </Button>
               <div className="relative w-full">
                 <div className="absolute inset-0 flex items-center">
@@ -131,7 +127,6 @@ export default function LoginPage() {
                 type="button"
                 onClick={() => router.push('/register')}
               >
-                <UserPlus className="mr-2 h-4 w-4" />
                 PPDB - Pendaftaran Siswa Baru
               </Button>
             </CardFooter>
@@ -147,7 +142,7 @@ export default function LoginPage() {
               variant="secondary"
               size="sm"
               className="text-[10px] h-8"
-              onClick={() => quickLogin('superadmin@sistren.sch.id')}
+              onClick={() => quickLogin('superadmin@sister.com')}
             >
               <ShieldCheck className="mr-1 h-3 w-3" /> Superadmin
             </Button>
@@ -155,7 +150,7 @@ export default function LoginPage() {
               variant="secondary"
               size="sm"
               className="text-[10px] h-8"
-              onClick={() => quickLogin('admin@sistren.sch.id')}
+              onClick={() => quickLogin('admin@sister.com')}
             >
               <ShieldCheck className="mr-1 h-3 w-3" /> Admin
             </Button>
@@ -163,7 +158,7 @@ export default function LoginPage() {
               variant="secondary"
               size="sm"
               className="text-[10px] h-8"
-              onClick={() => quickLogin('guru@sistren.sch.id')}
+              onClick={() => quickLogin('guru@sister.com')}
             >
               <ShieldCheck className="mr-1 h-3 w-3" /> Guru
             </Button>
@@ -171,7 +166,7 @@ export default function LoginPage() {
               variant="secondary"
               size="sm"
               className="text-[10px] h-8"
-              onClick={() => quickLogin('siswa@sistren.sch.id')}
+              onClick={() => quickLogin('siswa@sister.com')}
             >
               <Student className="mr-1 h-3 w-3" /> Siswa
             </Button>
@@ -179,5 +174,5 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
-  );
+  )
 }

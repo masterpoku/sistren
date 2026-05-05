@@ -1,10 +1,10 @@
-'use client';
+'use client'
 
-import { useEffect, useState } from 'react';
-import { MOCK_STUDENTS, MOCK_TEACHERS, MOCK_PAYMENTS, MOCK_ANNOUNCEMENTS, MOCK_ACADEMIC_RECORDS } from '@/constants';
-import type { User } from '@/constants';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { useEffect, useState } from 'react'
+import { createAuthClient } from 'better-auth/client'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   Student,
   BookOpen,
@@ -16,7 +16,7 @@ import {
   Calendar,
   Clock,
   CheckCircle,
-} from 'phosphor-react';
+} from 'phosphor-react'
 import {
   AreaChart,
   Area,
@@ -27,57 +27,110 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-} from 'recharts';
+} from 'recharts'
+import type { UserRole } from '@/util/mock/users'
+import { fetchDashboardStats } from '@/actions/dashboard'
+
+const authClient = createAuthClient({
+  baseURL: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+})
+
+interface DashboardStats {
+  totalStudents: number
+  totalTeachers: number
+  totalAnnouncements: number
+  pendingPayments: number
+  totalClasses: number
+  totalMajors: number
+}
 
 export default function DashboardPage() {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<{ id: string; name: string; email: string; role: UserRole } | null>(null)
+  const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const stored = localStorage.getItem('sistren_user');
-    if (stored) {
-      setUser(JSON.parse(stored));
-    }
-  }, []);
+    async function fetchData() {
+      try {
+        const session = await authClient.getSession()
+        if (session?.data?.user) {
+          const baUser = session.data.user
+          setUser({
+            id: baUser.id,
+            name: baUser.name || baUser.email,
+            email: baUser.email,
+            role: 'siswa' as UserRole,
+          })
 
-  const studentCount = MOCK_STUDENTS.filter((s) => s.status === 'aktif').length;
-  const teacherCount = MOCK_TEACHERS.filter((t) => t.status === 'aktif').length;
-  const unpaidCount = MOCK_PAYMENTS.filter(
-    (p) => p.status === 'belum-lunas'
-  ).length;
-  const announcementsCount = MOCK_ANNOUNCEMENTS.length;
-  const totalPaid = MOCK_PAYMENTS.filter((p) => p.status === 'lunas').reduce(
-    (sum, p) => sum + p.amount,
-    0
-  );
+          const stats = await fetchDashboardStats()
+            setStats(stats)
+        }
+      } catch (error) {
+        console.error('Failed to fetch dashboard data:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
       currency: 'IDR',
       minimumFractionDigits: 0,
-    }).format(amount);
-  };
+    }).format(amount)
+  }
 
-  const chartData = MOCK_ACADEMIC_RECORDS.map((r) => ({
-    ...r,
-    gpa: r.gpa * 20 + 10,
-  }));
   const registrationData = [
     { name: 'Jan', total: 40 },
     { name: 'Feb', total: 65 },
     { name: 'Mar', total: 120 },
     { name: 'Apr', total: 180 },
-  ];
+  ]
 
-  const isAlumni = user?.role === 'alumni';
-  const isSiswa = user?.role === 'siswa';
-  const isGuru = user?.role === 'guru';
-  const isAdmin = user?.role === 'administrator' || user?.role === 'superadmin';
+  const chartData = [
+    { semester: 'Sem 1', gpa: 85 },
+    { semester: 'Sem 2', gpa: 88 },
+    { semester: 'Sem 3', gpa: 82 },
+    { semester: 'Sem 4', gpa: 90 },
+  ]
+
+  const isAlumni = user?.role === 'alumni'
+  const isSiswa = user?.role === 'siswa'
+  const isGuru = user?.role === 'guru'
+  const isAdmin = user?.role === 'administrator' || user?.role === 'superadmin'
+
+  if (loading) {
+    return (
+      <div className="flex flex-col gap-6 p-4 md:p-6">
+        <div className="flex flex-col gap-2">
+          <Skeleton className="h-10 w-64" />
+          <Skeleton className="h-4 w-96" />
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-4" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-8 w-16" />
+                <Skeleton className="mt-2 h-3 w-32" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6">
       {isAlumni && (
-        <div className="flex items-center gap-3 rounded-xl bg-yellow-50 border border-yellow-200 p-4">
+        <div className="flex items-center gap-3 rounded-xl border border-yellow-200 bg-yellow-50 p-4">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-yellow-100 text-yellow-700">
             <GraduationCap className="h-6 w-6" />
           </div>
@@ -177,7 +230,7 @@ export default function DashboardPage() {
                 <Student className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{studentCount}</div>
+                <div className="text-2xl font-bold">{stats?.totalStudents ?? 0}</div>
                 <p className="text-xs text-muted-foreground">
                   +12 pendaftar baru hari ini
                 </p>
@@ -191,7 +244,7 @@ export default function DashboardPage() {
                 <BookOpen className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{teacherCount}</div>
+                <div className="text-2xl font-bold">{stats?.totalTeachers ?? 0}</div>
                 <p className="text-xs text-muted-foreground">Aktif mengajar</p>
               </CardContent>
             </Card>
@@ -204,7 +257,7 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {formatCurrency(totalPaid)}
+                  {stats ? formatCurrency(stats.pendingPayments * 500000) : 'Rp 0'}
                 </div>
                 <p className="text-xs text-muted-foreground">Bulan berjalan</p>
               </CardContent>
@@ -217,7 +270,7 @@ export default function DashboardPage() {
                 <Note className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{announcementsCount}</div>
+                <div className="text-2xl font-bold">{stats?.totalAnnouncements ?? 0}</div>
                 <p className="text-xs text-muted-foreground">
                   Pengumuman aktif
                 </p>
@@ -289,7 +342,7 @@ export default function DashboardPage() {
                 <Student className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{studentCount}</div>
+                <div className="text-2xl font-bold">{stats?.totalStudents ?? 0}</div>
                 <p className="text-xs text-muted-foreground">
                   Siswa aktif saat ini
                 </p>
@@ -303,7 +356,7 @@ export default function DashboardPage() {
                 <BookOpen className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{teacherCount}</div>
+                <div className="text-2xl font-bold">{stats?.totalTeachers ?? 0}</div>
                 <p className="text-xs text-muted-foreground">Guru aktif</p>
               </CardContent>
             </Card>
@@ -315,7 +368,7 @@ export default function DashboardPage() {
                 <CreditCard className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{unpaidCount}</div>
+                <div className="text-2xl font-bold">{stats?.pendingPayments ?? 0}</div>
                 <p className="text-xs text-muted-foreground">
                   Pembayaran bulan ini
                 </p>
@@ -329,7 +382,7 @@ export default function DashboardPage() {
                 <Bell className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{announcementsCount}</div>
+                <div className="text-2xl font-bold">{stats?.totalAnnouncements ?? 0}</div>
                 <p className="text-xs text-muted-foreground">
                   Pengumuman aktif
                 </p>
@@ -414,28 +467,60 @@ export default function DashboardPage() {
           <CardContent>
             <div className="space-y-6">
               {isAdmin ? (
-                MOCK_ANNOUNCEMENTS.slice(0, 4).map((item, i) => (
-                  <div key={i} className="flex items-center gap-4">
+                <>
+                  <div className="flex items-center gap-4">
                     <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100">
                       <Bell className="h-4 w-4" />
                     </div>
                     <div className="flex flex-col gap-1">
                       <p className="text-sm font-medium leading-none">
-                        {item.title}
+                        Pendaftaran Siswa Baru Dibuka
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {item.date}
+                        2 jam yang lalu
                       </p>
                     </div>
                     <Badge variant="outline" className="ml-auto">
-                      {item.category}
+                      Umum
                     </Badge>
                   </div>
-                ))
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100">
+                      <CreditCard className="h-4 w-4" />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <p className="text-sm font-medium leading-none">
+                        Pembayaran SPP Bulan April
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        5 jam yang lalu
+                      </p>
+                    </div>
+                    <Badge variant="outline" className="ml-auto">
+                      Keuangan
+                    </Badge>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100">
+                      <BookOpen className="h-4 w-4" />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <p className="text-sm font-medium leading-none">
+                        Jadwal Ujian Tengah Semester
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        1 hari yang lalu
+                      </p>
+                    </div>
+                    <Badge variant="outline" className="ml-auto">
+                      Akademik
+                    </Badge>
+                  </div>
+                </>
               ) : (
                 <>
                   <div className="flex items-start gap-4">
-                    <div className="flex h-2 w-2 translate-y-2 rounded-full bg-primary" />
+                    <div className="mt-2 h-2 w-2 translate-y-2 rounded-full bg-primary" />
                     <div className="space-y-1">
                       <p className="text-sm font-medium leading-none">
                         Sistem Terdistribusi
@@ -455,7 +540,7 @@ export default function DashboardPage() {
                     </div>
                   </div>
                   <div className="flex items-start gap-4">
-                    <div className="flex h-2 w-2 translate-y-2 rounded-full bg-primary" />
+                    <div className="mt-2 h-2 w-2 translate-y-2 rounded-full bg-primary" />
                     <div className="space-y-1">
                       <p className="text-sm font-medium leading-none">
                         Kecerdasan Buatan
@@ -475,7 +560,7 @@ export default function DashboardPage() {
                     </div>
                   </div>
                   <div className="flex items-start gap-4">
-                    <div className="flex h-2 w-2 translate-y-2 rounded-full bg-primary" />
+                    <div className="mt-2 h-2 w-2 translate-y-2 rounded-full bg-primary" />
                     <div className="space-y-1">
                       <p className="text-sm font-medium leading-none">
                         Praktikum Jaringan Komputer
@@ -501,5 +586,5 @@ export default function DashboardPage() {
         </Card>
       </div>
     </div>
-  );
+  )
 }

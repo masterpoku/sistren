@@ -1,16 +1,17 @@
 import { db } from './index'
-import { roles, majors, classes, semesters, subjects, paymentMethods, systemConfigs } from './schema'
+import { roles, majors, classes, semesters, subjects, paymentMethods, systemConfigs, users } from './schema'
+import { hash } from 'argon2'
 
 console.log('🌱 Starting seed...')
 
 async function seed() {
-  // Seed roles
+  // Seed roles with level and is_default
   await db.insert(roles).values([
-    { name: 'superadmin', description: 'Super Administrator - full access' },
-    { name: 'administrator', description: 'Administrator - TU/admin staff' },
-    { name: 'guru', description: 'Teacher - can view classes, input grades' },
-    { name: 'siswa', description: 'Student - can view own records' },
-    { name: 'alumni', description: 'Alumni - read-only access to own transcript' },
+    { name: 'superadmin', description: 'Super Administrator - full access', level: 100, isDefault: false },
+    { name: 'administrator', description: 'Administrator - TU/admin staff', level: 80, isDefault: false },
+    { name: 'guru', description: 'Teacher - can view classes, input grades', level: 60, isDefault: false },
+    { name: 'siswa', description: 'Student - can view own records', level: 40, isDefault: true },
+    { name: 'alumni', description: 'Alumni - read-only access to own transcript', level: 20, isDefault: false },
   ])
   console.log('✅ Seeded roles')
 
@@ -64,6 +65,28 @@ async function seed() {
     { key: 'academic_year', value: '2025/2026', description: 'Current academic year' },
   ])
   console.log('✅ Seeded system configs')
+
+  // Seed admin users (same credentials as old PHP)
+  const superadminPassword = await hash('Password123!')
+  const adminPassword = await hash('Password123!')
+
+  await db.insert(users).values([
+    {
+      name: 'Super Admin',
+      email: 'superadmin@sister.com',
+      password: superadminPassword,
+      confirmed: true,
+      roleId: 1, // superadmin
+    },
+    {
+      name: 'Administrator',
+      email: 'admin@sister.com',
+      password: adminPassword,
+      confirmed: true,
+      roleId: 2, // administrator
+    },
+  ])
+  console.log('✅ Seeded admin users')
 
   console.log('🎉 All seed data inserted successfully')
 }

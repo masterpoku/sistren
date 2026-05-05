@@ -1,58 +1,78 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { createAuthClient } from 'better-auth/client'
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { Label } from '@/components/ui/label'
+import { GraduationCap } from '@phosphor-icons/react'
+
+const authClient = createAuthClient({
+  baseURL: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+})
 
 export default function RegisterPage() {
-  const router = useRouter();
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    password: '',
-    confirmPassword: '',
-  });
+  const router = useRouter()
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (formData.password !== formData.confirmPassword) {
-      alert('Password tidak cocok!');
-      return;
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setError('')
+
+    if (password !== confirmPassword) {
+      setError('Password tidak cocok')
+      return
     }
-    alert('Pendaftaran berhasil! Silakan login.');
-    router.push('/login');
-  };
+
+    if (password.length < 6) {
+      setError('Password minimal 6 karakter')
+      return
+    }
+
+    setLoading(true)
+
+    try {
+      const result = await authClient.signUp.email({
+        email,
+        password,
+        name,
+      })
+
+      if (result.error) {
+        setError(result.error.message || 'Pendaftaran gagal.')
+      } else {
+        // Auto sign in after registration
+        const signInResult = await authClient.signIn.email({
+          email,
+          password,
+        })
+
+        if (signInResult.error) {
+          router.push('/login?registered=true')
+        } else {
+          router.push('/dashboard')
+        }
+      }
+    } catch (err) {
+      setError('Terjadi kesalahan. Silakan coba lagi.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center space-y-2">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-              <path d="M6 12v5c3 3 9 3 12 0v-5" />
-            </svg>
+            <GraduationCap className="h-7 w-7" />
           </div>
           <h1 className="text-3xl font-bold tracking-tight text-slate-900">
             PPDB
@@ -69,15 +89,18 @@ export default function RegisterPage() {
           </CardHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <CardContent className="space-y-4">
+              {error && (
+                <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+                  {error}
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="name">Nama Lengkap</Label>
                 <Input
                   id="name"
                   placeholder="Nama lengkap sesuai KK"
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                   required
                 />
               </div>
@@ -87,23 +110,8 @@ export default function RegisterPage() {
                   id="email"
                   type="email"
                   placeholder="email@ortu.id"
-                  value={formData.email}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone">No. HP WhatsApp</Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  placeholder="08xxxxxxxxxx"
-                  value={formData.phone}
-                  onChange={(e) =>
-                    setFormData({ ...formData, phone: e.target.value })
-                  }
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   required
                 />
               </div>
@@ -112,10 +120,8 @@ export default function RegisterPage() {
                 <Input
                   id="password"
                   type="password"
-                  value={formData.password}
-                  onChange={(e) =>
-                    setFormData({ ...formData, password: e.target.value })
-                  }
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   required
                 />
               </div>
@@ -124,35 +130,26 @@ export default function RegisterPage() {
                 <Input
                   id="confirmPassword"
                   type="password"
-                  value={formData.confirmPassword}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      confirmPassword: e.target.value,
-                    })
-                  }
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
                   required
                 />
               </div>
             </CardContent>
             <CardFooter className="flex flex-col gap-4">
-              <Button type="submit" className="w-full h-11">
-                Daftar
+              <Button type="submit" className="w-full h-11" disabled={loading}>
+                {loading ? 'Memuat...' : 'Daftar'}
               </Button>
               <p className="text-center text-sm text-muted-foreground">
                 Sudah punya akun?{' '}
-                <button
-                  type="button"
-                  className="text-primary hover:underline"
-                  onClick={() => router.push('/login')}
-                >
+                <a href="/login" className="text-primary hover:underline">
                   Login di sini
-                </button>
+                </a>
               </p>
             </CardFooter>
           </form>
         </Card>
       </div>
     </div>
-  );
+  )
 }
