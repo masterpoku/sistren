@@ -2,10 +2,21 @@
 
 import { useEffect, useState } from 'react'
 import { fetchAcademic } from '@/actions/academic'
+import { fetchEnrollments } from '@/actions/enrollments'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
 import { Plus, BookOpen, Users } from 'phosphor-react'
+
+interface Enrollment {
+  id: number
+  studentId: number
+  classId: number
+  semesterId: number
+  student?: { name: string; email: string }
+  semester?: { name: string }
+  class?: { name: string }
+}
 
 interface AcademicData {
   classes: { id: number; name: string; level?: number | null }[]
@@ -15,14 +26,18 @@ interface AcademicData {
 
 export default function EnrollmentsPage() {
   const [loading, setLoading] = useState(true)
-  const [data, setData] = useState<AcademicData | null>(null)
+  const [academicData, setAcademicData] = useState<AcademicData | null>(null)
+  const [enrollments, setEnrollments] = useState<Enrollment[]>([])
 
   useEffect(() => {
     async function load() {
       try {
-        const academicData = await fetchAcademic()
-        setData(academicData)
-        // TODO: fetch enrollments from server action
+        const [academic, enrollmentData] = await Promise.all([
+          fetchAcademic(),
+          fetchEnrollments().catch(() => []),
+        ])
+        setAcademicData(academic)
+        setEnrollments(enrollmentData)
       } catch (error) {
         console.error('Failed to load:', error)
       } finally {
@@ -69,7 +84,7 @@ export default function EnrollmentsPage() {
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{data?.classes.length || 0}</div>
+                <div className="text-2xl font-bold">{academicData?.classes.length || 0}</div>
               </CardContent>
             </Card>
             <Card>
@@ -78,7 +93,7 @@ export default function EnrollmentsPage() {
                 <BookOpen className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{data?.majors.length || 0}</div>
+                <div className="text-2xl font-bold">{academicData?.majors.length || 0}</div>
               </CardContent>
             </Card>
             <Card>
@@ -87,14 +102,14 @@ export default function EnrollmentsPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {data?.semesters.filter(s => s.isActive).length || 0}
+                  {academicData?.semesters.filter(s => s.isActive).length || 0}
                 </div>
               </CardContent>
             </Card>
           </div>
 
           <div className="space-y-4">
-            {data?.semesters.map((semester) => (
+            {academicData?.semesters.map((semester) => (
               <Card key={semester.id}>
                 <CardHeader>
                   <div className="flex items-center justify-between">
@@ -111,7 +126,7 @@ export default function EnrollmentsPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-sm text-muted-foreground">
-                    Klik untuk melihat dan mengelola pendaftaran siswa pada semester ini.
+                    {enrollments.filter(e => e.semesterId === semester.id).length} siswa terdaftar
                   </div>
                 </CardContent>
               </Card>

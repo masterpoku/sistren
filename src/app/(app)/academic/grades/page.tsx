@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { fetchAcademic } from '@/actions/academic'
+import { fetchGrades } from '@/actions/grades'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
@@ -26,7 +27,7 @@ export default function GradesPage() {
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState<AcademicData | null>(null)
   const [selectedSemester, setSelectedSemester] = useState<number | null>(null)
-  const [grades] = useState<GradeData[]>([])
+  const [grades, setGrades] = useState<GradeData[]>([])
 
   useEffect(() => {
     async function load() {
@@ -48,12 +49,25 @@ export default function GradesPage() {
     load()
   }, [])
 
-  // TODO: Fetch grades when semester changes
   useEffect(() => {
-    if (selectedSemester) {
-      // fetchGrades(selectedSemester).then(setGrades)
+    async function loadGrades() {
+      if (selectedSemester) {
+        try {
+          const gradeData = await fetchGrades(undefined, selectedSemester)
+          setGrades(gradeData)
+        } catch (error) {
+          console.error('Failed to load grades:', error)
+          setGrades([])
+        }
+      }
     }
+    loadGrades()
   }, [selectedSemester])
+
+  const gradedCount = grades.filter(g => g.grade).length
+  const avgScore = grades.length > 0
+    ? grades.filter(g => g.score).reduce((sum, g) => sum + parseFloat(g.score || '0'), 0) / grades.filter(g => g.score).length
+    : 0
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6">
@@ -97,7 +111,7 @@ export default function GradesPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {grades.filter(g => g.subject).length}
+                  {grades.length}
                 </div>
               </CardContent>
             </Card>
@@ -107,9 +121,7 @@ export default function GradesPage() {
                 <CheckCircle className="h-4 w-4 text-green-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
-                  {grades.filter(g => g.grade).length}
-                </div>
+                <div className="text-2xl font-bold">{gradedCount}</div>
               </CardContent>
             </Card>
             <Card>
@@ -117,9 +129,7 @@ export default function GradesPage() {
                 <CardTitle className="text-sm font-medium">Belum Dinilai</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
-                  {grades.filter(g => !g.grade).length}
-                </div>
+                <div className="text-2xl font-bold">{grades.length - gradedCount}</div>
               </CardContent>
             </Card>
             <Card>
@@ -127,14 +137,7 @@ export default function GradesPage() {
                 <CardTitle className="text-sm font-medium">Rata-rata Nilai</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
-                  {grades.length > 0
-                    ? (
-                        grades.reduce((sum, g) => sum + (parseFloat(g.score || '0')), 0) / 
-                        grades.filter(g => g.score).length
-                      ).toFixed(1)
-                    : '-'}
-                </div>
+                <div className="text-2xl font-bold">{avgScore > 0 ? avgScore.toFixed(1) : '-'}</div>
               </CardContent>
             </Card>
           </div>
@@ -152,7 +155,7 @@ export default function GradesPage() {
               <div className="space-y-2">
                 {grades.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
-                    Pilih semester dan kelas untuk input nilai
+                    {selectedSemester ? 'Belum ada nilai untuk semester ini' : 'Pilih semester untuk melihat nilai'}
                   </div>
                 ) : (
                   grades.map((grade) => (

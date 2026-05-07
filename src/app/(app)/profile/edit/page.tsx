@@ -1,18 +1,13 @@
 import { redirect } from 'next/navigation'
-import { getSessionWithRole } from '@/lib/auth/get-session'
-import { getProfile } from '@/lib/db/queries'
+import { fetchUserProfile } from '@/actions/profile'
 import { ProfileEditClient } from '@/features/profile/ProfileEditClient'
 
 export default async function ProfileEditPage() {
-  const { user: sessionUser } = await getSessionWithRole() || {}
+  const { user, profile } = await fetchUserProfile()
   
-  if (!sessionUser) {
+  if (!user) {
     redirect('/login')
   }
   
-  // For now, show own profile only
-  const profileId = sessionUser.id
-  const profile = await getProfile(parseInt(profileId))
-  
-  return <ProfileEditClient profile={profile} user={sessionUser} />
+  return <ProfileEditClient profile={profile} user={user} />
 }
