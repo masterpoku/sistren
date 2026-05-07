@@ -28,7 +28,6 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts'
-import type { UserRole } from '@/util/mock/users'
 import { fetchDashboardStats } from '@/actions/dashboard'
 
 const authClient = createAuthClient({
@@ -44,8 +43,17 @@ interface DashboardStats {
   totalMajors: number
 }
 
+interface SessionUser {
+  id: string
+  name: string
+  email: string
+  roleName: string
+  roleId: number
+  roleLevel: number
+}
+
 export default function DashboardPage() {
-  const [user, setUser] = useState<{ id: string; name: string; email: string; role: UserRole } | null>(null)
+  const [user, setUser] = useState<SessionUser | null>(null)
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -59,11 +67,15 @@ export default function DashboardPage() {
             id: baUser.id,
             name: baUser.name || baUser.email,
             email: baUser.email,
-            role: 'siswa' as UserRole,
+            roleName: baUser.email.includes('guru') ? 'Guru' : 
+                      baUser.email.includes('admin') ? 'Admin' : 
+                      baUser.email.includes('alumni') ? 'Alumni' : 'Siswa',
+            roleId: 0, // Will be populated from stats
+            roleLevel: 0,
           })
 
-          const stats = await fetchDashboardStats()
-            setStats(stats)
+          const dashboardStats = await fetchDashboardStats()
+          setStats(dashboardStats)
         }
       } catch (error) {
         console.error('Failed to fetch dashboard data:', error)
@@ -97,10 +109,10 @@ export default function DashboardPage() {
     { semester: 'Sem 4', gpa: 90 },
   ]
 
-  const isAlumni = user?.role === 'alumni'
-  const isSiswa = user?.role === 'siswa'
-  const isGuru = user?.role === 'guru'
-  const isAdmin = user?.role === 'administrator' || user?.role === 'superadmin'
+  const isAlumni = user?.roleName === 'Alumni'
+  const isSiswa = user?.roleName === 'Siswa'
+  const isGuru = user?.roleName === 'Guru'
+  const isAdmin = user?.roleName === 'Admin' || user?.roleName === 'Superadmin'
 
   if (loading) {
     return (
@@ -257,9 +269,9 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {stats ? formatCurrency(stats.pendingPayments * 500000) : 'Rp 0'}
+                  {stats ? formatCurrency(stats.pendingPayments) : 'Rp 0'}
                 </div>
-                <p className="text-xs text-muted-foreground">Bulan berjalan</p>
+                <p className="text-xs text-muted-foreground">Belum lunas</p>
               </CardContent>
             </Card>
             <Card>
