@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { getSessionWithRole } from '@/lib/auth/get-session'
 import { AppLayoutClient } from '@/features/layout/AppLayoutClient'
+import { ToastProvider } from '@/hooks/use-toast'
 import { createAuthClient } from 'better-auth/client'
 
 const authClient = createAuthClient({
@@ -26,17 +27,19 @@ export default async function ProtectedLayout({
   const { user } = result
 
   return (
-    <AppLayoutClient
-      user={{
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.roleName,
-        roleId: user.roleId,
-      }}
-      onLogout={handleLogout}
-    >
-      {children}
-    </AppLayoutClient>
+    <ToastProvider>
+      <AppLayoutClient
+        user={{
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.roleName,
+          roleId: user.roleId,
+        }}
+        onLogout={handleLogout}
+      >
+        {children}
+      </AppLayoutClient>
+    </ToastProvider>
   )
 }

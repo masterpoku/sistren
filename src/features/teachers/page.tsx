@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import { ColumnDef } from '@tanstack/react-table'
-import { fetchTeachers } from '@/actions/teachers'
+import { fetchTeachers, createTeacher } from '@/actions/teachers'
 import { DataTable } from '@/components/ui/data-table'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -23,6 +23,8 @@ import {
   Trash,
   Plus,
 } from 'phosphor-react'
+import { TeacherForm, TeacherFormData } from '@/components/teachers/TeacherForm'
+import { useToast } from '@/hooks/use-toast'
 
 interface Teacher {
   id: number
@@ -114,20 +116,55 @@ export const columns: ColumnDef<Teacher>[] = [
 export default function TeachersPage() {
   const [teachers, setTeachers] = React.useState<Teacher[]>([])
   const [loading, setLoading] = React.useState(true)
+  const [formOpen, setFormOpen] = React.useState(false)
+  const { toast } = useToast()
+
+  const loadTeachers = React.useCallback(async () => {
+    try {
+      const data = await fetchTeachers()
+      setTeachers(data)
+    } catch (error) {
+      console.error('Failed to fetch teachers:', error)
+      toast({
+        title: 'Error',
+        description: 'Gagal memuat data guru',
+        variant: 'destructive',
+      })
+    } finally {
+      setLoading(false)
+    }
+  }, [toast])
 
   React.useEffect(() => {
-    async function loadTeachers() {
-      try {
-        const data = await fetchTeachers()
-        setTeachers(data)
-      } catch (error) {
-        console.error('Failed to fetch teachers:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
     loadTeachers()
-  }, [])
+  }, [loadTeachers])
+
+  const handleSubmit = async (data: TeacherFormData) => {
+    try {
+      await createTeacher({
+        email: data.email,
+        password: 'Password123!',
+        name: data.name,
+        nik: data.nik,
+        phone: data.phone,
+        birthPlace: data.birthPlace,
+        birthDate: data.birthDate,
+        address: data.address,
+      })
+      toast({
+        title: 'Berhasil',
+        description: 'Guru baru berhasil ditambahkan',
+      })
+      await loadTeachers()
+    } catch (error) {
+      console.error('Failed to create teacher:', error)
+      toast({
+        title: 'Error',
+        description: 'Gagal menambahkan guru',
+        variant: 'destructive',
+      })
+    }
+  }
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6">
@@ -138,7 +175,7 @@ export default function TeachersPage() {
             Manajemen data guru SMK TERPADU.
           </p>
         </div>
-        <Button className="gap-2">
+        <Button className="gap-2" onClick={() => setFormOpen(true)}>
           <Plus className="h-4 w-4" />
           Tambah Guru
         </Button>
@@ -175,6 +212,12 @@ export default function TeachersPage() {
           />
         </>
       )}
+
+      <TeacherForm
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        onSubmit={handleSubmit}
+      />
     </div>
   )
 }

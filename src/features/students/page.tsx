@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import { ColumnDef } from '@tanstack/react-table'
-import { fetchStudents } from '@/actions/students'
+import { fetchStudents, createStudent } from '@/actions/students'
 import { DataTable } from '@/components/ui/data-table'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -23,6 +23,8 @@ import {
   Trash,
   Plus,
 } from 'phosphor-react'
+import { StudentForm, StudentFormData } from '@/components/students/StudentForm'
+import { useToast } from '@/hooks/use-toast'
 
 interface Student {
   id: number
@@ -114,20 +116,61 @@ export const columns: ColumnDef<Student>[] = [
 export default function StudentsPage() {
   const [students, setStudents] = React.useState<Student[]>([])
   const [loading, setLoading] = React.useState(true)
+  const [formOpen, setFormOpen] = React.useState(false)
+  const { toast } = useToast()
+
+  const loadStudents = React.useCallback(async () => {
+    try {
+      const data = await fetchStudents()
+      setStudents(data)
+    } catch (error) {
+      console.error('Failed to fetch students:', error)
+      toast({
+        title: 'Error',
+        description: 'Gagal memuat data siswa',
+        variant: 'destructive',
+      })
+    } finally {
+      setLoading(false)
+    }
+  }, [toast])
 
   React.useEffect(() => {
-    async function loadStudents() {
-      try {
-        const data = await fetchStudents()
-        setStudents(data)
-      } catch (error) {
-        console.error('Failed to fetch students:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
     loadStudents()
-  }, [])
+  }, [loadStudents])
+
+  const handleSubmit = async (data: StudentFormData) => {
+    try {
+      await createStudent({
+        email: data.email,
+        password: 'Password123!', // Default password
+        name: data.name,
+        nik: data.nik,
+        nisn: data.nisn,
+        birthPlace: data.birthPlace,
+        birthDate: data.birthDate,
+        gender: data.gender,
+        address: data.address,
+        phone: data.phone,
+        fatherName: data.fatherName,
+        motherName: data.motherName,
+        parentsPhone: data.parentsPhone,
+      })
+      toast({
+        title: 'Berhasil',
+        description: 'Siswa baru berhasil ditambahkan',
+      })
+      await loadStudents()
+    } catch (error) {
+      console.error('Failed to create student:', error)
+      toast({
+        title: 'Error',
+        description: 'Gagal menambahkan siswa',
+        variant: 'destructive',
+      })
+    } finally {
+    }
+  }
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6">
@@ -138,7 +181,7 @@ export default function StudentsPage() {
             Manajemen data siswa SMK TERPADU.
           </p>
         </div>
-        <Button className="gap-2">
+        <Button className="gap-2" onClick={() => setFormOpen(true)}>
           <Plus className="h-4 w-4" />
           Tambah Siswa
         </Button>
@@ -175,6 +218,12 @@ export default function StudentsPage() {
           />
         </>
       )}
+
+      <StudentForm
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        onSubmit={handleSubmit}
+      />
     </div>
   )
 }

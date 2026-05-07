@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import { ColumnDef } from '@tanstack/react-table'
-import { fetchPayments } from '@/actions/payments'
+import { fetchPayments, createPaymentRecord } from '@/actions/payments'
 import { DataTable } from '@/components/ui/data-table'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -17,6 +17,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { DotsThree, Eye, Pencil, Trash, Plus } from 'phosphor-react'
+import { PaymentForm, PaymentFormData } from '@/components/finance/PaymentForm'
+import { useToast } from '@/hooks/use-toast'
 
 interface Payment {
   id: number
@@ -141,20 +143,51 @@ export const columns: ColumnDef<Payment>[] = [
 export default function FinancePage() {
   const [payments, setPayments] = React.useState<Payment[]>([])
   const [loading, setLoading] = React.useState(true)
+  const [formOpen, setFormOpen] = React.useState(false)
+  const { toast } = useToast()
+
+  const loadPayments = React.useCallback(async () => {
+    try {
+      const data = await fetchPayments()
+      setPayments(data)
+    } catch (error) {
+      console.error('Failed to fetch payments:', error)
+      toast({
+        title: 'Error',
+        description: 'Gagal memuat data pembayaran',
+        variant: 'destructive',
+      })
+    } finally {
+      setLoading(false)
+    }
+  }, [toast])
 
   React.useEffect(() => {
-    async function loadPayments() {
-      try {
-        const data = await fetchPayments()
-        setPayments(data)
-      } catch (error) {
-        console.error('Failed to fetch payments:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
     loadPayments()
-  }, [])
+  }, [loadPayments])
+
+  const handleSubmit = async (data: PaymentFormData) => {
+    try {
+      await createPaymentRecord({
+        studentId: data.studentId,
+        description: data.description,
+        price: parseFloat(data.price),
+        quantity: data.quantity,
+      })
+      toast({
+        title: 'Berhasil',
+        description: 'Pembayaran berhasil dicatat',
+      })
+      await loadPayments()
+    } catch (error) {
+      console.error('Failed to create payment:', error)
+      toast({
+        title: 'Error',
+        description: 'Gagal mencatat pembayaran',
+        variant: 'destructive',
+      })
+    }
+  }
 
   const paidPayments = payments.filter((p) => p.status === 'paid')
   const pendingPayments = payments.filter((p) => p.status === 'pending')
@@ -170,7 +203,7 @@ export default function FinancePage() {
             Manajemen pembayaran siswa SMK TERPADU.
           </p>
         </div>
-        <Button className="gap-2">
+        <Button className="gap-2" onClick={() => setFormOpen(true)}>
           <Plus className="h-4 w-4" />
           Tambah Pembayaran
         </Button>
@@ -223,6 +256,12 @@ export default function FinancePage() {
           />
         </>
       )}
+
+      <PaymentForm
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        onSubmit={handleSubmit}
+      />
     </div>
   )
 }
