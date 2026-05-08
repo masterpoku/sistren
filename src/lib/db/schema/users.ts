@@ -1,6 +1,7 @@
 import { mysqlTable, bigint, varchar, boolean, timestamp } from 'drizzle-orm/mysql-core'
 import { relations } from 'drizzle-orm'
 import { roles } from './roles'
+import { accounts } from './accounts'
 
 /**
  * Users table — core authentication (Better Auth compatible).
@@ -18,7 +19,7 @@ export const users = mysqlTable('users', {
   username: varchar('username', { length: 255 }).unique(),
   name: varchar('name', { length: 255 }).notNull(),
   email: varchar('email', { length: 255 }).unique().notNull(),
-  guid: varchar('guid', { length: 255 }),
+  image: varchar('image', { length: 255 }),
   emailVerifiedAt: timestamp('email_verified_at'),
   password: varchar('password', { length: 255 }).notNull(),
   roleId: bigint('role_id', { mode: 'number' }).references(() => roles.id, { onDelete: 'cascade' }),
@@ -28,9 +29,10 @@ export const users = mysqlTable('users', {
   updatedAt: timestamp('updated_at').onUpdateNow(),
 })
 
-export const usersRelations = relations(users, ({ one }) => ({
+export const usersRelations = relations(users, ({ one, many }) => ({
   role: one(roles, {
     fields: [users.roleId],
     references: [roles.id],
   }),
+  accounts: many(accounts),
 }))

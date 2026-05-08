@@ -1,6 +1,59 @@
 import { db } from './index'
 import { users, announcements, payments, classes, majors, semesters, profiles, subjects, enrollments, grades } from './schema'
-import { eq, desc, count, and } from 'drizzle-orm'
+import { eq, desc, count, and, inArray } from 'drizzle-orm'
+import { getUserWithRole } from './queries-user'
+import { getEnrollmentsWithRelations, getEnrollmentByIdWithRelations, getProfilesWithRelations } from './queries-joins'
+
+/**
+ * Get grades with subject and semester info using manual joins.
+ */
+export async function getGradesWithRelations(filters?: { 
+  userId?: number 
+  semesterId?: number 
+  enrollmentId?: number 
+}) {
+  let query = db
+    .select({
+      id: grades.id,
+      enrollmentId: grades.enrollmentId,
+      subjectId: grades.subjectId,
+      score: grades.score,
+      grade: grades.grade,
+      predicate: grades.predicate,
+      createdAt: grades.createdAt,
+      // Subject info
+      subjectName: subjects.name,
+      subjectCode: subjects.code,
+      // Semester info
+      semesterName: semesters.name,
+    })
+    .from(grades)
+    .leftJoin(subjects, eq(grades.subjectId, subjects.id))
+    .leftJoin(semesters, eq(grades.semesterId, semesters.id))
+
+  if (filters?.enrollmentId) {
+    return query.where(eq(grades.enrollmentId, filters.enrollmentId))
+  }
+
+  if (filters?.userId) {
+    // Get enrollment IDs for this user
+    const userEnrollments = await db
+      .select({ id: enrollments.id })
+      .from(enrollments)
+      .where(eq(enrollments.studentId, filters.userId))
+    
+    const enrollmentIds = userEnrollments.map(e => e.id)
+    if (enrollmentIds.length === 0) return []
+    
+    return query.where(inArray(grades.enrollmentId, enrollmentIds))
+  }
+
+  if (filters?.semesterId) {
+    return query.where(eq(grades.semesterId, filters.semesterId))
+  }
+
+  return query
+}
 
 export interface DashboardStats {
   totalStudents: number
@@ -81,10 +134,7 @@ export async function getPayments(userId?: number, roleId?: number) {
 }
 
 export async function getUserById(id: number) {
-  return db.query.users.findFirst({
-    where: eq(users.id, id),
-    with: { role: true },
-  })
+  return getUserWithRole(id)
 }
 
 export async function getClasses() {
@@ -104,10 +154,7 @@ export async function getAllUsers() {
 }
 
 export async function getUserRole(userId: number) {
-  const user = await db.query.users.findFirst({
-    where: eq(users.id, userId),
-    with: { role: true },
-  })
+  const user = await getUserWithRole(userId)
   return user?.role ?? null
 }
 
@@ -116,16 +163,29 @@ export async function getUserRole(userId: number) {
 // ============================================
 
 export async function getProfile(userId: number) {
-  return db.query.profiles.findFirst({
-    where: eq(profiles.userId, userId),
-    with: { user: true, major: true },
-  })
+  const results = await getProfilesWithRelations(userId)
+  if (results.length === 0) return null
+  const r = results[0]
+  return {
+    id: r.id,
+    userId: r.userId,
+    nik: r.nik,
+    phone: r.phone,
+    address: r.address,
+    birthPlace: r.birthPlace,
+    birthDate: r.birthDate,
+    gender: r.gender,
+    religion: r.religion,
+    majorId: r.majorId,
+    createdAt: r.createdAt,
+    updatedAt: r.updatedAt,
+    user: r.userName ? { name: r.userName, email: r.userEmail!, roleId: r.roleId } : null,
+    major: r.majorName ? { id: r.majorId, name: r.majorName } : null,
+  }
 }
 
 export async function getAllProfiles() {
-  return db.query.profiles.findMany({
-    with: { user: true, major: true },
-  })
+  return getProfilesWithRelations()
 }
 
 export async function createProfile(data: typeof profiles.$inferInsert) {
@@ -187,30 +247,11 @@ export async function deleteSubject(id: number) {
 // ============================================
 
 export async function getEnrollments(filters?: { userId?: number; semesterId?: number }) {
-  if (filters?.userId && filters?.semesterId) {
-    return db.query.enrollments.findMany({
-      where: and(
-        eq(enrollments.studentId, filters.userId),
-        eq(enrollments.semesterId, filters.semesterId)
-      ),
-      with: { student: true, class: true, semester: true },
-    })
-  } else if (filters?.userId) {
-    return db.query.enrollments.findMany({
-      where: eq(enrollments.studentId, filters.userId),
-      with: { student: true, class: true, semester: true },
-    })
-  }
-  return db.query.enrollments.findMany({
-    with: { student: true, class: true, semester: true },
-  })
+  return getEnrollmentsWithRelations(filters)
 }
 
 export async function getEnrollmentById(id: number) {
-  return db.query.enrollments.findFirst({
-    where: eq(enrollments.id, id),
-    with: { student: true, class: true, semester: true },
-  })
+  return getEnrollmentByIdWithRelations(id)
 }
 
 export async function createEnrollment(data: typeof enrollments.$inferInsert) {
@@ -232,35 +273,31 @@ export async function deleteEnrollment(id: number) {
 // ============================================
 
 export async function getGrades(filters?: { userId?: number; semesterId?: number; enrollmentId?: number }) {
-  if (filters?.enrollmentId) {
-    return db.query.grades.findMany({
-      where: eq(grades.enrollmentId, filters.enrollmentId),
-      with: { subject: true, semester: true },
-    })
-  }
-  
-  // Get grades for a student's enrollments
-  if (filters?.userId) {
-    const userEnrollments = await db.query.enrollments.findMany({
-      where: eq(enrollments.studentId, filters.userId),
-    })
-    const enrollmentIds = userEnrollments.map(e => e.id)
-    
-    if (enrollmentIds.length === 0) return []
-    
-    return db.query.grades.findMany({
-      with: { subject: true, semester: true },
-    })
-  }
-  
-  return db.select().from(grades)
+  return getGradesWithRelations(filters)
 }
 
 export async function getGradeById(id: number) {
-  return db.query.grades.findFirst({
-    where: eq(grades.id, id),
-    with: { subject: true, semester: true },
-  })
+  const results = await db
+    .select({
+      id: grades.id,
+      enrollmentId: grades.enrollmentId,
+      subjectId: grades.subjectId,
+      semesterId: grades.semesterId,
+      score: grades.score,
+      grade: grades.grade,
+      predicate: grades.predicate,
+      createdAt: grades.createdAt,
+      subjectName: subjects.name,
+      subjectCode: subjects.code,
+      semesterName: semesters.name,
+    })
+    .from(grades)
+    .leftJoin(subjects, eq(grades.subjectId, subjects.id))
+    .leftJoin(semesters, eq(grades.semesterId, semesters.id))
+    .where(eq(grades.id, id))
+    .limit(1)
+  
+  return results[0] ?? null
 }
 
 export async function inputGrade(data: typeof grades.$inferInsert) {
@@ -310,15 +347,51 @@ export async function deletePayment(id: number) {
 }
 
 export async function getPaymentById(id: number) {
-  return db.query.payments.findFirst({
-    where: eq(payments.id, id),
-    with: { student: true },
-  })
+  const results = await db
+    .select({
+      id: payments.id,
+      studentId: payments.studentId,
+      code: payments.code,
+      description: payments.description,
+      price: payments.price,
+      quantity: payments.quantity,
+      total: payments.total,
+      orderData: payments.orderData,
+      status: payments.status,
+      paidAt: payments.paidAt,
+      createdAt: payments.createdAt,
+      studentName: users.name,
+      studentEmail: users.email,
+    })
+    .from(payments)
+    .leftJoin(users, eq(payments.studentId, users.id))
+    .where(eq(payments.id, id))
+    .limit(1)
+  
+  if (results.length === 0) return null
+  
+  const r = results[0]
+  return {
+    ...r,
+    student: r.studentName ? { name: r.studentName, email: r.studentEmail } : null,
+  }
 }
 
 export async function getStudentPayments(userId: number) {
-  return db.query.payments.findMany({
-    where: eq(payments.studentId, userId),
-    orderBy: [desc(payments.createdAt)],
-  })
+  return db
+    .select({
+      id: payments.id,
+      studentId: payments.studentId,
+      code: payments.code,
+      description: payments.description,
+      price: payments.price,
+      quantity: payments.quantity,
+      total: payments.total,
+      status: payments.status,
+      paidAt: payments.paidAt,
+      createdAt: payments.createdAt,
+    })
+    .from(payments)
+    .where(eq(payments.studentId, userId))
+    .orderBy(desc(payments.createdAt))
 }

@@ -1,9 +1,7 @@
 import 'server-only'
 import { auth } from '@/lib/auth'
 import { headers } from 'next/headers'
-import { db } from '@/lib/db'
-import { eq } from 'drizzle-orm'
-import { users } from '@/lib/db/schema'
+import { getUserWithRole } from '@/lib/db/queries-user'
 
 export interface SessionUser {
   id: string
@@ -28,12 +26,10 @@ export async function getSessionWithRole(): Promise<{ session: Awaited<ReturnTyp
   }
 
   const baUser = session.user
-  
-  // Fetch user role from DB
-  const dbUser = await db.query.users.findFirst({
-    where: eq(users.id, parseInt(baUser.id)),
-    with: { role: true },
-  })
+  const userId = parseInt(baUser.id)
+
+  // Use MariaDB-compatible query
+  const dbUser = await getUserWithRole(userId)
 
   if (!dbUser) {
     return null

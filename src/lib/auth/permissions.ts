@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
-import { permissions, rolePermissions, userPermissions, users } from '@/lib/db/schema'
+import { permissions, rolePermissions, userPermissions } from '@/lib/db/schema'
 import { eq, and, or, isNull, gt } from 'drizzle-orm'
+import { getUserWithRole } from '@/lib/db/queries-user'
 
 export interface UserPermissionContext {
   userId: number
@@ -22,12 +23,9 @@ export interface UserPermissionContext {
  *    - expired overrides are ignored
  */
 export async function getUserPermissions(userId: number): Promise<UserPermissionContext | null> {
-  const user = await db.query.users.findFirst({
-    where: eq(users.id, userId),
-    with: { role: true },
-  })
+  const user = await getUserWithRole(userId)
 
-  if (!user || !user.role || user.roleId === null) {
+  if (!user || user.roleId === null || !user.role) {
     return null
   }
 
