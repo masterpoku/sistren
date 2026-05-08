@@ -35,6 +35,7 @@ export default async function ProtectedLayout({
           email: user.email,
           role: user.roleName,
           roleId: user.roleId,
+          roleLevel: user.roleLevel,
         }}
         onLogout={handleLogout}
       >

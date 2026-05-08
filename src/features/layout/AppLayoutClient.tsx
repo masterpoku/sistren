@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { usePathname } from 'next/navigation'
+import Link from 'next/link'
 import {
   House,
   GraduationCap,
@@ -19,15 +20,17 @@ interface NavItem {
   title: string
   href: string
   icon: React.ElementType
+  minLevel?: number // Minimum role level to see this item
 }
 
+// Role levels: superadmin=100, administrator=80, headmaster=70, teacher=60, student=40, parent=30, alumni=20
 const navItems: NavItem[] = [
   { title: 'Dashboard', href: '/dashboard', icon: House },
-  { title: 'Akademik', href: '/academic', icon: GraduationCap },
-  { title: 'Keuangan', href: '/finance', icon: Wallet },
-  { title: 'Siswa', href: '/students', icon: Student },
-  { title: 'Guru', href: '/teachers', icon: Users },
-  { title: 'Pengguna', href: '/users', icon: UserCircle },
+  { title: 'Akademik', href: '/academic', icon: GraduationCap, minLevel: 40 },
+  { title: 'Keuangan', href: '/finance', icon: Wallet, minLevel: 80 },
+  { title: 'Siswa', href: '/students', icon: Student, minLevel: 60 },
+  { title: 'Guru', href: '/teachers', icon: Users, minLevel: 60 },
+  { title: 'Pengguna', href: '/users', icon: UserCircle, minLevel: 80 },
   { title: 'Pengumuman', href: '/announcements', icon: Bell },
 ]
 
@@ -37,6 +40,7 @@ interface User {
   email: string
   role: string
   roleId: number
+  roleLevel: number
 }
 
 interface AppLayoutClientProps {
@@ -76,24 +80,26 @@ export function AppLayoutClient({ user, onLogout, children }: AppLayoutClientPro
         </div>
 
         <nav className="space-y-1 p-4">
-          {navItems.map((item) => {
-            const Icon = item.icon
-            const isActive = pathname === item.href
-            return (
-              <a
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                  isActive
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground hover:bg-slate-100 hover:text-slate-900'
-                }`}
-              >
-                <Icon className="h-5 w-5" />
-                {item.title}
-              </a>
-            )
-          })}
+          {navItems
+            .filter((item) => !item.minLevel || user.roleLevel >= item.minLevel)
+            .map((item) => {
+              const Icon = item.icon
+              const isActive = pathname === item.href
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                    isActive
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-muted-foreground hover:bg-slate-100 hover:text-slate-900'
+                  }`}
+                >
+                  <Icon className="h-5 w-5" />
+                  {item.title}
+                </Link>
+              )
+            })}
         </nav>
 
         <div className="absolute bottom-0 left-0 right-0 border-t p-4">
