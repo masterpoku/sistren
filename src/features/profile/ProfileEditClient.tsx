@@ -9,18 +9,22 @@ import { Button } from '@/components/ui/button'
 interface ProfileData {
   id: number
   userId: number
-  name: string | null
+  name?: string | null
   nik: string | null
-  nisn: string | null
+  nisn?: string | null
+  phone: string | null
+  address: string | null
   birthPlace: string | null
   birthDate: Date | null
-  gender: string | null
-  address: string | null
-  phone: string | null
+  gender: 'male' | 'female' | null
   religion: string | null
-  fatherName: string | null
-  motherName: string | null
-  parentsPhone: string | null
+  fatherName?: string | null
+  motherName?: string | null
+  parentsPhone?: string | null
+  majorId: number | null
+  major?: { id: number | null; name: string } | null
+  createdAt: Date | null
+  updatedAt: Date | null
 }
 
 interface UserData {
@@ -40,7 +44,7 @@ interface ProfileEditClientProps {
 export function ProfileEditClient({ profile, user }: ProfileEditClientProps) {
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
-    name: profile?.name || user.name || '',
+    name: user.name || '',
     phone: profile?.phone || '',
     nik: profile?.nik || '',
     birthPlace: profile?.birthPlace || '',
@@ -48,10 +52,8 @@ export function ProfileEditClient({ profile, user }: ProfileEditClientProps) {
       ? new Date(profile.birthDate).toISOString().split('T')[0] 
       : '',
     address: profile?.address || '',
-    fatherName: profile?.fatherName || '',
-    motherName: profile?.motherName || '',
-    parentsPhone: profile?.parentsPhone || '',
     religion: profile?.religion || '',
+    gender: profile?.gender || '',
   })
 
   const handleChange = (field: string, value: string) => {
@@ -61,10 +63,9 @@ export function ProfileEditClient({ profile, user }: ProfileEditClientProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    // TODO: call updateProfile server action
     try {
       console.log('Submitting profile update:', formData)
-      // await updateProfile(formData)
+      // TODO: call updateProfile server action
     } catch (error) {
       console.error('Failed to update profile:', error)
     } finally {
@@ -158,33 +159,6 @@ export function ProfileEditClient({ profile, user }: ProfileEditClientProps) {
             
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="fatherName">Nama Ayah</Label>
-                <Input
-                  id="fatherName"
-                  value={formData.fatherName}
-                  onChange={(e) => handleChange('fatherName', e.target.value)}
-                  placeholder="Nama ayah"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="motherName">Nama Ibu</Label>
-                <Input
-                  id="motherName"
-                  value={formData.motherName}
-                  onChange={(e) => handleChange('motherName', e.target.value)}
-                  placeholder="Nama ibu"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="parentsPhone">No. HP Orang Tua</Label>
-                <Input
-                  id="parentsPhone"
-                  value={formData.parentsPhone}
-                  onChange={(e) => handleChange('parentsPhone', e.target.value)}
-                  placeholder="08xxxxxxxxxx"
-                />
-              </div>
-              <div className="space-y-2">
                 <Label htmlFor="religion">Agama</Label>
                 <Input
                   id="religion"
@@ -192,6 +166,19 @@ export function ProfileEditClient({ profile, user }: ProfileEditClientProps) {
                   onChange={(e) => handleChange('religion', e.target.value)}
                   placeholder="Agama"
                 />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="gender">Jenis Kelamin</Label>
+                <select
+                  id="gender"
+                  value={formData.gender}
+                  onChange={(e) => handleChange('gender', e.target.value)}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  <option value="">Pilih</option>
+                  <option value="male">Laki-laki</option>
+                  <option value="female">Perempuan</option>
+                </select>
               </div>
             </div>
             

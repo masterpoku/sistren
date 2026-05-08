@@ -28,18 +28,20 @@ interface UserData {
 interface ProfileData {
   id: number
   userId: number
-  name: string | null
+  name?: string | null
   nik: string | null
-  nisn: string | null
+  nisn?: string | null
+  phone: string | null
+  address: string | null
   birthPlace: string | null
   birthDate: Date | null
-  gender: string | null
-  address: string | null
-  phone: string | null
+  gender: 'male' | 'female' | null
   religion: string | null
-  fatherName: string | null
-  motherName: string | null
-  parentsPhone: string | null
+  fatherName?: string | null
+  motherName?: string | null
+  parentsPhone?: string | null
+  majorId: number | null
+  major?: { id: number | null; name: string } | null
 }
 
 const roleLabels: Record<string, string> = {

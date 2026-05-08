@@ -11,6 +11,9 @@ export const auth = betterAuth({
     schema,
     usePlural: true,
   }),
+  experimental: {
+    joins: true,
+  },
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: false,
