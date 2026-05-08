@@ -110,23 +110,35 @@
 
 ## Technical Debt & Issues
 
+### 🔴 CRITICAL - LOGIN BROKEN
+- [ ] **Better Auth login fails** - `[Better Auth]: User not found`
+  - All 4 Better Auth tables exist (users, accounts, sessions, verifications)
+  - Schema has relations configured
+  - `experimental.joins: true` enabled
+  - `usePlural: true` enabled
+  - Password hashes verified with argon2
+  - Root cause: unknown - adapter's `findUserByEmail` not returning user
+
 ### 🔴 CRITICAL - FIXED
 - [x] Dashboard: Hardcoded `role: 'siswa'` - removed mock, use session
 - [x] Profile: localStorage auth - replaced with server action
+- [x] MariaDB json_array incompatibility - replaced `.with()` relations with manual JOINs
+- [x] Role-based sidebar - nav items filtered by roleLevel
+- [x] Route permissions - registered `/profile/edit`, `/academic/enrollments`, `/academic/grades`
 
-### 🟠 HIGH PRIORITY - IN PROGRESS
-- [ ] **Role-based sidebar visibility** - nav items currently hardcoded
-- [ ] **Route permissions registry** - some routes not in ROUTE_PERMISSIONS
+### 🟠 HIGH PRIORITY - PENDING COMMIT
+- [ ] **Commit all changes** - MariaDB fixes, schema changes, sidebar, permissions
 
 ### 🟡 MEDIUM PRIORITY
-- [ ] Replace `<a>` tags with `<Link>` across feature pages
-- [ ] Add error toasts across pages (some pages missing)
+- [ ] Replace `<a>` tags with `<Link>` across feature pages (done in sidebar)
+- [ ] Add error toasts across pages
 - [ ] Remove stale mock imports (constants.ts, AppLayout.tsx)
 
 ### 🟢 LOW PRIORITY - CLEANUP
 - [ ] Delete `src/util/mock/` folder (unused)
 - [ ] Delete `src/features/layout/AppLayout.tsx` (old, unused)
 - [ ] Delete `src/features/layout/AppSidebar.tsx` (old, unused)
+- [ ] Clean up leftover singular tables (user, account, session, verification)
 
 ---
 

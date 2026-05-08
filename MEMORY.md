@@ -1,300 +1,259 @@
 # SISTREN - Implementation Memory
 
-**Project:** Sistem Informasi Terpadu (Highschool Information System)
-**Created:** 2026-04-29
-**Status:** Ready for execution (not yet started)
+**Project:** Sistem Informasi Terpadu (Highschool Management System)
+**Last Updated:** 2026-05-08
+**Status:** AUTH NOT WORKING - Better Auth login fails
 
 ---
 
-## Context
+## 🔴 CRITICAL BUG: Login Always Fails
 
-This project is a Next.js 16.2.2 school information system, originally built on PHP Laravel. The database schema has been analyzed, 21 Drizzle ORM tables created, and a full RBAC permission system implemented. Now we need to:
+**Error:** `[Better Auth]: User not found { email: 'superadmin@sister.com' }`
 
-1. Enable working authentication (login/register)
-2. Replace mock data with real database queries
-3. Connect the permission system to UI
+### Root Cause Analysis
 
----
+Better Auth calls `internalAdapter.findUserByEmail(email, { includeAccounts: true })` which internally joins `users` → `accounts`.
 
-## Current State
-
-### ✅ Completed
-
-**Database Schema (21 tables):**
-- Core: `users`, `profiles`, `profile_assets`, `roles`
-- Academic: `majors`, `classes`, `subjects`, `semesters`, `enrollments`, `grades`
-- Business: `payments`, `payment_methods`, `announcements`, `announcement_recipients`, `system_configs`
-- RBAC: `permissions`, `role_permissions`, `user_permissions`
-- Better Auth: `accounts`, `sessions`, `verifications`
-
-**Migration:** `drizzle/migrations/0001_natural_ultron.sql` pushed to MySQL 8.0
-
-**RBAC System:**
-- 47 permissions seeded across 12 resource groups
-- Role hierarchy: superadmin(100) > administrator(80) > guru(60) > siswa(40) > alumni(20)
-- Role-permission assignments: admin(35 perms), guru(11 perms), siswa(6 perms), alumni(2 perms)
-- Superadmin bypass: level >= 100 grants all permissions implicitly
-
-**Better Auth Configuration:**
-- `src/lib/auth/index.ts` — configured with drizzleAdapter (mysql, usePlural: true)
-- `src/app/auth/[...better-auth]/route.ts` — auth handler route
-
-**Permission Utilities:**
-- `src/lib/auth/permissions.ts` — hasPermission, getUserPermissions, hasRoleLevel, etc.
-- `src/lib/auth/route-permissions.ts` — route-to-permission mapping
-- `src/middleware.ts` — auth + permission enforcement (has LSP errors to fix)
-- `src/hooks/use-permissions.ts` — client-side hook
-- `src/components/auth/RequirePermission.tsx` — UI wrapper components
-- `src/app/api/auth/permissions/route.ts` — permissions API endpoint
-
-**Build:** Passes (15 routes) with warning about BETTER_AUTH_SECRET
-
----
-
-## Old PHP Registration Flow (Reference)
-
-From `docs/oldphp/sister_spt/app/Http/Controllers/AuthController.php`:
-
-**Student Registration (Public):**
-- Route: `POST /auth/registrasi`
-- Fields: name, email, NISN, birth place, birth date, religion, gender, father's name, mother's name, first major, second major, previous school, address, captcha, terms
-- Password: auto-set to NISN value (security concern)
-- Creates: User (confirmed=false) + Profile + RegistrationInformation
-- Redirects to boarding page with encrypted token
-
-**Profile Completion (Dashboard):**
-- Triggered after login if profile incomplete
-- Additional fields: diploma numbers, parent details, document uploads (ijasah, skhun, skl, kk, akta_kelahiran, ktp_ayah, ktp_ibu, kip, pass_foto)
-- Route for completion was referenced but NOT IMPLEMENTED (bug)
-
-**Confirmation:** `confirmed = false` initially. Login check is COMMENTED OUT so students can login even before admin approval.
-
-**Admin Approval:** Route exists (`/portal/users/siswa/penerimaan`) but `accept_siswa()` method does NOT exist — incomplete implementation.
-
-**Teacher Registration:** Admin-only via `/portal/users/create`. No public registration.
-
----
-
-## Old PHP Admin Credentials
-
-```
-Superadmin: superadmin@sister.com / Password123!
-Admin:      admin@sister.com / Password123!
+The error happens at:
+```javascript
+// node_modules/better-auth/dist/api/routes/sign-in.mjs:211
+const user = await ctx.context.internalAdapter.findUserByEmail(email, { includeAccounts: true });
+if (!user) {
+  ctx.context.logger.error("User not found", { email });
+  throw APIError.from("UNAUTHORIZED", BASE_ERROR_CODES.INVALID_EMAIL_OR_PASSWORD);
+}
 ```
 
-Source: `docs/oldphp/sister_spt/app/Console/Commands/InitCommand.php`
+### What We've Tried (All Failed)
+
+| Attempt | Change | Result |
+|---------|--------|--------|
+| 1 | Created `accounts` table with `provider`, `provider_account_id` columns | Failed |
+| 2 | Renamed to `account_id`, `provider_id` | Failed |
+| 3 | Tried `usePlural: false` | Failed |
+| 4 | Tried `usePlural: true` | Failed |
+| 5 | Added `users → accounts` relation | Failed |
+| 6 | Added `accounts → users` relation | Failed |
+| 7 | Added `experimental.joins: true` | Failed |
+| 8 | Added `image` column to users | Failed |
+| 9 | Created `user`, `account`, `session`, `verification` (singular) tables | Failed |
+| 10 | Created `users`, `accounts`, `sessions`, `verifications` (plural) tables | Failed |
+
+### Current DB State (after many iterations)
+
+**Tables:** All 4 Better Auth tables exist
+- `users` - 2 rows (superadmin, admin) with password hashes
+- `accounts` - 2 rows (credential accounts) with password hashes  
+- `sessions` - 0 rows
+- `verifications` - 0 rows
+
+**Schema files:**
+- `src/lib/db/schema/users.ts` - has `accounts: many(accounts)` relation
+- `src/lib/db/schema/accounts.ts` - has `user: one(users)` relation
+- `src/lib/db/schema/sessions.ts` - exists
+- `src/lib/db/schema/verifications.ts` - exists
+
+**Auth config:**
+```typescript
+// src/lib/auth/index.ts
+adapter: drizzleAdapter(db, {
+  provider: 'mysql',
+  schema,
+  usePlural: true,  // Our tables are plural
+}),
+experimental: {
+  joins: true,  // Enable joins for Better Auth
+},
+```
+
+### What Has NOT Been Verified
+
+1. **Exact column mapping** - Drizzle camelCase → DB snake_case might be wrong
+2. **`findUserByEmail` implementation** - Cannot find where this is implemented in adapter
+3. **JOIN query** - Whether Better Auth can properly join users → accounts
+4. **`usePlural` actual behavior** - Conflicting docs about what this does
+
+### Known Facts from Source Code
+
+```javascript
+// sign-in.mjs line 211-213
+const user = await ctx.context.internalAdapter.findUserByEmail(email, { includeAccounts: true });
+if (!user) {
+  throw APIError.from("UNAUTHORIZED", "INVALID_EMAIL_OR_PASSWORD");
+}
+
+// sign-in.mjs line 215
+const credentialAccount = user.accounts.find((a) => a.providerId === "credential");
+```
+
+**Requirements:**
+1. `users` table must have: `id`, `email`, `image`, `name`, `emailVerified`, `createdAt`, `updatedAt`
+2. `accounts` table must have: `userId`, `providerId` (= 'credential'), `accountId`, `password`
+3. JOIN must work with Drizzle relations
 
 ---
 
-## Decision Points
+## ✅ COMPLETED WORK
 
-### Registration (CONFIRMED)
-- Public for students only
-- One-step simplified (email, name, password, confirm)
-- Auto-assign `siswa` role (role_id = 4)
-- Auto-confirm: `confirmed = true` (immediate login)
-- Old PHP was two-step but incomplete — simplified for MVP
+### 34 Tasks Done (Phase 1-6)
 
-### Admin Users (CONFIRMED)
-- Seed superadmin@sister.com and admin@sister.com with Password123!
-- Use argon2 for password hashing
-- Direct DB insert via `src/lib/db/seed.ts`
+All planned tasks from old MEMORY.md completed:
+- Auth + RBAC system
+- Server actions with CRUD
+- WRITE query operations
+- CRUD UI components
+- Role-based wrappers
+- Toast notifications
 
-### Mock Data Replacement (CONFIRMED)
-- All 8 feature pages at once
-- Use real DB queries via `src/lib/db/queries.ts`
-- Remove MOCK_* exports from `src/constants.ts`
+### MariaDB Compatibility Fix
 
-### Session Cleanup (DEFERRED)
-- MySQL Event Scheduler approach
-- Create event in migration `0002_cleanup_events.sql`
-- Enable via Docker `--event-scheduler=ON`
-- Phase 4 task (after auth working)
+Replaced Drizzle's `with: { role: true }` relations (uses `json_array()` which MariaDB doesn't support) with manual LEFT JOIN queries:
 
-### Unauthorized Page (CONFIRMED)
-- Simple message: "You don't have permission to access this page"
-- Button back to dashboard
+**New files:**
+- `src/lib/db/queries-user.ts` - getUserWithRole(), getUserByEmailWithRole()
+- `src/lib/db/queries-joins.ts` - getEnrollmentsWithRelations(), getGradesWithRelations()
 
----
+**Modified files:**
+- `src/lib/auth/permissions.ts` - uses queries-user.ts
+- `src/lib/auth/get-session.ts` - uses queries-user.ts
+- `src/lib/db/queries.ts` - manual joins instead of .with()
 
-## Role Definitions
+### Role-Based Sidebar
 
-| Role | Level | Default | Key Permissions |
-|------|-------|---------|----------------|
-| superadmin | 100 | false | ALL (implicit) |
-| administrator | 80 | false | ~35 (no users.delete, users.impersonate, grades.approve) |
-| guru | 60 | false | grades.input, grades.read_any, students.read, announcements.read, profile.edit_own, + academic read |
-| siswa | 40 | true | grades.read_own, announcements.read, profile.edit_own, students.read, payments.read_own, enrollments.read |
-| alumni | 20 | false | grades.read_own, profile.edit_own |
+- Nav items filtered by `user.roleLevel`
+- `<a>` replaced with `<Link>`
+- `roleLevel` passed from layout
+
+### Route Permissions
+
+Added to `src/lib/auth/route-permissions.ts`:
+- `/profile/edit`
+- `/academic/enrollments`
+- `/academic/grades`
 
 ---
 
-## 15-Step Execution Plan
-
-### Phase 1: Environment & Seed Data (Steps 1-3)
-
-**Step 1 — Add BETTER_AUTH_SECRET**
-- Generate: `openssl rand -base64 32`
-- Add to `.env` and `.env.example` (placeholder)
-
-**Step 2 — Verify roles seed**
-- Confirm roles have level + is_default set
-- superadmin=100, administrator=80, guru=60, siswa=40, alumni=20
-
-**Step 3 — Seed admin users**
-- Insert into `users` table via `src/lib/db/seed.ts`:
-  - `superadmin@sister.com` / `Password123!` (argon2)
-  - `admin@sister.com` / `Password123!`
-- roleId: superadmin=1, administrator=2, confirmed=true
-
-### Phase 2: Auth Infrastructure (Steps 4-7)
-
-**Step 4 — Create `/login` page**
-- File: `src/app/login/page.tsx`
-- Use Better Auth `signIn()` action
-- Redirect to callbackUrl or /dashboard
-
-**Step 5 — Create `/register` page**
-- File: `src/app/register/page.tsx`
-- Use Better Auth `signUp()` action
-- Auto-assign roleId=4 (siswa), confirmed=true
-- Redirect to /login on success
-
-**Step 6 — Create `/unauthorized` page**
-- File: `src/app/unauthorized/page.tsx`
-- Access denied message + home button
-
-**Step 7 — Update app layout**
-- File: `src/app/(app)/layout.tsx`
-- Replace localStorage mock with Better Auth session
-- Use `auth.api.getSession({ headers })`
-- Update logout to use `auth.signOut()`
-
-### Phase 3: Permission & Middleware (Steps 8-10)
-
-**Step 8 — Add /register to PUBLIC_ROUTES**
-- File: `src/lib/auth/route-permissions.ts`
-- Add `'/register'` to PUBLIC_ROUTES array
-
-**Step 9 — Fix middleware LSP errors**
-- File: `src/middleware.ts`
-- Cast `session.user.id` to `number` before passing to permission functions
-
-**Step 10 — Create session cleanup event**
-- File: `drizzle/migrations/0002_cleanup_events.sql`
-- MySQL event: `DELETE FROM sessions WHERE expiresAt < NOW()` (daily)
-- Same for verifications, draft payments 30+ days
-
-### Phase 4: Database Query Layer (Steps 11-13)
-
-**Step 11 — Create queries.ts**
-- File: `src/lib/db/queries.ts`
-- Functions: getStudents, getTeachers, getAnnouncements, getPayments(userId, role), getDashboardStats, getUserById, getCurrentUserProfile
-- Role-aware filtering (siswa sees own data only)
-
-**Step 12 — Update dashboard page**
-- File: `src/features/dashboard/page.tsx`
-- Replace MOCK_* with `getDashboardStats()`
-- Add loading + error states
-
-**Step 13 — Update remaining 7 feature pages**
-- `src/features/students/page.tsx` → getStudents()
-- `src/features/teachers/page.tsx` → getTeachers()
-- `src/features/announcements/page.tsx` → getAnnouncements()
-- `src/features/users/page.tsx` → user list query
-- `src/features/finance/page.tsx` → getPayments()
-- `src/features/academic/page.tsx` → classes/majors/subjects
-- `src/features/profile/page.tsx` → getCurrentUserProfile()
-
-### Phase 5: Permission UI Integration (Steps 14-15)
-
-**Step 14 — Wrap action buttons**
-- Add `<RequirePermission permission="...">` to Create/Edit/Delete/Approve buttons
-- Pages: users, students, teachers, announcements, finance
-
-**Step 15 — Final verification**
-- `bun typecheck` → 0 errors
-- `bun run build` → succeeds
-- Manual test: login flows for all 5 roles
-- Update COMPACTION.md
-
----
-
-## Files to Create/Modify
-
-**New Files:**
-- `.env` (BETTER_AUTH_SECRET)
-- `src/app/login/page.tsx`
-- `src/app/register/page.tsx`
-- `src/app/unauthorized/page.tsx`
-- `src/lib/db/queries.ts`
-- `drizzle/migrations/0002_cleanup_events.sql`
-
-**Modified Files:**
-- `src/lib/db/seed.ts` (admin users)
-- `src/app/(app)/layout.tsx` (Better Auth session)
-- `src/lib/auth/route-permissions.ts` (add /register)
-- `src/middleware.ts` (fix LSP errors)
-- All 8 feature pages (real queries)
-- `src/constants.ts` (remove mock data)
-- `COMPACTION.md` (final update)
-- `.env.example` (add BETTER_AUTH_SECRET placeholder)
-
----
-
-## Dependencies
+## 📁 Current Files Modified
 
 ```
-Step 1 → Step 4 → Step 5 → Step 6 → Step 7 → Step 8 → Step 9
-  ↓         ↓        ↓        ↓        ↓
- 3       (auth pages)    (layout)   (public routes)
-                            ↓
-                          Step 9
-                            ↓
-Step 10 ─────────────────────────────────────────↓
-  ↓
-Step 11 → Step 12 → Step 13 → Step 14 → Step 15
+Modified (since last push):
+  src/lib/auth/index.ts
+  src/lib/auth/permissions.ts
+  src/lib/auth/get-session.ts
+  src/lib/db/schema/users.ts
+  src/lib/db/schema/accounts.ts
+  src/lib/db/queries.ts
+  src/lib/db/queries-user.ts (NEW)
+  src/lib/db/queries-joins.ts (NEW)
+  src/app/(app)/layout.tsx
+  src/features/layout/AppLayoutClient.tsx
+  src/lib/auth/route-permissions.ts
+  src/features/profile/ProfileEditClient.tsx
+  src/features/profile/page.tsx
 ```
 
 ---
 
-## Not in Scope (Deferred)
+## ❌ NOT YET COMMITTED
 
-- Student two-step registration (profile completion form)
-- Admin approval flow (accept_siswa method missing in old PHP)
-- Teacher public registration (admin-only)
-- Document upload (profile_assets table exists but not wired)
-- Blog tables (blog_categories, blogs, blog_comments)
-- Redis caching for permissions
-- Admin UI for permission management
+All the MariaDB compatibility fixes, schema changes, and auth attempts are NOT committed.
 
 ---
 
-## Notes
+## 🔍 NEXT STEPS TO DEBUG
 
-- Password hashing: use argon2 (package already installed)
-- Better Auth uses `auth.handler()` not `toNextJsHandler()`
-- MySQL runs in Docker: `sistren-mysql` container
-- Build warning: "default secret" — requires BETTER_AUTH_SECRET env var
-- Old PHP had typo `comfirmed` vs `confirmed` — we use correct spelling
-- Old PHP login confirmation check was commented out — we may want to uncomment
+### 1. Verify Drizzle Schema Exactly Matches Better Auth
+
+Better Auth expects specific column names. Check if our schema matches exactly:
+
+```typescript
+// What Better Auth expects (from user.mjs schema):
+users: {
+  id: bigint("id").primaryKey().autoincrement(),
+  email: varchar("email").notNull().unique(),
+  emailVerified: boolean("email_verified").default(false),  // NOT emailVerifiedAt
+  name: varchar("name"),
+  image: varchar("image"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").onUpdateNow(),
+}
+
+accounts: {
+  id: bigint("id").primaryKey().autoincrement(),
+  userId: bigint("user_id").notNull(),  // FK
+  accountId: varchar("account_id"),
+  providerId: varchar("provider_id").notNull(),  // 'credential' for password
+  // OAuth fields...
+  password: varchar("password"),  // hashed password
+}
+```
+
+### 2. Try Without Relations
+
+The `experimental.joins: true` might be causing issues. Try removing it.
+
+### 3. Fresh Database
+
+Consider dropping all Better Auth tables and letting Better Auth create them via its CLI:
+```bash
+npx auth generate
+npx drizzle-kit push
+```
+
+### 4. Check usePlural Behavior
+
+Docs say:
+- `usePlural: true` = Drizzle plural (users) → DB plural (users)
+- Our tables ARE plural, so `usePlural: true` should be correct
+
+But we created BOTH singular and plural tables trying different things.
 
 ---
 
-## Verification Checklist
+## 📊 DB Tables (Current State)
 
-- [ ] BETTER_AUTH_SECRET set in .env
-- [ ] Admin users seeded (superadmin@sister.com, admin@sister.com)
-- [ ] /login page functional
-- [ ] /register page functional (creates siswa role)
-- [ ] /unauthorized page exists
-- [ ] Layout uses Better Auth session (not localStorage)
-- [ ] /register in PUBLIC_ROUTES
-- [ ] Middleware compiles without errors
-- [ ] 8 feature pages use real queries
-- [ ] Mock data removed from constants.ts
-- [ ] Action buttons wrapped with RequirePermission
-- [ ] `bun typecheck` passes
-- [ ] `bun run build` succeeds
-- [ ] Login works for all 5 roles
-- [ ] Permission UI correct for each role
+```sql
+-- Should exist:
+users        - ✅ 2 rows
+accounts     - ✅ 2 rows  
+sessions     - ✅ 0 rows
+verifications - ✅ 0 rows
+
+-- Leftover from debugging (should probably drop):
+user          - ❌ (singular, may conflict)
+account       - ❌ (singular, may conflict)
+session       - ❌ (singular, may conflict)
+verification  - ❌ (singular, may conflict)
+```
+
+---
+
+## 🧪 Scripts Created During Debugging
+
+Located in `/scripts/`:
+- `listUsers.ts` - Shows all users with password status
+- Various debug scripts were created then deleted during debugging
+
+---
+
+## 📝 Questions That Need Answers
+
+1. Does `usePlural: true` mean "tables ARE plural" or "convert to plural"?
+2. Does Better Auth use Drizzle relations for JOINs or raw queries?
+3. Is `experimental.joins: true` required or optional?
+4. Why can't we find `findUserByEmail` in the adapter source?
+5. Should we just delete all auth-related tables and let Better Auth regenerate them?
+
+---
+
+## 🤔 Recommendations
+
+1. **Read Better Auth adapter source more carefully** - It imports from `@better-auth/core/db/adapter` which we can't see
+
+2. **Try the nuclear option**: Delete all Better Auth tables, use `npx auth generate` to create proper schema
+
+3. **Check if we need a specific table prefix or suffix** - Some MySQL setups have issues
+
+4. **Consider using SQLite for development** - Avoids MySQL/MariaDB specific issues
+
+5. **Ask the Better Auth community** - This specific error might be a known issue with drizzle-adapter + MySQL
