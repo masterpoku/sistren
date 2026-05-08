@@ -69,6 +69,11 @@ export const ROUTE_PERMISSIONS: Record<string, string> = {
 
   // Profile (own profile is always accessible, edit_own)
   '/profile': 'profile.edit_own',
+  '/profile/edit': 'profile.edit_own',
+
+  // Academic
+  '/academic/enrollments': 'enrollments.read',
+  '/academic/grades': 'grades.read_any',
 }
 
 /**
