@@ -1,4 +1,4 @@
-import { mysqlTable, bigint, timestamp } from 'drizzle-orm/mysql-core'
+import { mysqlTable, bigint, timestamp, varchar } from 'drizzle-orm/mysql-core'
 import { users } from './users'
 
 /**
@@ -10,7 +10,10 @@ import { users } from './users'
 export const sessions = mysqlTable('sessions', {
   id: bigint('id', { mode: 'number' }).primaryKey().autoincrement(),
   userId: bigint('user_id', { mode: 'number' }).notNull().references(() => users.id, { onDelete: 'cascade' }),
+  token: varchar('token', { length: 255 }).notNull().unique(),
   expiresAt: timestamp('expires_at').notNull(),
+  ipAddress: varchar('ip_address', { length: 255 }),
+  userAgent: varchar('user_agent', { length: 255 }),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').onUpdateNow(),
 })
