@@ -9,11 +9,11 @@ export const auth = betterAuth({
   adapter: drizzleAdapter(db, {
     provider: 'mysql',
     schema,
-    usePlural: true,
+    // usePlural: false gives us 'accounts' key (plural) which Better Auth expects
+    usePlural: false,
   }),
-  experimental: {
-    joins: true,
-  },
+  // NOTE: experimental.joins: true uses json_array() which MariaDB doesn't support
+  // Disabled for MariaDB compatibility
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: false,
