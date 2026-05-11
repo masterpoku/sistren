@@ -9,11 +9,12 @@ export const auth = betterAuth({
   adapter: drizzleAdapter(db, {
     provider: 'mysql',
     schema,
-    // usePlural: true converts 'user' → 'users' which exists in our schema
     usePlural: true,
   }),
-  // NOTE: experimental.joins: true uses json_array() which MariaDB doesn't support
-  // Disabled for MariaDB compatibility
+  // Disable experimental.joins - MariaDB doesn't support json_arrayagg with LATERAL JOIN
+  experimental: {
+    // joins: true  // <-- CANNOT enable - MariaDB syntax error
+  },
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: false,
@@ -21,5 +22,9 @@ export const auth = betterAuth({
   session: {
     expiresIn: 60 * 60 * 24 * 7,
     updateAge: 60 * 60 * 24,
+  },
+  // Add debug logging
+  logger: {
+    level: 'debug',
   },
 })
