@@ -9,8 +9,8 @@ export const auth = betterAuth({
   adapter: drizzleAdapter(db, {
     provider: 'mysql',
     schema,
-    // usePlural: false gives us 'accounts' key (plural) which Better Auth expects
-    usePlural: false,
+    // usePlural: true converts 'user' → 'users' which exists in our schema
+    usePlural: true,
   }),
   // NOTE: experimental.joins: true uses json_array() which MariaDB doesn't support
   // Disabled for MariaDB compatibility
