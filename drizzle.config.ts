@@ -4,6 +4,7 @@ export default defineConfig({
   schema: './src/lib/db/schema/**/*.ts',
   out: './drizzle/migrations',
   dialect: 'mysql',
+  verbose: true,
   dbCredentials: {
     host: process.env.DB_HOST ?? 'localhost',
     port: Number(process.env.DB_PORT) ?? 3306,

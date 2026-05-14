@@ -50,6 +50,22 @@ export interface UpdateUserData {
 export async function updateUser(data: UpdateUserData) {
   await verifyAdmin()
 
+  // Security check: Prevent removing superadmin role from the last superadmin
+  if (data.roleId !== undefined && data.roleId !== 1) {
+    // Check if this user is a superadmin
+    const [user] = await db.select({ roleId: users.roleId }).from(users).where(eq(users.id, data.id))
+    
+    if (user?.roleId === 1) {
+      // Count remaining superadmin users
+      const result = await db.execute('SELECT COUNT(*) as cnt FROM users WHERE role_id = 1')
+      const superadminCount = (result as any)[0]?.[0]?.cnt || 0
+      
+      if (superadminCount <= 1) {
+        return { success: false, error: 'Cannot remove superadmin role from the last superadmin user' }
+      }
+    }
+  }
+
   const updateFields: Record<string, unknown> = {}
   
   if (data.name !== undefined) updateFields.name = data.name
@@ -63,6 +79,18 @@ export async function updateUser(data: UpdateUserData) {
 
 export async function deleteUser(id: number) {
   await verifyAdmin()
+  
+  // Security check: Prevent deleting the last superadmin user
+  const [user] = await db.select({ roleId: users.roleId }).from(users).where(eq(users.id, id))
+  
+  if (user?.roleId === 1) {
+    const result = await db.execute('SELECT COUNT(*) as cnt FROM users WHERE role_id = 1')
+    const superadminCount = (result as any)[0]?.[0]?.cnt || 0
+    
+    if (superadminCount <= 1) {
+      return { success: false, error: 'Cannot delete the last superadmin user' }
+    }
+  }
   
   // Delete profile first
   const { deleteProfile } = await import('@/lib/db/queries')

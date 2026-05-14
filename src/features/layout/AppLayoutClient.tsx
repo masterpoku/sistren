@@ -14,6 +14,8 @@ import {
   SignOut,
   List,
   X,
+  Shield,
+  Gear,
 } from 'phosphor-react'
 
 interface NavItem {
@@ -32,6 +34,9 @@ const navItems: NavItem[] = [
   { title: 'Guru', href: '/teachers', icon: Users, minLevel: 60 },
   { title: 'Pengguna', href: '/users', icon: UserCircle, minLevel: 80 },
   { title: 'Pengumuman', href: '/announcements', icon: Bell },
+  // Superadmin only sections
+  { title: 'Roles', href: '/roles', icon: Shield, minLevel: 100 },
+  { title: 'Permissions', href: '/permissions', icon: Gear, minLevel: 100 },
 ]
 
 interface User {
