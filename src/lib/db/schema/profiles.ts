@@ -47,6 +47,8 @@ export const profiles = mysqlTable('profiles', {
   enrolledAt: date('enrolled_at'),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').onUpdateNow(),
+deletedAt: timestamp('deleted_at'),
+  
 })
 
 export const profilesRelations = relations(profiles, ({ one }) => ({

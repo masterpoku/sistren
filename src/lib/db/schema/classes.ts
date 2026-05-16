@@ -9,4 +9,6 @@ export const classes = mysqlTable('classes', {
   code: varchar('code', { length: 255 }).unique().notNull(),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').onUpdateNow(),
+deletedAt: timestamp('deleted_at'),
+  
 })

@@ -27,6 +27,8 @@ export const users = mysqlTable('users', {
   lastLoginAt: timestamp('last_login_at'),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').onUpdateNow(),
+deletedAt: timestamp('deleted_at'),
+  
 })
 
 export const usersRelations = relations(users, ({ one, many }) => ({

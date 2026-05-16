@@ -17,4 +17,6 @@ export const subjects = mysqlTable('subjects', {
   description: text('description'),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').onUpdateNow(),
+deletedAt: timestamp('deleted_at'),
+  
 })

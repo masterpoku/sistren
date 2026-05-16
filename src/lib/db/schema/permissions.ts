@@ -15,4 +15,5 @@ export const permissions = mysqlTable('permissions', {
   scope: varchar('scope', { length: 20 }).default('global'),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').onUpdateNow(),
+  deletedAt: timestamp('deleted_at'),
 })

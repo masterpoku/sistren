@@ -24,6 +24,8 @@ export const payments = mysqlTable('payments', {
   paidAt: timestamp('paid_at'),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').onUpdateNow(),
+deletedAt: timestamp('deleted_at'),
+  
 })
 
 export const paymentsRelations = relations(payments, ({ one }) => ({

@@ -20,6 +20,8 @@ export const grades = mysqlTable('grades', {
   predicate: varchar('predicate', { length: 5 }),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').onUpdateNow(),
+deletedAt: timestamp('deleted_at'),
+  
 })
 
 export const gradesRelations = relations(grades, ({ one }) => ({

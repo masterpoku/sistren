@@ -17,6 +17,8 @@ export const enrollments = mysqlTable('enrollments', {
   classId: bigint('class_id', { mode: 'number' }).notNull().references(() => classes.id, { onDelete: 'cascade' }),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').onUpdateNow(),
+deletedAt: timestamp('deleted_at'),
+  
 })
 
 export const enrollmentsRelations = relations(enrollments, ({ one }) => ({

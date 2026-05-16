@@ -20,6 +20,8 @@ export const announcements = mysqlTable('announcements', {
   expiresAt: timestamp('expires_at'),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').onUpdateNow(),
+deletedAt: timestamp('deleted_at'),
+  
 })
 
 export const announcementsRelations = relations(announcements, ({ one }) => ({

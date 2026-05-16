@@ -13,4 +13,6 @@ export const semesters = mysqlTable('semesters', {
   isActive: boolean('is_active').default(false),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').onUpdateNow(),
+deletedAt: timestamp('deleted_at'),
+  
 })

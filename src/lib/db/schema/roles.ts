@@ -16,4 +16,6 @@ export const roles = mysqlTable('roles', {
   level: int('level').default(0),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').onUpdateNow(),
+deletedAt: timestamp('deleted_at'),
+  
 })
