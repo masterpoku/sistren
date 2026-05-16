@@ -4,6 +4,11 @@ import { auth } from '@/lib/auth'
 import { PUBLIC_ROUTES, ROUTE_PERMISSIONS, ROLE_LEVEL_REQUIREMENTS } from '@/lib/auth/route-permissions'
 import { hasPermission, hasRoleLevel } from '@/lib/auth/permissions'
 
+// Pre-sort routes by length (longest first) so more specific paths match first
+const SORTED_ROUTE_ENTRIES = Object.entries(ROUTE_PERMISSIONS).sort(
+  ([a], [b]) => b.length - a.length
+)
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
@@ -29,8 +34,10 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  const requiredPermission = Object.entries(ROUTE_PERMISSIONS).find(
-    ([route]) => pathname.startsWith(route)
+  // Longest route prefix wins — ensures /academic/grades matches 'grades.read_any'
+  // before /academic matches 'classes.manage'
+  const requiredPermission = SORTED_ROUTE_ENTRIES.find(([route]) =>
+    pathname.startsWith(route)
   )?.[1]
 
   if (requiredPermission) {

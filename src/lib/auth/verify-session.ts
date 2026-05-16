@@ -57,3 +57,21 @@ export async function verifyRoleLevel(minLevel: number) {
   
   return userId
 }
+
+/**
+ * Verifies the user has a specific permission.
+ * Superadmin (level >= 100) bypass — handled by hasPermission().
+ * Redirects to /unauthorized if not authorized.
+ */
+export async function verifyPermission(permissionName: string) {
+  const { userId } = await verifySession()
+  
+  const { hasPermission } = await import('@/lib/auth/permissions')
+  
+  const allowed = await hasPermission(userId, permissionName)
+  if (!allowed) {
+    redirect('/unauthorized')
+  }
+  
+  return userId
+}

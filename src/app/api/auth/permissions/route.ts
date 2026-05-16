@@ -1,14 +1,18 @@
+import { auth } from '@/lib/auth'
 import { getUserPermissions } from '@/lib/auth/permissions'
 import { NextRequest } from 'next/server'
 
 export async function GET(request: NextRequest) {
-  const userId = request.nextUrl.searchParams.get('userId')
+  // Derive userId from session cookie — secure, no query param needed
+  const session = await auth.api.getSession({
+    headers: request.headers,
+  })
 
-  if (!userId) {
-    return Response.json({ error: 'userId required' }, { status: 400 })
+  if (!session?.user) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const ctx = await getUserPermissions(parseInt(userId, 10))
+  const ctx = await getUserPermissions(parseInt(session.user.id, 10))
 
   if (!ctx) {
     return Response.json({ error: 'User not found' }, { status: 404 })
