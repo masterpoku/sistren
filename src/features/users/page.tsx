@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import { ColumnDef } from '@tanstack/react-table'
-import { fetchAllUsers } from '@/actions/users'
+import { fetchAllUsers, deleteUser } from '@/actions/users'
 import { DataTable } from '@/components/ui/data-table'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -24,6 +24,8 @@ import {
   Trash,
   UserPlus,
 } from 'phosphor-react'
+import { RequirePermission } from '@/components/auth/RequirePermission'
+import { useToast } from '@/hooks/use-toast'
 
 interface User {
   id: number
@@ -50,116 +52,10 @@ const roleBadgeVariant: Record<number, 'default' | 'secondary' | 'destructive' |
   5: 'outline',
 }
 
-export const columns: ColumnDef<User>[] = [
-  {
-    id: 'select',
-    header: ({ table }) => (
-      <Checkbox
-        checked={table.getIsAllPageRowsSelected()}
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Pilih semua"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Pilih baris"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
-    accessorKey: 'id',
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          ID
-          <ArrowsDownUp className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
-  },
-  {
-    accessorKey: 'name',
-    header: 'Nama',
-    cell: ({ row }) => (
-      <div className="font-medium">{row.getValue('name') || '-'}</div>
-    ),
-  },
-  {
-    accessorKey: 'email',
-    header: 'Email',
-  },
-  {
-    accessorKey: 'roleId',
-    header: 'Role',
-    cell: ({ row }) => {
-      const roleId = row.getValue('roleId') as number | null
-      return (
-        <Badge
-          variant={roleId ? (roleBadgeVariant[roleId] || 'outline') : 'outline'}
-          className="capitalize"
-        >
-          {roleId ? roleLabels[roleId] || `Role ${roleId}` : 'Unknown'}
-        </Badge>
-      )
-    },
-  },
-  {
-    accessorKey: 'confirmed',
-    header: 'Status',
-    cell: ({ row }) => {
-      const confirmed = row.getValue('confirmed') as boolean | null
-      return (
-        <Badge variant={confirmed ? 'default' : 'secondary'}>
-          {confirmed ? 'Aktif' : 'Pending'}
-        </Badge>
-      )
-    },
-  },
-  {
-    id: 'actions',
-    cell: ({ row }) => {
-      const user = row.original
-
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Buka menu</span>
-              <DotsThree className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Aksi</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(user.email)}
-              className="cursor-pointer"
-            >
-              <Eye className="mr-2 h-4 w-4" /> Lihat Detail
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="cursor-pointer">
-              <Pencil className="mr-2 h-4 w-4" /> Edit Data
-            </DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer text-destructive">
-              <Trash className="mr-2 h-4 w-4" /> Hapus
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )
-    },
-  },
-]
-
 export default function UsersPage() {
   const [users, setUsers] = React.useState<User[]>([])
   const [loading, setLoading] = React.useState(true)
+  const { toast } = useToast()
 
   React.useEffect(() => {
     async function loadUsers() {
@@ -168,18 +64,156 @@ export default function UsersPage() {
         setUsers(data)
       } catch (error) {
         console.error('Failed to fetch users:', error)
+        toast({
+          title: 'Error',
+          description: 'Gagal memuat data pengguna',
+          variant: 'destructive',
+        })
       } finally {
         setLoading(false)
       }
     }
     loadUsers()
-  }, [])
+  }, [toast])
+
+  const handleDelete = async (id: number, name: string) => {
+    if (!window.confirm(`Yakin ingin menghapus user "${name}"? Data tidak bisa dikembalikan.`)) return
+
+    try {
+      const result = await deleteUser(id)
+      if (result.success) {
+        toast({ title: 'Berhasil', description: 'User berhasil dihapus' })
+        // Reload
+        const data = await fetchAllUsers()
+        setUsers(data)
+      } else {
+        toast({ title: 'Error', description: result.error || 'Gagal menghapus user', variant: 'destructive' })
+      }
+    } catch (error) {
+      toast({ title: 'Error', description: 'Gagal menghapus user', variant: 'destructive' })
+    }
+  }
 
   const roleCounts = users.reduce((acc, user) => {
     const roleId = user.roleId || 0
     acc[roleId] = (acc[roleId] || 0) + 1
     return acc
   }, {} as Record<number, number>)
+
+  const columns: ColumnDef<User>[] = [
+    // ...existing column setup with RequirePermission wrapped actions
+    {
+      id: 'select',
+      header: ({ table }) => (
+        <Checkbox
+          checked={table.getIsAllPageRowsSelected()}
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label="Pilih semua"
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Pilih baris"
+        />
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    },
+    {
+      accessorKey: 'id',
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          >
+            ID
+            <ArrowsDownUp className="ml-2 h-4 w-4" />
+          </Button>
+        )
+      },
+    },
+    {
+      accessorKey: 'name',
+      header: 'Nama',
+      cell: ({ row }) => (
+        <div className="font-medium">{row.getValue('name') || '-'}</div>
+      ),
+    },
+    {
+      accessorKey: 'email',
+      header: 'Email',
+    },
+    {
+      accessorKey: 'roleId',
+      header: 'Role',
+      cell: ({ row }) => {
+        const roleId = row.getValue('roleId') as number | null
+        return (
+          <Badge
+            variant={roleId ? (roleBadgeVariant[roleId] || 'outline') : 'outline'}
+            className="capitalize"
+          >
+            {roleId ? roleLabels[roleId] || `Role ${roleId}` : 'Unknown'}
+          </Badge>
+        )
+      },
+    },
+    {
+      accessorKey: 'confirmed',
+      header: 'Status',
+      cell: ({ row }) => {
+        const confirmed = row.getValue('confirmed') as boolean | null
+        return (
+          <Badge variant={confirmed ? 'default' : 'secondary'}>
+            {confirmed ? 'Aktif' : 'Pending'}
+          </Badge>
+        )
+      },
+    },
+    {
+      id: 'actions',
+      cell: ({ row }) => {
+        const user = row.original
+
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Buka menu</span>
+                <DotsThree className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Aksi</DropdownMenuLabel>
+              <DropdownMenuItem
+                onClick={() => navigator.clipboard.writeText(user.email)}
+                className="cursor-pointer"
+              >
+                <Eye className="mr-2 h-4 w-4" /> Lihat Detail
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <RequirePermission permission="users.update">
+                <DropdownMenuItem className="cursor-pointer">
+                  <Pencil className="mr-2 h-4 w-4" /> Edit Data
+                </DropdownMenuItem>
+              </RequirePermission>
+              <RequirePermission permission="users.delete">
+                <DropdownMenuItem
+                  onClick={() => handleDelete(user.id, user.name || user.email)}
+                  className="cursor-pointer text-destructive"
+                >
+                  <Trash className="mr-2 h-4 w-4" /> Hapus
+                </DropdownMenuItem>
+              </RequirePermission>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )
+      },
+    },
+  ]
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6">
@@ -190,10 +224,12 @@ export default function UsersPage() {
             Manajemen semua pengguna sistem.
           </p>
         </div>
-        <Button className="gap-2">
-          <UserPlus className="h-4 w-4" />
-          Tambah Pengguna
-        </Button>
+        <RequirePermission permission="users.create">
+          <Button className="gap-2">
+            <UserPlus className="h-4 w-4" />
+            Tambah Pengguna
+          </Button>
+        </RequirePermission>
       </div>
 
       {loading ? (

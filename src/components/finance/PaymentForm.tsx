@@ -13,6 +13,7 @@ interface PaymentFormProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onSubmit: (data: PaymentFormData) => void
+  initialData?: Partial<PaymentFormData>
 }
 
 export interface PaymentFormData {
@@ -23,14 +24,14 @@ export interface PaymentFormData {
   total: string
 }
 
-export function PaymentForm({ open, onOpenChange, onSubmit }: PaymentFormProps) {
+export function PaymentForm({ open, onOpenChange, onSubmit, initialData }: PaymentFormProps) {
   const [loading, setLoading] = React.useState(false)
   const [formData, setFormData] = React.useState<PaymentFormData>({
-    studentId: 0,
-    description: '',
-    price: '',
-    quantity: 1,
-    total: '',
+    studentId: initialData?.studentId || 0,
+    description: initialData?.description || '',
+    price: initialData?.price || '',
+    quantity: initialData?.quantity || 1,
+    total: initialData?.total || '',
   })
 
   const handlePriceChange = (price: string) => {
@@ -67,7 +68,7 @@ export function PaymentForm({ open, onOpenChange, onSubmit }: PaymentFormProps) 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Tambah Pembayaran</DialogTitle>
+          <DialogTitle>{initialData?.description ? 'Edit Pembayaran' : 'Tambah Pembayaran'}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">

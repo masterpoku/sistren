@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import { ColumnDef } from '@tanstack/react-table'
-import { fetchTeachers, createTeacher } from '@/actions/teachers'
+import { fetchTeachers, fetchTeacherById, createTeacher, updateTeacher, deleteTeacher } from '@/actions/teachers'
 import { DataTable } from '@/components/ui/data-table'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -24,6 +24,7 @@ import {
   Plus,
 } from 'phosphor-react'
 import { TeacherForm, TeacherFormData } from '@/components/teachers/TeacherForm'
+import { RequirePermission } from '@/components/auth/RequirePermission'
 import { useToast } from '@/hooks/use-toast'
 
 interface Teacher {
@@ -33,90 +34,19 @@ interface Teacher {
   roleId: number | null
 }
 
-export const columns: ColumnDef<Teacher>[] = [
-  {
-    id: 'select',
-    header: ({ table }) => (
-      <Checkbox
-        checked={table.getIsAllPageRowsSelected()}
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Pilih semua"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Pilih baris"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
-    accessorKey: 'id',
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          ID
-          <ArrowsDownUp className="ml-2 h-4 w-4" />
-        </Button>
-      )
-    },
-  },
-  {
-    accessorKey: 'name',
-    header: 'Nama Lengkap',
-    cell: ({ row }) => (
-      <div className="font-medium">{row.getValue('name')}</div>
-    ),
-  },
-  {
-    accessorKey: 'email',
-    header: 'Email',
-  },
-  {
-    id: 'actions',
-    cell: ({ row }) => {
-      const teacher = row.original
-
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Buka menu</span>
-              <DotsThree className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Aksi</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(String(teacher.id))}
-              className="cursor-pointer"
-            >
-              <Eye className="mr-2 h-4 w-4" /> Lihat Detail
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="cursor-pointer">
-              <Pencil className="mr-2 h-4 w-4" /> Edit Data
-            </DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer text-destructive">
-              <Trash className="mr-2 h-4 w-4" /> Hapus
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )
-    },
-  },
-]
+interface TeacherProfile extends Teacher {
+  nik?: string | null
+  phone?: string | null
+  birthPlace?: string | null
+  birthDate?: string
+  address?: string | null
+}
 
 export default function TeachersPage() {
   const [teachers, setTeachers] = React.useState<Teacher[]>([])
   const [loading, setLoading] = React.useState(true)
   const [formOpen, setFormOpen] = React.useState(false)
+  const [editingTeacher, setEditingTeacher] = React.useState<TeacherProfile | null>(null)
   const { toast } = useToast()
 
   const loadTeachers = React.useCallback(async () => {
@@ -139,32 +69,91 @@ export default function TeachersPage() {
     loadTeachers()
   }, [loadTeachers])
 
-  const handleSubmit = async (data: TeacherFormData) => {
+  const handleEdit = async (id: number) => {
     try {
-      await createTeacher({
-        email: data.email,
-        password: 'Password123!',
-        name: data.name,
-        nik: data.nik,
-        phone: data.phone,
-        birthPlace: data.birthPlace,
-        birthDate: data.birthDate,
-        address: data.address,
-      })
-      toast({
-        title: 'Berhasil',
-        description: 'Guru baru berhasil ditambahkan',
-      })
-      await loadTeachers()
+      const profile = await fetchTeacherById(id)
+      if (profile) {
+        setEditingTeacher(profile)
+        setFormOpen(true)
+      }
     } catch (error) {
-      console.error('Failed to create teacher:', error)
       toast({
         title: 'Error',
-        description: 'Gagal menambahkan guru',
+        description: 'Gagal memuat data guru',
         variant: 'destructive',
       })
     }
   }
+
+  const handleDelete = async (id: number) => {
+    if (!window.confirm('Yakin ingin menghapus guru ini? Data tidak bisa dikembalikan.')) return
+
+    try {
+      await deleteTeacher(id)
+      toast({
+        title: 'Berhasil',
+        description: 'Guru berhasil dihapus',
+      })
+      await loadTeachers()
+    } catch (error) {
+      console.error('Failed to delete teacher:', error)
+      toast({
+        title: 'Error',
+        description: 'Gagal menghapus guru',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  const handleSubmit = async (data: TeacherFormData) => {
+    try {
+      if (editingTeacher) {
+        await updateTeacher({
+          id: editingTeacher.id,
+          name: data.name,
+          nik: data.nik,
+          phone: data.phone,
+          birthPlace: data.birthPlace,
+          birthDate: data.birthDate,
+          address: data.address,
+        })
+        toast({
+          title: 'Berhasil',
+          description: 'Data guru berhasil diperbarui',
+        })
+      } else {
+        await createTeacher({
+          email: data.email,
+          password: 'Password123!',
+          name: data.name,
+          nik: data.nik,
+          phone: data.phone,
+          birthPlace: data.birthPlace,
+          birthDate: data.birthDate,
+          address: data.address,
+        })
+        toast({
+          title: 'Berhasil',
+          description: 'Guru baru berhasil ditambahkan',
+        })
+      }
+      setFormOpen(false)
+      setEditingTeacher(null)
+      await loadTeachers()
+    } catch (error) {
+      console.error('Failed to save teacher:', error)
+      toast({
+        title: 'Error',
+        description: editingTeacher ? 'Gagal memperbarui data guru' : 'Gagal menambahkan guru',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  const columns = React.useMemo(
+    () => buildColumns(handleEdit, handleDelete),
+    [handleEdit, handleDelete]
+  )
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6">
@@ -175,10 +164,12 @@ export default function TeachersPage() {
             Manajemen data guru SMK TERPADU.
           </p>
         </div>
-        <Button className="gap-2" onClick={() => setFormOpen(true)}>
-          <Plus className="h-4 w-4" />
-          Tambah Guru
-        </Button>
+        <RequirePermission permission="teachers.create">
+          <Button className="gap-2" onClick={() => { setEditingTeacher(null); setFormOpen(true); }}>
+            <Plus className="h-4 w-4" />
+            Tambah Guru
+          </Button>
+        </RequirePermission>
       </div>
 
       {loading ? (
@@ -214,10 +205,117 @@ export default function TeachersPage() {
       )}
 
       <TeacherForm
+        key={editingTeacher?.id || 'new'}
         open={formOpen}
-        onOpenChange={setFormOpen}
+        onOpenChange={(open) => {
+          setFormOpen(open)
+          if (!open) setTimeout(() => setEditingTeacher(null), 200)
+        }}
         onSubmit={handleSubmit}
+        initialData={editingTeacher ? {
+          name: editingTeacher.name,
+          email: editingTeacher.email,
+          nik: editingTeacher.nik || '',
+          phone: editingTeacher.phone || '',
+          teacherId: '',
+          subjectTaught: '',
+          birthPlace: editingTeacher.birthPlace || '',
+          birthDate: editingTeacher.birthDate || '',
+          address: editingTeacher.address || '',
+        } : undefined}
       />
     </div>
   )
+}
+
+function buildColumns(onEdit: (id: number) => void, onDelete: (id: number) => void): ColumnDef<Teacher>[] {
+  return [
+    {
+      id: 'select',
+      header: ({ table }) => (
+        <Checkbox
+          checked={table.getIsAllPageRowsSelected()}
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label="Pilih semua"
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Pilih baris"
+        />
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    },
+    {
+      accessorKey: 'id',
+      header: ({ column }) => {
+        return (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+          >
+            ID
+            <ArrowsDownUp className="ml-2 h-4 w-4" />
+          </Button>
+        )
+      },
+    },
+    {
+      accessorKey: 'name',
+      header: 'Nama Lengkap',
+      cell: ({ row }) => (
+        <div className="font-medium">{row.getValue('name')}</div>
+      ),
+    },
+    {
+      accessorKey: 'email',
+      header: 'Email',
+    },
+    {
+      id: 'actions',
+      cell: ({ row }) => {
+        const teacher = row.original
+
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Buka menu</span>
+                <DotsThree className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Aksi</DropdownMenuLabel>
+              <DropdownMenuItem
+                onClick={() => navigator.clipboard.writeText(String(teacher.id))}
+                className="cursor-pointer"
+              >
+                <Eye className="mr-2 h-4 w-4" /> Lihat Detail
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <RequirePermission permission="teachers.update">
+                <DropdownMenuItem
+                  onClick={() => onEdit(teacher.id)}
+                  className="cursor-pointer"
+                >
+                  <Pencil className="mr-2 h-4 w-4" /> Edit Data
+                </DropdownMenuItem>
+              </RequirePermission>
+              <RequirePermission permission="teachers.delete">
+                <DropdownMenuItem
+                  onClick={() => onDelete(teacher.id)}
+                  className="cursor-pointer text-destructive"
+                >
+                  <Trash className="mr-2 h-4 w-4" /> Hapus
+                </DropdownMenuItem>
+              </RequirePermission>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )
+      },
+    },
+  ]
 }
