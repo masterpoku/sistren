@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { createAuthClient } from 'better-auth/client'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -28,11 +27,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts'
-import { fetchDashboardStats } from '@/actions/dashboard'
-
-const authClient = createAuthClient({
-  baseURL: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
-})
+import { fetchDashboardStats, getCurrentUserRole } from '@/actions/dashboard'
 
 interface DashboardStats {
   totalStudents: number
@@ -60,21 +55,16 @@ export default function DashboardPage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const session = await authClient.getSession()
-        if (session?.data?.user) {
-          const baUser = session.data.user
-          setUser({
-            id: baUser.id,
-            name: baUser.name || baUser.email,
-            email: baUser.email,
-            roleName: baUser.email.includes('guru') ? 'Guru' : 
-                      baUser.email.includes('admin') ? 'Admin' : 
-                      baUser.email.includes('alumni') ? 'Alumni' : 'Siswa',
-            roleId: 0, // Will be populated from stats
-            roleLevel: 0,
-          })
-
-          const dashboardStats = await fetchDashboardStats()
+        const [dashboardStats, userRole] = await Promise.all([
+          fetchDashboardStats(),
+          getCurrentUserRole(),
+        ])
+        
+        if (userRole) {
+          setUser(userRole)
+        }
+        
+        if (dashboardStats) {
           setStats(dashboardStats)
         }
       } catch (error) {
