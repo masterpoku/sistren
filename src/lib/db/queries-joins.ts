@@ -1,11 +1,19 @@
 import { db } from './index'
-import { enrollments, classes, semesters, users, majors } from './schema'
-import { eq, and } from 'drizzle-orm'
+import { enrollments, classes, semesters, users, majors, profiles } from './schema'
+import { eq, and, isNull } from 'drizzle-orm'
 
 /**
  * Get enrollments with related data using manual joins (MariaDB compatible).
+ * Filters soft-deleted records from all joined tables.
  */
 export async function getEnrollmentsWithRelations(filters?: { userId?: number; semesterId?: number }) {
+  const activeFilter = and(
+    isNull(enrollments.deletedAt),
+    isNull(users.deletedAt),
+    isNull(classes.deletedAt),
+    isNull(semesters.deletedAt)
+  )
+
   let query = db
     .select({
       id: enrollments.id,
@@ -31,21 +39,32 @@ export async function getEnrollmentsWithRelations(filters?: { userId?: number; s
   if (filters?.userId && filters?.semesterId) {
     return query.where(
       and(
+        activeFilter,
         eq(enrollments.studentId, filters.userId),
         eq(enrollments.semesterId, filters.semesterId)
       )
     )
   } else if (filters?.userId) {
-    return query.where(eq(enrollments.studentId, filters.userId))
+    return query.where(
+      and(activeFilter, eq(enrollments.studentId, filters.userId))
+    )
   }
 
-  return query
+  return query.where(activeFilter)
 }
 
 /**
  * Get enrollment by ID with relations.
+ * Filters soft-deleted records.
  */
 export async function getEnrollmentByIdWithRelations(id: number) {
+  const activeFilter = and(
+    isNull(enrollments.deletedAt),
+    isNull(users.deletedAt),
+    isNull(classes.deletedAt),
+    isNull(semesters.deletedAt)
+  )
+
   const result = await db
     .select({
       id: enrollments.id,
@@ -64,7 +83,7 @@ export async function getEnrollmentByIdWithRelations(id: number) {
     .leftJoin(users, eq(enrollments.studentId, users.id))
     .leftJoin(classes, eq(enrollments.classId, classes.id))
     .leftJoin(semesters, eq(enrollments.semesterId, semesters.id))
-    .where(eq(enrollments.id, id))
+    .where(and(eq(enrollments.id, id), activeFilter))
     .limit(1)
 
   return result[0] ?? null
@@ -72,15 +91,21 @@ export async function getEnrollmentByIdWithRelations(id: number) {
 
 /**
  * Get profiles with user and major info using manual joins.
+ * Filters soft-deleted records from profiles, users, and majors.
  */
 export async function getProfilesWithRelations(userId?: number) {
-  const { profiles } = await import('./schema')
-  
+  const activeFilter = and(
+    isNull(profiles.deletedAt),
+    isNull(users.deletedAt),
+    isNull(majors.deletedAt)
+  )
+
   let query = db
     .select({
       id: profiles.id,
       userId: profiles.userId,
       nik: profiles.nik,
+      nisn: profiles.nisn,
       phone: profiles.phone,
       address: profiles.address,
       birthPlace: profiles.birthPlace,
@@ -88,6 +113,9 @@ export async function getProfilesWithRelations(userId?: number) {
       gender: profiles.gender,
       religion: profiles.religion,
       majorId: profiles.majorId,
+      fatherName: profiles.fatherName,
+      motherName: profiles.motherName,
+      parentsPhone: profiles.parentsPhone,
       createdAt: profiles.createdAt,
       updatedAt: profiles.updatedAt,
       userName: users.name,
@@ -100,8 +128,8 @@ export async function getProfilesWithRelations(userId?: number) {
     .leftJoin(majors, eq(profiles.majorId, majors.id))
 
   if (userId) {
-    return query.where(eq(profiles.userId, userId)).limit(1)
+    return query.where(and(eq(profiles.userId, userId), activeFilter)).limit(1)
   }
 
-  return query
+  return query.where(activeFilter)
 }

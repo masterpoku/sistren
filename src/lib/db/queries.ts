@@ -1,11 +1,12 @@
 import { db } from './index'
 import { users, announcements, payments, classes, majors, semesters, profiles, subjects, enrollments, grades } from './schema'
-import { eq, desc, count, and, inArray } from 'drizzle-orm'
+import { eq, desc, count, and, inArray, isNull } from 'drizzle-orm'
 import { getUserWithRole } from './queries-user'
 import { getEnrollmentsWithRelations, getEnrollmentByIdWithRelations, getProfilesWithRelations } from './queries-joins'
 
 /**
  * Get grades with subject and semester info using manual joins.
+ * Filters soft-deleted records from grades, subjects, semesters, and enrollments.
  */
 export async function getGradesWithRelations(filters?: { 
   userId?: number 
@@ -31,28 +32,35 @@ export async function getGradesWithRelations(filters?: {
     .leftJoin(subjects, eq(grades.subjectId, subjects.id))
     .leftJoin(semesters, eq(grades.semesterId, semesters.id))
 
+  // Apply soft-delete filters
+  const baseCondition = and(
+    isNull(grades.deletedAt),
+    isNull(subjects.deletedAt),
+    isNull(semesters.deletedAt)
+  )
+
   if (filters?.enrollmentId) {
-    return query.where(eq(grades.enrollmentId, filters.enrollmentId))
+    return query.where(and(baseCondition, eq(grades.enrollmentId, filters.enrollmentId)))
   }
 
   if (filters?.userId) {
-    // Get enrollment IDs for this user
+    // Get enrollment IDs for this user (only active enrollments)
     const userEnrollments = await db
       .select({ id: enrollments.id })
       .from(enrollments)
-      .where(eq(enrollments.studentId, filters.userId))
+      .where(and(eq(enrollments.studentId, filters.userId), isNull(enrollments.deletedAt)))
     
     const enrollmentIds = userEnrollments.map(e => e.id)
     if (enrollmentIds.length === 0) return []
     
-    return query.where(inArray(grades.enrollmentId, enrollmentIds))
+    return query.where(and(baseCondition, inArray(grades.enrollmentId, enrollmentIds)))
   }
 
   if (filters?.semesterId) {
-    return query.where(eq(grades.semesterId, filters.semesterId))
+    return query.where(and(baseCondition, eq(grades.semesterId, filters.semesterId)))
   }
 
-  return query
+  return query.where(baseCondition)
 }
 
 export interface DashboardStats {
@@ -73,12 +81,12 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     classCountResult,
     majorCountResult,
   ] = await Promise.all([
-    db.select({ count: count() }).from(users).where(eq(users.roleId, 4)),
-    db.select({ count: count() }).from(users).where(eq(users.roleId, 3)),
-    db.select({ count: count() }).from(announcements),
-    db.select({ count: count() }).from(payments).where(eq(payments.status, 'pending')),
-    db.select({ count: count() }).from(classes),
-    db.select({ count: count() }).from(majors),
+    db.select({ count: count() }).from(users).where(and(eq(users.roleId, 4), isNull(users.deletedAt))),
+    db.select({ count: count() }).from(users).where(and(eq(users.roleId, 3), isNull(users.deletedAt))),
+    db.select({ count: count() }).from(announcements).where(isNull(announcements.deletedAt)),
+    db.select({ count: count() }).from(payments).where(and(eq(payments.status, 'pending'), isNull(payments.deletedAt))),
+    db.select({ count: count() }).from(classes).where(isNull(classes.deletedAt)),
+    db.select({ count: count() }).from(majors).where(isNull(majors.deletedAt)),
   ])
 
   return {
@@ -100,7 +108,7 @@ export async function getStudents() {
       roleId: users.roleId,
     })
     .from(users)
-    .where(eq(users.roleId, 4))
+    .where(and(eq(users.roleId, 4), isNull(users.deletedAt)))
 }
 
 export async function getTeachers() {
@@ -112,13 +120,14 @@ export async function getTeachers() {
       roleId: users.roleId,
     })
     .from(users)
-    .where(eq(users.roleId, 3))
+    .where(and(eq(users.roleId, 3), isNull(users.deletedAt)))
 }
 
 export async function getAnnouncements(limit = 10) {
   return db
     .select()
     .from(announcements)
+    .where(isNull(announcements.deletedAt))
     .orderBy(desc(announcements.createdAt))
     .limit(limit)
 }
@@ -128,9 +137,9 @@ export async function getPayments(userId?: number, roleId?: number) {
     return db
       .select()
       .from(payments)
-      .where(eq(payments.studentId, userId))
+      .where(and(eq(payments.studentId, userId), isNull(payments.deletedAt)))
   }
-  return db.select().from(payments)
+  return db.select().from(payments).where(isNull(payments.deletedAt))
 }
 
 export async function getUserById(id: number) {
@@ -138,19 +147,19 @@ export async function getUserById(id: number) {
 }
 
 export async function getClasses() {
-  return db.select().from(classes)
+  return db.select().from(classes).where(isNull(classes.deletedAt))
 }
 
 export async function getMajors() {
-  return db.select().from(majors)
+  return db.select().from(majors).where(isNull(majors.deletedAt))
 }
 
 export async function getSemesters() {
-  return db.select().from(semesters).orderBy(desc(semesters.isActive))
+  return db.select().from(semesters).where(isNull(semesters.deletedAt)).orderBy(desc(semesters.isActive))
 }
 
 export async function getAllUsers() {
-  return db.select().from(users)
+  return db.select().from(users).where(isNull(users.deletedAt))
 }
 
 export async function getUserRole(userId: number) {
@@ -170,6 +179,7 @@ export async function getProfile(userId: number) {
     id: r.id,
     userId: r.userId,
     nik: r.nik,
+    nisn: r.nisn,
     phone: r.phone,
     address: r.address,
     birthPlace: r.birthPlace,
@@ -177,6 +187,9 @@ export async function getProfile(userId: number) {
     gender: r.gender,
     religion: r.religion,
     majorId: r.majorId,
+    fatherName: r.fatherName,
+    motherName: r.motherName,
+    parentsPhone: r.parentsPhone,
     createdAt: r.createdAt,
     updatedAt: r.updatedAt,
     user: r.userName ? { name: r.userName, email: r.userEmail!, roleId: r.roleId } : null,
@@ -199,7 +212,8 @@ export async function updateProfile(userId: number, data: Partial<typeof profile
 }
 
 export async function deleteProfile(userId: number) {
-  return db.delete(profiles).where(eq(profiles.userId, userId))
+  // Soft delete profile
+  return db.update(profiles).set({ deletedAt: new Date() }).where(eq(profiles.userId, userId))
 }
 
 // ============================================
@@ -210,22 +224,26 @@ export async function getSubjects(filters?: { classId?: number; majorId?: number
   if (filters?.classId && filters?.majorId) {
     return db.query.subjects.findMany({
       where: and(
+        isNull(subjects.deletedAt),
         eq(subjects.classId, filters.classId),
         eq(subjects.majorId, filters.majorId)
       ),
     })
   } else if (filters?.classId) {
     return db.query.subjects.findMany({
-      where: eq(subjects.classId, filters.classId),
+      where: and(isNull(subjects.deletedAt), eq(subjects.classId, filters.classId)),
     })
   }
-  return db.select().from(subjects)
+  return db.select().from(subjects).where(isNull(subjects.deletedAt))
 }
 
 export async function getSubjectById(id: number) {
-  return db.query.subjects.findFirst({
-    where: eq(subjects.id, id),
-  })
+  const results = await db
+    .select()
+    .from(subjects)
+    .where(and(eq(subjects.id, id), isNull(subjects.deletedAt)))
+    .limit(1)
+  return results[0] ?? null
 }
 
 export async function createSubject(data: typeof subjects.$inferInsert) {
@@ -239,7 +257,8 @@ export async function updateSubject(id: number, data: Partial<typeof subjects.$i
 }
 
 export async function deleteSubject(id: number) {
-  return db.delete(subjects).where(eq(subjects.id, id))
+  // Soft delete
+  return db.update(subjects).set({ deletedAt: new Date() }).where(eq(subjects.id, id))
 }
 
 // ============================================
@@ -265,7 +284,8 @@ export async function updateEnrollment(id: number, data: Partial<typeof enrollme
 }
 
 export async function deleteEnrollment(id: number) {
-  return db.delete(enrollments).where(eq(enrollments.id, id))
+  // Soft delete
+  return db.update(enrollments).set({ deletedAt: new Date() }).where(eq(enrollments.id, id))
 }
 
 // ============================================
@@ -294,7 +314,7 @@ export async function getGradeById(id: number) {
     .from(grades)
     .leftJoin(subjects, eq(grades.subjectId, subjects.id))
     .leftJoin(semesters, eq(grades.semesterId, semesters.id))
-    .where(eq(grades.id, id))
+    .where(and(eq(grades.id, id), isNull(grades.deletedAt)))
     .limit(1)
   
   return results[0] ?? null
@@ -310,9 +330,7 @@ export async function updateGrade(id: number, data: Partial<typeof grades.$infer
   return result
 }
 
-export async function deleteGrade(id: number) {
-  return db.delete(grades).where(eq(grades.id, id))
-}
+// No deleteGrade — grades are immutable academic records
 
 // ============================================
 // PAYMENTS WRITE OPERATIONS
@@ -331,19 +349,20 @@ export async function updatePayment(id: number, data: Partial<typeof payments.$i
 export async function markPaymentAsPaid(id: number) {
   const result = await db.update(payments)
     .set({ status: 'paid', paidAt: new Date() })
-    .where(eq(payments.id, id))
+    .where(and(eq(payments.id, id), isNull(payments.deletedAt)))
   return result
 }
 
 export async function cancelPayment(id: number) {
   const result = await db.update(payments)
     .set({ status: 'cancelled' })
-    .where(eq(payments.id, id))
+    .where(and(eq(payments.id, id), isNull(payments.deletedAt)))
   return result
 }
 
 export async function deletePayment(id: number) {
-  return db.delete(payments).where(eq(payments.id, id))
+  // Soft delete
+  return db.update(payments).set({ deletedAt: new Date() }).where(eq(payments.id, id))
 }
 
 export async function getPaymentById(id: number) {
@@ -365,7 +384,7 @@ export async function getPaymentById(id: number) {
     })
     .from(payments)
     .leftJoin(users, eq(payments.studentId, users.id))
-    .where(eq(payments.id, id))
+    .where(and(eq(payments.id, id), isNull(payments.deletedAt)))
     .limit(1)
   
   if (results.length === 0) return null
@@ -392,6 +411,6 @@ export async function getStudentPayments(userId: number) {
       createdAt: payments.createdAt,
     })
     .from(payments)
-    .where(eq(payments.studentId, userId))
+    .where(and(eq(payments.studentId, userId), isNull(payments.deletedAt)))
     .orderBy(desc(payments.createdAt))
 }

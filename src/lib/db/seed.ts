@@ -7,44 +7,44 @@ console.log('🌱 Starting seed...')
 async function seed() {
   // Seed roles with level and is_default
   await db.insert(roles).values([
-    { name: 'superadmin', description: 'Super Administrator - full access', level: 100, isDefault: false },
-    { name: 'administrator', description: 'Administrator - TU/admin staff', level: 80, isDefault: false },
-    { name: 'guru', description: 'Teacher - can view classes, input grades', level: 60, isDefault: false },
-    { name: 'siswa', description: 'Student - can view own records', level: 40, isDefault: true },
-    { name: 'alumni', description: 'Alumni - read-only access to own transcript', level: 20, isDefault: false },
+    { name: 'superadmin', description: 'Super Administrator - full access', level: 100, isDefault: false, deletedAt: null },
+    { name: 'administrator', description: 'Administrator - TU/admin staff', level: 80, isDefault: false, deletedAt: null },
+    { name: 'guru', description: 'Teacher - can view classes, input grades', level: 60, isDefault: false, deletedAt: null },
+    { name: 'siswa', description: 'Student - can view own records', level: 40, isDefault: true, deletedAt: null },
+    { name: 'alumni', description: 'Alumni - read-only access to own transcript', level: 20, isDefault: false, deletedAt: null },
   ])
   console.log('✅ Seeded roles')
 
   // Seed majors
   await db.insert(majors).values([
-    { name: 'Teknik Komputer & Jaringan', description: 'TKJ - Computer Networking' },
-    { name: 'Rekayasa Perangkat Lunak', description: 'RPL - Software Engineering' },
-    { name: 'Teknik Kendaraan Ringan', description: 'Automotive Engineering' },
+    { name: 'Teknik Komputer & Jaringan', description: 'TKJ - Computer Networking', deletedAt: null },
+    { name: 'Rekayasa Perangkat Lunak', description: 'RPL - Software Engineering', deletedAt: null },
+    { name: 'Teknik Kendaraan Ringan', description: 'Automotive Engineering', deletedAt: null },
   ])
   console.log('✅ Seeded majors')
 
   // Seed classes (grade levels)
   await db.insert(classes).values([
-    { name: 'X', code: '10' },
-    { name: 'XI', code: '11' },
-    { name: 'XII', code: '12' },
+    { name: 'X', code: '10', deletedAt: null },
+    { name: 'XI', code: '11', deletedAt: null },
+    { name: 'XII', code: '12', deletedAt: null },
   ])
   console.log('✅ Seeded classes')
 
   // Seed semesters (current academic year)
   await db.insert(semesters).values([
-    { name: 'Semester 1', academicYear: '2025/2026', startDate: new Date('2025-07-15'), endDate: new Date('2025-12-20'), isActive: true },
-    { name: 'Semester 2', academicYear: '2025/2026', startDate: new Date('2026-01-10'), endDate: new Date('2026-06-15'), isActive: false },
+    { name: 'Semester 1', academicYear: '2025/2026', startDate: new Date('2025-07-15'), endDate: new Date('2025-12-20'), isActive: true, deletedAt: null },
+    { name: 'Semester 2', academicYear: '2025/2026', startDate: new Date('2026-01-10'), endDate: new Date('2026-06-15'), isActive: false, deletedAt: null },
   ])
   console.log('✅ Seeded semesters')
 
   // Seed sample subjects for TKJ (major_id = 1) class X (class_id = 1)
   await db.insert(subjects).values([
-    { name: 'Pemrograman Dasar', code: 'TK101', classId: 1, majorId: 1, credits: 3, description: 'Dasar-dasar pemrograman' },
-    { name: 'Matematika Diskrit', code: 'TK102', classId: 1, majorId: 1, credits: 3 },
-    { name: 'Struktur Data', code: 'TK103', classId: 1, majorId: 1, credits: 4 },
-    { name: 'Basis Data', code: 'TK104', classId: 1, majorId: 1, credits: 3 },
-    { name: 'Jaringan Komputer', code: 'TK105', classId: 1, majorId: 1, credits: 3 },
+    { name: 'Pemrograman Dasar', code: 'TK101', classId: 1, majorId: 1, credits: 3, description: 'Dasar-dasar pemrograman', deletedAt: null },
+    { name: 'Matematika Diskrit', code: 'TK102', classId: 1, majorId: 1, credits: 3, deletedAt: null },
+    { name: 'Struktur Data', code: 'TK103', classId: 1, majorId: 1, credits: 4, deletedAt: null },
+    { name: 'Basis Data', code: 'TK104', classId: 1, majorId: 1, credits: 3, deletedAt: null },
+    { name: 'Jaringan Komputer', code: 'TK105', classId: 1, majorId: 1, credits: 3, deletedAt: null },
   ])
   console.log('✅ Seeded subjects')
 
@@ -73,17 +73,19 @@ async function seed() {
   await db.insert(users).values([
     {
       name: 'Super Admin',
-      email: 'superadmin@sister.com',
+      email: 'superadmin@sistren.com',
       password: superadminPassword,
       confirmed: true,
       roleId: 1, // superadmin
+      deletedAt: null,
     },
     {
       name: 'Administrator',
-      email: 'admin@sister.com',
+      email: 'admin@sistren.com',
       password: adminPassword,
       confirmed: true,
       roleId: 2, // administrator
+      deletedAt: null,
     },
   ])
   console.log('✅ Seeded admin users')

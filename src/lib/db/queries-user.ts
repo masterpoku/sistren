@@ -1,10 +1,10 @@
 import { db } from './index'
 import { users, roles } from './schema'
-import { eq } from 'drizzle-orm'
+import { eq, isNull, and } from 'drizzle-orm'
 
 /**
  * Get user with role using manual left join (MariaDB compatible).
- * Replaces: db.query.users.findFirst({ where: eq(users.id, id), with: { role: true } })
+ * Filters soft-deleted users.
  */
 export async function getUserWithRole(userId: number) {
   const result = await db
@@ -25,7 +25,7 @@ export async function getUserWithRole(userId: number) {
     })
     .from(users)
     .leftJoin(roles, eq(users.roleId, roles.id))
-    .where(eq(users.id, userId))
+    .where(and(eq(users.id, userId), isNull(users.deletedAt)))
     .limit(1)
 
   if (result.length === 0) return null
@@ -51,6 +51,7 @@ export async function getUserWithRole(userId: number) {
 
 /**
  * Get user by email with role (for login).
+ * Filters soft-deleted users.
  */
 export async function getUserByEmailWithRole(email: string) {
   const result = await db
@@ -69,7 +70,7 @@ export async function getUserByEmailWithRole(email: string) {
     })
     .from(users)
     .leftJoin(roles, eq(users.roleId, roles.id))
-    .where(eq(users.email, email))
+    .where(and(eq(users.email, email), isNull(users.deletedAt)))
     .limit(1)
 
   if (result.length === 0) return null
@@ -95,12 +96,13 @@ export async function getUserByEmailWithRole(email: string) {
 
 /**
  * Get role by ID.
+ * Filters soft-deleted roles.
  */
 export async function getRoleById(roleId: number) {
   const result = await db
     .select()
     .from(roles)
-    .where(eq(roles.id, roleId))
+    .where(and(eq(roles.id, roleId), isNull(roles.deletedAt)))
     .limit(1)
   return result[0] ?? null
 }
