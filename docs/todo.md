@@ -4,85 +4,38 @@
 - **Project:** Sistren (Sistem Informasi Terpadu)
 - **Type:** Islamic High School Management System
 - **Stack:** Next.js 16, Drizzle ORM, MySQL, better-auth 1.6.9
-- **Status:** MVP Core Features ✓ | Additional Features WIP
+- **Status:** MVP Core Features ✅ | Additional Features WIP
 
 ---
 
 ## Phase 1: Foundation ✅ DONE
 
-### 1.1 Setup ✅
-- [x] Install dependencies (bun add next react drizzle-orm mysql2)
-- [x] Configure Drizzle with MySQL connection
-- [x] Create .env for DB credentials
-- [x] Update dependencies (next 16.2.5, react 19.2.6)
-
-### 1.2 Database Schema ✅
-- [x] Users (id, email, password, role)
-- [x] Students (user_id, name, nis, class_id)
-- [x] Teachers (user_id, name, nip, subject)
-- [x] Profiles (user_id, phone, address, birth_place, birth_date)
-- [x] Classes (id, name, level, academic_year)
-- [x] Majors (id, name, code)
-- [x] Semesters (id, name, is_active)
-- [x] Enrollments (student_id, class_id, semester_id)
-- [x] Subjects (id, name, code, teacher_id, class_id)
-- [x] Grades (enrollment_id, subject_id, score)
-- [x] Payments (student_id, description, total, status)
-- [x] Announcements (title, content, author_id)
-
-### 1.3 Auth ✅
-- [x] Login/register (email/password)
-- [x] Role-based access (superadmin, administrator, headmaster, teacher, student, parent)
-- [x] Session management (better-auth)
-- [x] RBAC middleware + permissions
+See `docs/table.md` for full schema documentation.
 
 ---
 
-## Phase 2: Core Modules ✅ DONE
-
-### 2.1 Student Management ✅
-- [x] List all students (DataTable)
-- [x] Add new student (StudentForm)
-- [x] Edit student details (updateStudent action)
-- [x] Delete student
-
-### 2.2 Teacher Management ✅
-- [x] List all teachers (DataTable)
-- [x] Add new teacher (TeacherForm)
-- [x] Edit teacher details (updateTeacher action)
-- [x] Assign subjects
+## Phase 2: Core Modules
 
 ### 2.3 Learning Module 🔄 IN PROGRESS
-- [x] View subjects by class
 - [ ] Teacher: upload materials (title, content, class)
 - [ ] Student: view materials by class
 - [ ] Categories (subjects)
 
-### 2.4 Payment System ✅
-- [x] Payment types (tuition, books, etc)
-- [x] Record payments (PaymentForm)
-- [x] Payment status (draft/pending/paid/cancelled)
-- [x] Mark as paid/cancel actions
+### 2.4 Payment System 🔄
 - [ ] Mock Midtrans (real integration later)
 
 ---
 
-## Phase 3: Additional Features 🔄 IN PROGRESS
+## Phase 3: Additional Features
 
 ### 3.1 Document Upload ❌
 - [ ] Upload files (PDF, images)
 - [ ] Link to student/teacher
 - [ ] Download/view
 
-### 3.2 Student Grades/Ranking ⚠️ ALMOST DONE
-- [x] Input grades per subject (grades.ts + grades page)
-- [x] Calculate average scores
+### 3.2 Student Grades/Ranking ⚠️
 - [ ] View grades by class/semester
 - [ ] Calculate ranking
-
-### 3.3 Academic Enrollment ✅
-- [x] Manage enrollments per semester
-- [x] View enrollment status by semester
 
 ### 3.4 Graduate Module ❌
 - [ ] Mark student as graduate
@@ -95,60 +48,28 @@
 
 ---
 
-## Phase 4: Management Admin ✅ DONE
+## Technical Debt
 
-### 4.1 Dashboard ✅
-- [x] Stats overview (students, teachers, payments)
-- [x] Quick actions
+### HIGH PRIORITY
+- [ ] Wire all server actions to UI (students, teachers, payments, dll)
+- [ ] Seed script for initial data (majors, classes, subjects, sample users)
 
-### 4.2 Full CRUD ✅
-- [x] Manage all entities
-- [x] Server actions (create/update/delete)
-- [x] Toast notifications
-
----
-
-## Technical Debt & Issues
-
-### 🔴 CRITICAL - LOGIN BROKEN
-- [ ] **Better Auth login fails** - `[Better Auth]: User not found`
-  - All 4 Better Auth tables exist (users, accounts, sessions, verifications)
-  - Schema has relations configured
-  - `experimental.joins: true` enabled
-  - `usePlural: true` enabled
-  - Password hashes verified with argon2
-  - Root cause: unknown - adapter's `findUserByEmail` not returning user
-
-### 🔴 CRITICAL - FIXED
-- [x] Dashboard: Hardcoded `role: 'siswa'` - removed mock, use session
-- [x] Profile: localStorage auth - replaced with server action
-- [x] MariaDB json_array incompatibility - replaced `.with()` relations with manual JOINs
-- [x] Role-based sidebar - nav items filtered by roleLevel
-- [x] Route permissions - registered `/profile/edit`, `/academic/enrollments`, `/academic/grades`
-
-### 🟠 HIGH PRIORITY - PENDING COMMIT
-- [ ] **Commit all changes** - MariaDB fixes, schema changes, sidebar, permissions
-
-### 🟡 MEDIUM PRIORITY
-- [ ] Replace `<a>` tags with `<Link>` across feature pages (done in sidebar)
+### MEDIUM PRIORITY
 - [ ] Add error toasts across pages
-- [ ] Remove stale mock imports (constants.ts, AppLayout.tsx)
+- [ ] Validation integration (Zod schemas exist but not fully wired)
 
-### 🟢 LOW PRIORITY - CLEANUP
-- [ ] Delete `src/util/mock/` folder (unused)
-- [ ] Delete `src/features/layout/AppLayout.tsx` (old, unused)
-- [ ] Delete `src/features/layout/AppSidebar.tsx` (old, unused)
-- [ ] Clean up leftover singular tables (user, account, session, verification)
+### LOW PRIORITY - CLEANUP
+- [ ] Delete leftover singular tables (user, account, session, verification) if unused
 
 ---
 
 ## Next Steps (Priority Order)
 
-1. **Role-based sidebar** - Show/hide nav items based on user role
-2. **Route permissions** - Register `/profile/edit`, `/academic/enrollments`, `/academic/grades`
-3. **Learning module** - Upload/view materials
-4. **Midtrans integration** - Real payment gateway
-5. **Document upload** - File management system
+1. **Wire CRUD actions to UI** — students, teachers, finance, announcements
+2. **Seed data** — majors, classes, semesters, subjects, sample users
+3. **Learning module** — Upload/view materials
+4. **Midtrans integration** — Real payment gateway
+5. **Document upload** — File management system
 
 ---
 
@@ -177,3 +98,9 @@ bun add -d @types/bcryptjs drizzle-kit
 - Role-based access control (RBAC) implemented with better-auth
 - Session user has `roleName` (string) not `roleId` (enum)
 - All server actions protected with verifyAdmin/verifySession
+- drizzle-kit push hangs in non-TTY → use raw SQL scripts for DB changes
+- Next.js 16 uses `proxy.ts` (formerly middleware.ts) for route protection
+
+---
+
+**Last Updated:** 2026-05-14
