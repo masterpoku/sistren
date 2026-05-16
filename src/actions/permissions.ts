@@ -1,20 +1,20 @@
 'use server'
 'use node'
 
-import { verifyRoleLevel } from '@/lib/auth/verify-session'
+import { verifyPermission } from '@/lib/auth/verify-session'
 import { db } from '@/lib/db'
-import { permissions, rolePermissions, roles } from '@/lib/db/schema'
-import { eq, and } from 'drizzle-orm'
+import { permissions, rolePermissions, roles, users } from '@/lib/db/schema'
+import { eq, and, isNull, count } from 'drizzle-orm'
 
 // ==================== PERMISSIONS ====================
 
 export async function getAllPermissions() {
-  await verifyRoleLevel(100) // superadmin only
+  await verifyPermission('permissions.manage')
   return await db.select().from(permissions).orderBy(permissions.resource, permissions.action)
 }
 
 export async function getPermissionsByResource() {
-  await verifyRoleLevel(100) // superadmin only
+  await verifyPermission('permissions.manage')
   
   const allPerms = await db.select().from(permissions).orderBy(permissions.resource, permissions.action)
   
@@ -30,17 +30,14 @@ export async function getPermissionsByResource() {
   return grouped
 }
 
-export interface CreatePermissionData {
+export async function createPermission(data: {
   name: string
   resource: string
   action: string
   description?: string
-}
-
-export async function createPermission(data: CreatePermissionData) {
-  await verifyRoleLevel(100) // superadmin only
+}) {
+  await verifyPermission('permissions.manage')
   
-  // Check if permission already exists
   const [existing] = await db
     .select()
     .from(permissions)
@@ -57,7 +54,6 @@ export async function createPermission(data: CreatePermissionData) {
     description: data.description || null,
   })
   
-  // Get the inserted permission
   const [newPerm] = await db
     .select({ id: permissions.id })
     .from(permissions)
@@ -67,7 +63,7 @@ export async function createPermission(data: CreatePermissionData) {
 }
 
 export async function updatePermission(id: number, data: { name?: string; description?: string }) {
-  await verifyRoleLevel(100) // superadmin only
+  await verifyPermission('permissions.manage')
   
   const updateFields: Record<string, unknown> = {}
   if (data.name !== undefined) updateFields.name = data.name
@@ -79,10 +75,25 @@ export async function updatePermission(id: number, data: { name?: string; descri
 }
 
 export async function deletePermission(id: number) {
-  await verifyRoleLevel(100) // superadmin only
+  await verifyPermission('permissions.manage')
   
-  // CASCADE will handle role_permissions
-  await db.delete(permissions).where(eq(permissions.id, id))
+  // GUARD: Check if permission is assigned to any role
+  const [assignmentCount] = await db
+    .select({ count: count() })
+    .from(rolePermissions)
+    .where(eq(rolePermissions.permissionId, id))
+  
+  if ((assignmentCount?.count ?? 0) > 0) {
+    return { 
+      success: false, 
+      error: `Permission digunakan oleh ${assignmentCount.count} role. Hapus assignment terlebih dahulu.` 
+    }
+  }
+
+  // Soft delete
+  await db.update(permissions)
+    .set({ deletedAt: new Date() })
+    .where(eq(permissions.id, id))
   
   return { success: true }
 }
@@ -90,28 +101,25 @@ export async function deletePermission(id: number) {
 // ==================== ROLES ====================
 
 export async function getAllRoles() {
-  await verifyRoleLevel(100) // superadmin only
+  await verifyPermission('roles.manage')
   
-  return await db.select().from(roles).orderBy(roles.level)
+  return await db
+    .select()
+    .from(roles)
+    .where(isNull(roles.deletedAt))
+    .orderBy(roles.level)
 }
 
-export interface RoleWithPermissions {
-  id: number
-  name: string
-  description: string | null
-  level: number
-  isDefault: boolean
-  permissions: { id: number; name: string; resource: string; action: string }[]
-}
-
-export async function getRoleWithPermissions(roleId: number): Promise<RoleWithPermissions | null> {
-  await verifyRoleLevel(100) // superadmin only
+export async function getRoleWithPermissions(roleId: number) {
+  await verifyPermission('roles.manage')
   
-  // Get role
-  const [role] = await db.select().from(roles).where(eq(roles.id, roleId))
+  const [role] = await db
+    .select()
+    .from(roles)
+    .where(and(eq(roles.id, roleId), isNull(roles.deletedAt)))
+  
   if (!role) return null
   
-  // Get permissions for this role
   const rolePerms = await db
     .select({
       id: permissions.id,
@@ -133,12 +141,16 @@ export async function getRoleWithPermissions(roleId: number): Promise<RoleWithPe
   }
 }
 
-export async function getAllRolesWithPermissions(): Promise<RoleWithPermissions[]> {
-  await verifyRoleLevel(100) // superadmin only
+export async function getAllRolesWithPermissions() {
+  await verifyPermission('roles.manage')
   
-  const allRoles = await db.select().from(roles).orderBy(roles.level)
+  const allRoles = await db
+    .select()
+    .from(roles)
+    .where(isNull(roles.deletedAt))
+    .orderBy(roles.level)
   
-  const result: RoleWithPermissions[] = []
+  const result = []
   
   for (const role of allRoles) {
     const rolePerms = await db
@@ -166,16 +178,12 @@ export async function getAllRolesWithPermissions(): Promise<RoleWithPermissions[
 }
 
 export async function assignPermissionToRole(roleId: number, permissionId: number) {
-  await verifyRoleLevel(100) // superadmin only
+  await verifyPermission('roles.manage')
   
   try {
-    await db.insert(rolePermissions).values({
-      roleId,
-      permissionId,
-    })
+    await db.insert(rolePermissions).values({ roleId, permissionId })
     return { success: true }
   } catch (e: any) {
-    // Duplicate entry
     if (e.code === 'ER_DUP_ENTRY') {
       return { success: false, error: 'Permission already assigned to role' }
     }
@@ -184,7 +192,7 @@ export async function assignPermissionToRole(roleId: number, permissionId: numbe
 }
 
 export async function removePermissionFromRole(roleId: number, permissionId: number) {
-  await verifyRoleLevel(100) // superadmin only
+  await verifyPermission('roles.manage')
   
   await db.delete(rolePermissions).where(
     and(
@@ -196,15 +204,72 @@ export async function removePermissionFromRole(roleId: number, permissionId: num
   return { success: true }
 }
 
-export async function updateRole(roleId: number, data: { name?: string; description?: string; isDefault?: boolean }) {
-  await verifyRoleLevel(100) // superadmin only
+export async function updateRole(roleId: number, data: { 
+  name?: string
+  description?: string
+  isDefault?: boolean
+  level?: number
+}) {
+  await verifyPermission('roles.manage')
   
   const updateFields: Record<string, unknown> = {}
   if (data.name !== undefined) updateFields.name = data.name
   if (data.description !== undefined) updateFields.description = data.description
   if (data.isDefault !== undefined) updateFields.isDefault = data.isDefault
+  if (data.level !== undefined) updateFields.level = data.level
   
   await db.update(roles).set(updateFields).where(eq(roles.id, roleId))
+  
+  return { success: true }
+}
+
+export async function createRole(data: {
+  name: string
+  description?: string
+  level?: number
+  isDefault?: boolean
+}) {
+  await verifyPermission('roles.manage')
+  
+  const [existing] = await db
+    .select()
+    .from(roles)
+    .where(and(eq(roles.name, data.name), isNull(roles.deletedAt)))
+  
+  if (existing) {
+    return { success: false, error: 'Role name already exists' }
+  }
+  
+  const [result] = await db.insert(roles).values({
+    name: data.name,
+    description: data.description || null,
+    level: data.level ?? 0,
+    isDefault: data.isDefault ?? false,
+  })
+  
+  return { success: true, id: result.insertId }
+}
+
+export async function deleteRole(id: number) {
+  await verifyPermission('roles.manage')
+  
+  // GUARD: Check if any users have this role
+  const [userCount] = await db
+    .select({ count: count() })
+    .from(users)
+    .where(and(eq(users.roleId, id), isNull(users.deletedAt)))
+  
+  if ((userCount?.count ?? 0) > 0) {
+    return { 
+      success: false, 
+      error: `Role digunakan oleh ${userCount.count} user. Ganti role user terlebih dahulu.` 
+    }
+  }
+
+  // Soft delete
+  await db.update(roles)
+    .set({ deletedAt: new Date() })
+    .where(eq(roles.id, id))
   
   return { success: true }
 }

@@ -1,11 +1,11 @@
 'use server'
 'use node'
 
-import { verifySession } from '@/lib/auth/verify-session'
+import { verifyPermission } from '@/lib/auth/verify-session'
 import { getEnrollments, createEnrollment, updateEnrollment, deleteEnrollment } from '@/lib/db/queries'
 
 export async function fetchEnrollments(userId?: number, semesterId?: number) {
-  await verifySession()
+  await verifyPermission('enrollments.read')
   return await getEnrollments({ userId, semesterId })
 }
 
@@ -16,7 +16,7 @@ export interface CreateEnrollmentData {
 }
 
 export async function createEnrollmentAction(data: CreateEnrollmentData) {
-  await verifySession()
+  await verifyPermission('enrollments.create')
 
   return await createEnrollment({
     studentId: data.studentId,
@@ -32,7 +32,7 @@ export interface UpdateEnrollmentData {
 }
 
 export async function updateEnrollmentAction(data: UpdateEnrollmentData) {
-  await verifySession()
+  await verifyPermission('enrollments.update')
 
   const updateFields: Record<string, unknown> = {}
   
@@ -43,6 +43,6 @@ export async function updateEnrollmentAction(data: UpdateEnrollmentData) {
 }
 
 export async function deleteEnrollmentAction(id: number) {
-  await verifySession()
+  await verifyPermission('enrollments.delete')
   return await deleteEnrollment(id)
 }

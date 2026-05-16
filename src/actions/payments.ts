@@ -1,12 +1,12 @@
 'use server'
 'use node'
 
-import { verifySession } from '@/lib/auth/verify-session'
+import { verifyPermission } from '@/lib/auth/verify-session'
 import { getPayments, createPayment, updatePayment, markPaymentAsPaid, cancelPayment, deletePayment as deletePaymentQuery } from '@/lib/db/queries'
 import { randomBytes } from 'crypto'
 
 export async function fetchPayments(userId?: number, roleId?: number) {
-  await verifySession()
+  await verifyPermission('payments.read_any')
   return await getPayments(userId, roleId)
 }
 
@@ -18,7 +18,7 @@ export interface CreatePaymentData {
 }
 
 export async function createPaymentRecord(data: CreatePaymentData) {
-  await verifySession()
+  await verifyPermission('payments.create')
 
   const code = `PAY-${Date.now()}-${randomBytes(4).toString('hex').toUpperCase()}`
   const total = data.price * (data.quantity || 1)
@@ -43,7 +43,7 @@ export interface UpdatePaymentData {
 }
 
 export async function updatePaymentRecord(data: UpdatePaymentData) {
-  await verifySession()
+  await verifyPermission('payments.update')
 
   const updateFields: Record<string, unknown> = {}
   
@@ -61,16 +61,16 @@ export async function updatePaymentRecord(data: UpdatePaymentData) {
 }
 
 export async function markPaymentAsPaidAction(id: number) {
-  await verifySession()
+  await verifyPermission('payments.approve')
   return await markPaymentAsPaid(id)
 }
 
 export async function cancelPaymentAction(id: number) {
-  await verifySession()
+  await verifyPermission('payments.update')
   return await cancelPayment(id)
 }
 
 export async function deletePaymentAction(id: number) {
-  await verifySession()
+  await verifyPermission('payments.delete')
   return await deletePaymentQuery(id)
 }

@@ -1,16 +1,48 @@
 'use server'
 'use node'
 
-import { verifyAdmin } from '@/lib/auth/verify-session'
+import { verifyPermission } from '@/lib/auth/verify-session'
 import { getStudents, createProfile } from '@/lib/db/queries'
 import { db } from '@/lib/db'
 import { users } from '@/lib/db/schema'
-import { eq } from 'drizzle-orm'
+import { eq, isNull, and } from 'drizzle-orm'
 import { hash } from 'argon2'
 
 export async function fetchStudents() {
-  await verifyAdmin()
+  await verifyPermission('students.read')
   return await getStudents()
+}
+
+export async function fetchStudentById(id: number) {
+  await verifyPermission('students.read')
+  
+  const { getUserById, getProfile } = await import('@/lib/db/queries')
+  const [user, profile] = await Promise.all([
+    getUserById(id),
+    getProfile(id),
+  ])
+  
+  if (!user) return null
+  
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    roleId: user.roleId,
+    ...(profile ? {
+      nik: profile.nik,
+      nisn: profile.nisn,
+      birthPlace: profile.birthPlace,
+      birthDate: profile.birthDate ? new Date(profile.birthDate).toISOString().split('T')[0] : '',
+      gender: profile.gender,
+      address: profile.address,
+      phone: profile.phone,
+      fatherName: profile.fatherName,
+      motherName: profile.motherName,
+      parentsPhone: profile.parentsPhone,
+      religion: profile.religion,
+    } : {}),
+  }
 }
 
 export interface CreateStudentData {
@@ -31,7 +63,18 @@ export interface CreateStudentData {
 }
 
 export async function createStudent(data: CreateStudentData) {
-  await verifyAdmin()
+  await verifyPermission('students.create')
+
+  // Check if active user with this email already exists
+  const existing = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(and(eq(users.email, data.email), isNull(users.deletedAt)))
+    .limit(1)
+  
+  if (existing.length > 0) {
+    return { success: false, error: 'Email sudah terdaftar' }
+  }
 
   const hashedPassword = await hash(data.password)
 
@@ -86,7 +129,7 @@ export interface UpdateStudentData {
 }
 
 export async function updateStudent(data: UpdateStudentData) {
-  await verifyAdmin()
+  await verifyPermission('students.update')
 
   const { id, ...profileData } = data
 
@@ -116,14 +159,21 @@ export async function updateStudent(data: UpdateStudentData) {
 }
 
 export async function deleteStudent(id: number) {
-  await verifyAdmin()
+  await verifyPermission('students.delete')
   
-  // Delete profile first (foreign key)
-  const { deleteProfile } = await import('@/lib/db/queries')
-  await deleteProfile(id)
-  
-  // Delete user
-  await db.delete(users).where(eq(users.id, id))
+  // Soft delete user and profile atomically
+  await db.transaction(async (tx) => {
+    // Soft delete profile
+    await tx.update(users)
+      .set({ deletedAt: new Date() })
+      .where(eq(users.id, id))
+    
+    // Soft delete profile (from queries.ts, uses same pattern)
+    const { profiles } = await import('@/lib/db/schema')
+    await tx.update(profiles)
+      .set({ deletedAt: new Date() })
+      .where(eq(profiles.userId, id))
+  })
   
   return { success: true }
 }

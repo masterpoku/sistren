@@ -1,16 +1,42 @@
 'use server'
 'use node'
 
-import { verifyAdmin } from '@/lib/auth/verify-session'
+import { verifyPermission } from '@/lib/auth/verify-session'
 import { getTeachers, createProfile } from '@/lib/db/queries'
 import { db } from '@/lib/db'
-import { users } from '@/lib/db/schema'
-import { eq } from 'drizzle-orm'
+import { users, profiles } from '@/lib/db/schema'
+import { eq, isNull, and } from 'drizzle-orm'
 import { hash } from 'argon2'
 
 export async function fetchTeachers() {
-  await verifyAdmin()
+  await verifyPermission('teachers.read')
   return await getTeachers()
+}
+
+export async function fetchTeacherById(id: number) {
+  await verifyPermission('teachers.read')
+  
+  const { getUserById, getProfile } = await import('@/lib/db/queries')
+  const [user, profile] = await Promise.all([
+    getUserById(id),
+    getProfile(id),
+  ])
+  
+  if (!user) return null
+  
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    roleId: user.roleId,
+    ...(profile ? {
+      nik: profile.nik,
+      phone: profile.phone,
+      birthPlace: profile.birthPlace,
+      birthDate: profile.birthDate ? new Date(profile.birthDate).toISOString().split('T')[0] : '',
+      address: profile.address,
+    } : {}),
+  }
 }
 
 export interface CreateTeacherData {
@@ -25,7 +51,18 @@ export interface CreateTeacherData {
 }
 
 export async function createTeacher(data: CreateTeacherData) {
-  await verifyAdmin()
+  await verifyPermission('teachers.create')
+
+  // Check if active user with this email already exists
+  const existing = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(and(eq(users.email, data.email), isNull(users.deletedAt)))
+    .limit(1)
+  
+  if (existing.length > 0) {
+    return { success: false, error: 'Email sudah terdaftar' }
+  }
 
   const hashedPassword = await hash(data.password)
 
@@ -67,7 +104,7 @@ export interface UpdateTeacherData {
 }
 
 export async function updateTeacher(data: UpdateTeacherData) {
-  await verifyAdmin()
+  await verifyPermission('teachers.update')
 
   const { id, ...profileData } = data
 
@@ -89,11 +126,17 @@ export async function updateTeacher(data: UpdateTeacherData) {
 }
 
 export async function deleteTeacher(id: number) {
-  await verifyAdmin()
+  await verifyPermission('teachers.delete')
   
-  const { deleteProfile } = await import('@/lib/db/queries')
-  await deleteProfile(id)
-  await db.delete(users).where(eq(users.id, id))
+  await db.transaction(async (tx) => {
+    await tx.update(users)
+      .set({ deletedAt: new Date() })
+      .where(eq(users.id, id))
+    
+    await tx.update(profiles)
+      .set({ deletedAt: new Date() })
+      .where(eq(profiles.userId, id))
+  })
   
   return { success: true }
 }

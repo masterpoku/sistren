@@ -1,11 +1,11 @@
 'use server'
 'use node'
 
-import { verifySession } from '@/lib/auth/verify-session'
-import { getGrades, inputGrade, updateGrade, deleteGrade } from '@/lib/db/queries'
+import { verifyPermission } from '@/lib/auth/verify-session'
+import { getGrades, inputGrade, updateGrade } from '@/lib/db/queries'
 
 export async function fetchGrades(userId?: number, semesterId?: number, enrollmentId?: number) {
-  await verifySession()
+  await verifyPermission('grades.read_any')
   return await getGrades({ userId, semesterId, enrollmentId })
 }
 
@@ -19,7 +19,7 @@ export interface InputGradeData {
 }
 
 export async function inputGradeAction(data: InputGradeData) {
-  await verifySession()
+  await verifyPermission('grades.input')
 
   return await inputGrade({
     enrollmentId: data.enrollmentId,
@@ -39,7 +39,7 @@ export interface UpdateGradeData {
 }
 
 export async function updateGradeAction(data: UpdateGradeData) {
-  await verifySession()
+  await verifyPermission('grades.input')
 
   const updateFields: Record<string, unknown> = {}
   
@@ -50,7 +50,6 @@ export async function updateGradeAction(data: UpdateGradeData) {
   return await updateGrade(data.id, updateFields)
 }
 
-export async function deleteGradeAction(id: number) {
-  await verifySession()
-  return await deleteGrade(id)
-}
+// NOTE: deleteGradeAction is intentionally NOT provided.
+// Grades are immutable academic records and should NEVER be hard-deleted.
+// If correction is needed, use updateGradeAction to update the score.

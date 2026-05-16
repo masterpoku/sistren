@@ -1,15 +1,15 @@
 'use server'
 'use node'
 
-import { verifyAdmin } from '@/lib/auth/verify-session'
+import { verifyPermission } from '@/lib/auth/verify-session'
 import { getAllUsers } from '@/lib/db/queries'
 import { db } from '@/lib/db'
-import { users } from '@/lib/db/schema'
-import { eq } from 'drizzle-orm'
+import { users, profiles } from '@/lib/db/schema'
+import { eq, isNull, and } from 'drizzle-orm'
 import { hash } from 'argon2'
 
 export async function fetchAllUsers() {
-  await verifyAdmin()
+  await verifyPermission('users.read')
   return await getAllUsers()
 }
 
@@ -21,7 +21,18 @@ export interface CreateUserData {
 }
 
 export async function createUser(data: CreateUserData) {
-  await verifyAdmin()
+  await verifyPermission('users.create')
+
+  // Check if active user with this email already exists
+  const existing = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(and(eq(users.email, data.email), isNull(users.deletedAt)))
+    .limit(1)
+  
+  if (existing.length > 0) {
+    return { success: false, error: 'Email sudah terdaftar' }
+  }
 
   const hashedPassword = await hash(data.password)
 
@@ -48,16 +59,19 @@ export interface UpdateUserData {
 }
 
 export async function updateUser(data: UpdateUserData) {
-  await verifyAdmin()
+  await verifyPermission('users.update')
 
   // Security check: Prevent removing superadmin role from the last superadmin
   if (data.roleId !== undefined && data.roleId !== 1) {
-    // Check if this user is a superadmin
-    const [user] = await db.select({ roleId: users.roleId }).from(users).where(eq(users.id, data.id))
+    const [user] = await db
+      .select({ roleId: users.roleId })
+      .from(users)
+      .where(and(eq(users.id, data.id), isNull(users.deletedAt)))
     
     if (user?.roleId === 1) {
-      // Count remaining superadmin users
-      const result = await db.execute('SELECT COUNT(*) as cnt FROM users WHERE role_id = 1')
+      const result = await db.execute(
+        'SELECT COUNT(*) as cnt FROM users WHERE role_id = 1 AND deleted_at IS NULL'
+      )
       const superadminCount = (result as any)[0]?.[0]?.cnt || 0
       
       if (superadminCount <= 1) {
@@ -78,13 +92,18 @@ export async function updateUser(data: UpdateUserData) {
 }
 
 export async function deleteUser(id: number) {
-  await verifyAdmin()
+  await verifyPermission('users.delete')
   
   // Security check: Prevent deleting the last superadmin user
-  const [user] = await db.select({ roleId: users.roleId }).from(users).where(eq(users.id, id))
+  const [user] = await db
+    .select({ roleId: users.roleId })
+    .from(users)
+    .where(and(eq(users.id, id), isNull(users.deletedAt)))
   
   if (user?.roleId === 1) {
-    const result = await db.execute('SELECT COUNT(*) as cnt FROM users WHERE role_id = 1')
+    const result = await db.execute(
+      'SELECT COUNT(*) as cnt FROM users WHERE role_id = 1 AND deleted_at IS NULL'
+    )
     const superadminCount = (result as any)[0]?.[0]?.cnt || 0
     
     if (superadminCount <= 1) {
@@ -92,12 +111,18 @@ export async function deleteUser(id: number) {
     }
   }
   
-  // Delete profile first
-  const { deleteProfile } = await import('@/lib/db/queries')
-  await deleteProfile(id)
-  
-  // Delete user
-  await db.delete(users).where(eq(users.id, id))
+  // Soft delete user and profile atomically
+  await db.transaction(async (tx) => {
+    // Soft delete profile
+    await tx.update(profiles)
+      .set({ deletedAt: new Date() })
+      .where(eq(profiles.userId, id))
+    
+    // Soft delete user
+    await tx.update(users)
+      .set({ deletedAt: new Date() })
+      .where(eq(users.id, id))
+  })
   
   return { success: true }
 }
