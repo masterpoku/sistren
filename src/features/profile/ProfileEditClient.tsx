@@ -5,6 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
+import { updateUserProfile } from '@/actions/profile'
+import { useToast } from '@/hooks/use-toast'
 
 interface ProfileData {
   id: number
@@ -43,6 +45,7 @@ interface ProfileEditClientProps {
 
 export function ProfileEditClient({ profile, user }: ProfileEditClientProps) {
   const [loading, setLoading] = useState(false)
+  const { toast } = useToast()
   const [formData, setFormData] = useState({
     name: user.name || '',
     phone: profile?.phone || '',
@@ -64,10 +67,20 @@ export function ProfileEditClient({ profile, user }: ProfileEditClientProps) {
     e.preventDefault()
     setLoading(true)
     try {
-      console.log('Submitting profile update:', formData)
-      // TODO: call updateProfile server action
+      await updateUserProfile({
+        name: formData.name,
+        phone: formData.phone,
+        nik: formData.nik,
+        birthPlace: formData.birthPlace,
+        birthDate: formData.birthDate,
+        address: formData.address,
+        religion: formData.religion,
+        gender: formData.gender as 'male' | 'female' | undefined,
+      })
+      toast({ title: 'Berhasil', description: 'Profil berhasil diperbarui' })
     } catch (error) {
       console.error('Failed to update profile:', error)
+      toast({ title: 'Error', description: 'Gagal memperbarui profil', variant: 'destructive' })
     } finally {
       setLoading(false)
     }
