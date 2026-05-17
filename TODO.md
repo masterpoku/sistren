@@ -1,157 +1,162 @@
 # TODO.md — Sistren Development Task List
 
 ## Project Info
-- **Stack:** Next.js 16, Drizzle ORM, MySQL, better-auth
-- **Last Updated:** 2026-05-14
-- **Status:** MVP Core Features ✅ | Additional Features WIP
+- **Stack:** Next.js 16.2.5, Drizzle ORM 0.45, MySQL, better-auth, shadcn/ui
+- **Last Updated:** 2026-05-17
+- **Status:** MVP Core Features WIP | Additional Features Pending
 
 ---
 
-## Priority 1: Wire CRUD to UI
+## Completed Features ✅
 
-### Students (`src/features/students/page.tsx`)
-- [x] Server actions exist (`src/actions/students.ts`)
-- [x] Create form works
-- [ ] **Wire Edit button** → trigger update handler
-- [ ] **Wire Delete button** → trigger delete with confirmation
-- [ ] Add loading states
-- [ ] Add error toasts
+### Soft Delete (2026-05-15/16)
+- `deletedAt` column on 12 tables: roles, users, profiles, majors, classes, semesters, subjects, announcements, enrollments, grades, payments, permissions
+- All queries filter `isNull(xxx.deletedAt)` — no orphaned soft-deleted reads
+- All delete actions use soft delete + pre-check guards
+- Grades are immutable — no delete action, correction only via update
+- Build clean, DB seeded
 
-### Teachers (`src/features/teachers/page.tsx`)
-- [x] Server actions exist (`src/actions/teachers.ts`)
-- [x] Create form works
-- [ ] **Wire Edit button** → trigger update handler
-- [ ] **Wire Delete button** → trigger delete with confirmation
-- [ ] Add loading states
-- [ ] Add error toasts
+### RBAC (2026-05-14/15)
+- 38 permissions, 93 role_permission mappings
+- Server actions protected with `verifyPermission(permName)`
+- Auth API fix: userId from session cookie, not query param
+- Dashboard: role fetched from DB, not email inference
 
-### Finance (`src/features/finance/page.tsx`)
-- [x] Full CRUD wired ✅
-- [ ] Review payment status transitions (draft → pending → paid/cancelled)
+### UI Pages Wired (2026-05-15/16)
+- Students: full CRUD with RequirePermission ✅
+- Teachers: full CRUD with RequirePermission ✅
+- Finance: full CRUD + status transitions ✅
+- Users: delete wired ✅
+- Profile: updateUserProfile wired ✅
+- **Academic: tabbed CRUD with Sheet sidepanels** ✅ NEW
+
+### Seed (2026-05-17)
+- `db:seed` is now idempotent — re-runnable without ER_DUP_ENTRY
+- `db.end()` + `process.exit(0)` prevents process hang
+- `seed-permissions.ts` uses try/catch ER_DUP_ENTRY for role_permissions
 
 ---
 
-## Priority 2: Seed Data
+## Priority 1: Remaining CRUD UI
 
-### Add sample data to `src/lib/db/seed.ts`
-- [x] Roles ✅ (superadmin, administrator, guru, siswa, alumni)
-- [x] Majors ✅ (TKJ, RPL, TKR)
-- [x] Classes ✅ (X, XI, XII)
-- [x] Semesters ✅ (Semester 1, 2 — 2025/2026)
-- [x] Subjects ✅ (5 subjects for TKJ X)
-- [x] Payment Methods ✅ (BCA, Mandiri, Tunai, GoPay)
-- [x] System Configs ✅
-- [ ] **Sample Students** — 5-10 records with profiles
-- [ ] **Sample Teachers** — 3-5 records with profiles
-- [ ] **Sample Enrollments** — link students to classes/semesters
+### Announcements (`src/features/announcements/page.tsx`)
+- [ ] Create/edit form (title, description, content, category, priority, publishedAt)
+- [ ] Publish/unpublish toggle
+- [ ] Delete with confirm
+- [ ] RequirePermission: create→`announcements.create`, edit→`announcements.update`, delete→`announcements.delete`, publish→`announcements.publish`
 
-### Quick Login Credentials (already seeded)
+### Enrollments (`src/features/academic/enrollments/page.tsx`)
+- [ ] Wire existing page to `src/actions/enrollments.ts`
+- [ ] Add dialog for create/update enrollment (select student, class, semester)
+- [ ] RequirePermission wrappers
+
+### Grades (`src/features/academic/grades/page.tsx`)
+- [ ] Wire existing page to `src/actions/grades.ts`
+- [ ] Input form: select enrollment, subject, semester, score, grade, predicate
+- [ ] No delete button (grades immutable)
+- [ ] RequirePermission: `grades.input`
+
+---
+
+## Priority 2: Sample Data
+
+### Add to `src/lib/db/seed.ts`
+- [ ] Sample Students — 5-10 records with profiles (nisn, birthPlace, birthDate, gender, address, phone, fatherName, motherName, parentsPhone, religion, majorId, classId)
+- [ ] Sample Teachers — 3-5 records with profiles
+- [ ] Sample Enrollments — link students to classes/semesters
+- [ ] Sample Grades — realistic score data per enrollment
+
+### Quick Login Credentials
 ```
-superadmin@sister.com / Password123!  (superadmin)
-admin@sister.com      / Password123!  (administrator)
-guru@sister.com       / Password123!  (guru)
-siswa@sister.com      / Password123!  (siswa)
+superadmin@sistren.com / Password123!  (superadmin)
+admin@sistren.com      / Password123!  (administrator)
+guru@sistren.com       / Password123!  (guru)
+siswa@sistren.com      / Password123!  (siswa)
 ```
 
 ---
 
-## Priority 3: Add Forms
+## Priority 3: Additional Features
 
-### Academic Page (`src/features/academic/page.tsx`)
-- [ ] Add form to create/edit **Majors** (name, description)
-- [ ] Add form to create/edit **Classes** (name, code)
-- [ ] Add form to create/edit **Semesters** (name, academic_year, dates)
-- [ ] Add form to create/edit **Subjects** (name, code, class, major, credits)
-- [ ] Wire to `src/actions/academic.ts`
-
-### Announcements Page (`src/features/announcements/page.tsx`)
-- [ ] Add form to create/edit announcements
-- [ ] Fields: title, content, category, priority
-- [ ] Wire to `src/actions/announcements.ts`
-
-### Grades Page (`src/app/(app)/academic/grades/page.tsx`)
-- [ ] Create or wire grade input UI
-- [ ] Select student → select subject → input score
-- [ ] Auto-calculate grade (A/B/C/D/E) from score
-- [ ] Wire to `src/actions/grades.ts`
-
----
-
-## Priority 4: Missing Features
-
-### Learning Module (2.3)
+### Learning Module
 - [ ] Teacher: upload materials (title, content, class)
 - [ ] Student: view materials by class
 - [ ] Categories (subjects)
 
-### Document Upload (3.1)
+### Document Upload
 - [ ] Upload files (PDF, images) to `public/uploads/`
 - [ ] Link to student/teacher profiles
 - [ ] Download/view functionality
 
-### Student Grades/Ranking (3.2)
-- [ ] View grades by class/semester
-- [ ] Calculate ranking
-
-### Graduate Module (3.4)
-- [ ] Mark student as graduate
+### Graduate Module
+- [ ] Mark student as graduate (soft delete + status change)
 - [ ] Archive graduate records
 - [ ] Generate certificate data
 
-### Archive System (3.5)
-- [ ] Archive old academic years
-- [ ] Search archived data
-
-### Payment Integration (2.4)
+### Payment Integration
 - [ ] Mock Midtrans integration
 - [ ] Real payment gateway later
 
 ---
 
-## Tech Debt
+## Cleanup (Low Priority)
 
-### Medium Priority
-- [ ] Add error toasts across all pages
-- [ ] Validation integration (Zod schemas exist but not fully wired)
-- [ ] Consistent loading states
+- [ ] `src/util/mock/` — entire folder unused, safe to delete
+- [ ] `src/features/layout/AppLayout.tsx` — self-import, unused
+- [ ] `src/features/layout/AppSidebar.tsx` — only imported by AppLayout
+- [ ] `src/constants.ts` — remove `import type { Announcement }` from mock, remove `MOCK_ANNOUNCEMENTS` block
+- [ ] Delete leftover singular tables if unused (user, account, session, verification in schema — these may be leftover from earlier scaffolding)
 
-### Low Priority
-- [ ] Delete leftover singular tables if unused (user, account, session, verification)
-- [ ] Review and clean up unused imports
+---
+
+## Tech Debt (Medium Priority)
+
+- [ ] Add loading states to all DataTables (currently show skeleton on initial load only)
+- [ ] Validation integration — Zod schemas exist but not fully wired to forms
+- [ ] Consistent error toasts across all pages
 
 ---
 
 ## Module Status Matrix
 
-| Module | Read | Create | Update | Delete |
-|--------|------|--------|--------|--------|
-| Students | ✅ | ✅ | ⚠️ | ⚠️ |
-| Teachers | ✅ | ✅ | ⚠️ | ⚠️ |
-| Finance | ✅ | ✅ | ✅ | ✅ |
-| Academic | ✅ | ❌ | ❌ | ❌ |
-| Announcements | ✅ | ❌ | ❌ | ❌ |
-| Grades | ⚠️ | ❌ | ❌ | ❌ |
+| Module     | Read | Create | Update | Delete |
+|------------|------|--------|--------|--------|
+| Students   | ✅   | ✅     | ✅     | ✅     |
+| Teachers   | ✅   | ✅     | ✅     | ✅     |
+| Finance    | ✅   | ✅     | ✅     | ✅     |
+| Academic   | ✅   | ✅     | ✅     | ✅     |
+| Announce.  | ✅   | ❌     | ❌     | ❌     |
+| Grades     | ✅   | ❌     | ❌     | ❌     |
+| Enrollments| ✅   | ❌     | ❌     | ❌     |
+| Permissions| ✅   | ✅     | ✅     | ✅     |
+| Roles      | ✅   | ✅     | ✅     | ✅     |
 
-Legend: ✅ Wired | ⚠️ Partial | ❌ Not wired | ❌ Missing
+Legend: ✅ Wired | ❌ Not wired
 
 ---
 
 ## File Locations
 
 ```
-src/actions/          — Server actions (CRUD)
-src/features/          — UI pages
-src/lib/db/schema/     — Database schemas
-src/lib/db/seed.ts     — Seed data
-src/lib/auth/          — Auth + permissions
-src/proxy.ts           — Route protection (Next.js 16)
+src/actions/              — Server actions (CRUD + guards)
+src/components/academic/  — Academic sheet forms (ClassSheet, MajorSheet, SemesterSheet, SubjectSheet, AcademicTabs)
+src/features/            — UI pages
+src/lib/db/schema/        — Database schemas (12 tables with soft delete)
+src/lib/db/queries.ts    — Query layer (isNull filters on all reads)
+src/lib/db/seed.ts       — Idempotent base seed
+src/lib/db/seed-permissions.ts — Idempotent permission seed
+src/lib/auth/            — Auth + verifyPermission
+src/proxy.ts             — Route protection (Next.js 16)
 ```
 
 ---
 
-## Notes
+## Technical Notes
 
 - drizzle-kit push hangs in non-TTY → use raw SQL scripts for DB changes
-- Next.js 16 uses `proxy.ts` (formerly middleware.ts)
+- Next.js 16 uses `proxy.ts` (formerly middleware.ts) + Turbopack
 - Default role for new users: `siswa` (level 40)
-- All server actions protected with `verifyAdmin` or `verifySession`
+- All server actions use `verifyPermission(permName)` — superadmin bypasses all
+- Grades are immutable — no delete action exists, corrections via update only
+- Seed is idempotent — safe to re-run anytime, skips existing records
+- `db.end()` + `process.exit(0)` required at end of seed scripts to prevent hang
