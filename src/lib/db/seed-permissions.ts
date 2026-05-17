@@ -1,28 +1,34 @@
 import { db } from './index'
 import { roles, permissions, rolePermissions } from './schema'
+import { isNull } from 'drizzle-orm'
 
 console.log('🌱 Starting permission seed...')
 
 async function seedPermissions() {
-  // Get all roles
-  const allRoles = await db.select().from(roles)
+  // Get all roles (active only)
+  const allRoles = await db.select().from(roles).where(isNull(roles.deletedAt))
   console.log('Roles found:', allRoles.map(r => ({ id: r.id, name: r.name, level: r.level })))
 
-  // Get all permissions
-  const allPerms = await db.select().from(permissions)
+  // Get all permissions (active only)
+  const allPerms = await db.select().from(permissions).where(isNull(permissions.deletedAt))
   console.log('Permissions found:', allPerms.length)
+
+  if (allRoles.length === 0 || allPerms.length === 0) {
+    console.log('⚠️  No roles or permissions found. Run base seed first.')
+    return
+  }
 
   const roleMap = Object.fromEntries(allRoles.map(r => [r.name, r]))
   const permMap = Object.fromEntries(allPerms.map(p => [p.name, p]))
 
-  // Administrator permissions (all except delete/impersonate users, approve grades)
+  // Administrator permissions
   const adminPermNames = [
-    'users.create', 'users.read', 'users.update', // no users.delete, users.impersonate
+    'users.create', 'users.read', 'users.update',
     'students.create', 'students.read', 'students.update', 'students.delete', 'students.promote', 'students.graduate', 'students.import',
     'teachers.create', 'teachers.read', 'teachers.update', 'teachers.delete', 'teachers.assign_class', 'teachers.assign_subject',
     'classes.manage', 'majors.manage', 'subjects.manage', 'semesters.manage',
     'enrollments.create', 'enrollments.read', 'enrollments.update', 'enrollments.delete',
-    'grades.input', 'grades.read_any', 'grades.read_own', 'grades.print', // no grades.approve
+    'grades.input', 'grades.read_any', 'grades.read_own', 'grades.print',
     'announcements.create', 'announcements.read', 'announcements.update', 'announcements.delete', 'announcements.publish',
     'payments.create', 'payments.read_any', 'payments.read_own', 'payments.update', 'payments.approve', 'payments.generate_report',
     'payment_methods.manage', 'system_configs.manage',
@@ -47,49 +53,41 @@ async function seedPermissions() {
     'grades.read_own', 'profile.edit_own',
   ]
 
-  // Seed role_permissions for administrator
-  for (const permName of adminPermNames) {
-    if (roleMap['administrator'] && permMap[permName]) {
-      await db.insert(rolePermissions).values({
-        roleId: roleMap['administrator'].id,
-        permissionId: permMap[permName].id,
-      })
-    }
-  }
-  console.log('✅ Seeded administrator permissions')
+  const assignments = [
+    { roleName: 'superadmin', perms: allPerms.map(p => p.name) },
+    { roleName: 'administrator', perms: adminPermNames },
+    { roleName: 'guru', perms: guruPermNames },
+    { roleName: 'siswa', perms: siswaPermNames },
+    { roleName: 'alumni', perms: alumniPermNames },
+  ]
 
-  // Seed role_permissions for guru
-  for (const permName of guruPermNames) {
-    if (roleMap['guru'] && permMap[permName]) {
-      await db.insert(rolePermissions).values({
-        roleId: roleMap['guru'].id,
-        permissionId: permMap[permName].id,
-      })
+  for (const { roleName, perms } of assignments) {
+    if (!roleMap[roleName]) {
+      console.log(`⏭️  Role '${roleName}' not found, skipping`)
+      continue
     }
-  }
-  console.log('✅ Seeded guru permissions')
 
-  // Seed role_permissions for siswa
-  for (const permName of siswaPermNames) {
-    if (roleMap['siswa'] && permMap[permName]) {
-      await db.insert(rolePermissions).values({
-        roleId: roleMap['siswa'].id,
-        permissionId: permMap[permName].id,
-      })
-    }
-  }
-  console.log('✅ Seeded siswa permissions')
+    for (const permName of perms) {
+      if (!permMap[permName]) {
+        console.log(`⏭️  Permission '${permName}' not found, skipping`)
+        continue
+      }
 
-  // Seed role_permissions for alumni
-  for (const permName of alumniPermNames) {
-    if (roleMap['alumni'] && permMap[permName]) {
-      await db.insert(rolePermissions).values({
-        roleId: roleMap['alumni'].id,
-        permissionId: permMap[permName].id,
-      })
+      try {
+        await db.insert(rolePermissions).values({
+          roleId: roleMap[roleName].id,
+          permissionId: permMap[permName].id,
+        })
+      } catch (e: any) {
+        if (e.code === 'ER_DUP_ENTRY') {
+          // Already assigned, skip silently
+        } else {
+          throw e
+        }
+      }
     }
+    console.log(`✅ Seeded ${roleName} permissions`)
   }
-  console.log('✅ Seeded alumni permissions')
 
   console.log('🎉 Permission seed completed')
 }

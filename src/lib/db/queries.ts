@@ -221,20 +221,26 @@ export async function deleteProfile(userId: number) {
 // ============================================
 
 export async function getSubjects(filters?: { classId?: number; majorId?: number }) {
-  if (filters?.classId && filters?.majorId) {
-    return db.query.subjects.findMany({
-      where: and(
-        isNull(subjects.deletedAt),
-        eq(subjects.classId, filters.classId),
-        eq(subjects.majorId, filters.majorId)
-      ),
+  const conditions = [isNull(subjects.deletedAt)] as any[]
+  if (filters?.classId) conditions.push(eq(subjects.classId, filters.classId))
+  if (filters?.majorId) conditions.push(eq(subjects.majorId, filters.majorId))
+
+  return db
+    .select({
+      id: subjects.id,
+      name: subjects.name,
+      code: subjects.code,
+      classId: subjects.classId,
+      majorId: subjects.majorId,
+      credits: subjects.credits,
+      description: subjects.description,
+      className: classes.name,
+      majorName: majors.name,
     })
-  } else if (filters?.classId) {
-    return db.query.subjects.findMany({
-      where: and(isNull(subjects.deletedAt), eq(subjects.classId, filters.classId)),
-    })
-  }
-  return db.select().from(subjects).where(isNull(subjects.deletedAt))
+    .from(subjects)
+    .leftJoin(classes, eq(subjects.classId, classes.id))
+    .leftJoin(majors, eq(subjects.majorId, majors.id))
+    .where(and(...conditions))
 }
 
 export async function getSubjectById(id: number) {
