@@ -23,7 +23,7 @@ export async function fetchAcademic() {
 
 // ==================== CLASSES ====================
 
-export async function createClass(data: { name: string; code: string }) {
+export async function createClass(data: { name: string; code: string }): Promise<{ success: true; id: number } | { success: false; error: string }> {
   await verifyPermission('classes.manage')
 
   // Check duplicate code (active records only)
@@ -41,7 +41,7 @@ export async function createClass(data: { name: string; code: string }) {
   return { success: true, id: result.insertId }
 }
 
-export async function updateClass(id: number, data: { name?: string; code?: string }) {
+export async function updateClass(id: number, data: { name?: string; code?: string }): Promise<{ success: true } | { success: false; error: string }> {
   await verifyPermission('classes.manage')
 
   // Check duplicate code (exclude self, active only)
@@ -65,7 +65,7 @@ export async function updateClass(id: number, data: { name?: string; code?: stri
   return { success: true }
 }
 
-export async function deleteClass(id: number) {
+export async function deleteClass(id: number): Promise<{ success: true } | { success: false; error: string }> {
   await verifyPermission('classes.manage')
 
   // GUARD: Check active enrollments
@@ -95,7 +95,7 @@ export async function deleteClass(id: number) {
 
 // ==================== MAJORS ====================
 
-export async function createMajor(data: { name: string; description?: string }) {
+export async function createMajor(data: { name: string; description?: string }): Promise<{ success: true; id: number } | { success: false; error: string }> {
   await verifyPermission('majors.manage')
 
   // Check duplicate name (active only)
@@ -113,7 +113,7 @@ export async function createMajor(data: { name: string; description?: string }) 
   return { success: true, id: result.insertId }
 }
 
-export async function updateMajor(id: number, data: { name?: string; description?: string }) {
+export async function updateMajor(id: number, data: { name?: string; description?: string }): Promise<{ success: true } | { success: false; error: string }> {
   await verifyPermission('majors.manage')
 
   if (data.name) {
@@ -136,7 +136,7 @@ export async function updateMajor(id: number, data: { name?: string; description
   return { success: true }
 }
 
-export async function deleteMajor(id: number) {
+export async function deleteMajor(id: number): Promise<{ success: true } | { success: false; error: string }> {
   await verifyPermission('majors.manage')
 
   // GUARD: Check active profiles (students/teachers) in this major
@@ -171,7 +171,7 @@ export async function createSemester(data: {
   academicYear: string
   startDate?: string
   endDate?: string
-}) {
+}): Promise<{ success: true; id: number } | { success: false; error: string }> {
   await verifyPermission('semesters.manage')
 
   const [result] = await db.insert(semesters).values({
@@ -189,7 +189,7 @@ export async function updateSemester(id: number, data: {
   startDate?: string
   endDate?: string
   isActive?: boolean
-}) {
+}): Promise<{ success: true } | { success: false; error: string }> {
   await verifyPermission('semesters.manage')
 
   const updateFields: Record<string, unknown> = {}
@@ -218,7 +218,7 @@ export async function updateSemester(id: number, data: {
   return { success: true }
 }
 
-export async function deleteSemester(id: number) {
+export async function deleteSemester(id: number): Promise<{ success: true } | { success: false; error: string }> {
   await verifyPermission('semesters.manage')
 
   // GUARD: Check active enrollments
