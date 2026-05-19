@@ -5,7 +5,7 @@ import { verifyPermission } from '@/lib/auth/verify-session'
 import { getAllUsers } from '@/lib/db/queries'
 import { db } from '@/lib/db'
 import { users, profiles } from '@/lib/db/schema'
-import { eq, isNull, and } from 'drizzle-orm'
+import { eq, isNull, and, count } from 'drizzle-orm'
 import { hash } from 'argon2'
 
 export async function fetchAllUsers() {
@@ -69,11 +69,10 @@ export async function updateUser(data: UpdateUserData) {
       .where(and(eq(users.id, data.id), isNull(users.deletedAt)))
     
     if (user?.roleId === 1) {
-      const result = await db.execute(
-        'SELECT COUNT(*) as cnt FROM users WHERE role_id = 1 AND deleted_at IS NULL'
-      )
-      const superadminCount = (result as any)[0]?.[0]?.cnt || 0
-      
+      const [{ count: superadminCount }] = await db
+        .select({ count: count() })
+        .from(users)
+        .where(and(eq(users.roleId, 1), isNull(users.deletedAt)))
       if (superadminCount <= 1) {
         return { success: false, error: 'Cannot remove superadmin role from the last superadmin user' }
       }
@@ -101,11 +100,10 @@ export async function deleteUser(id: number) {
     .where(and(eq(users.id, id), isNull(users.deletedAt)))
   
   if (user?.roleId === 1) {
-    const result = await db.execute(
-      'SELECT COUNT(*) as cnt FROM users WHERE role_id = 1 AND deleted_at IS NULL'
-    )
-    const superadminCount = (result as any)[0]?.[0]?.cnt || 0
-    
+    const [{ count: superadminCount }] = await db
+      .select({ count: count() })
+      .from(users)
+      .where(and(eq(users.roleId, 1), isNull(users.deletedAt)))
     if (superadminCount <= 1) {
       return { success: false, error: 'Cannot delete the last superadmin user' }
     }
