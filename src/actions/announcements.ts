@@ -19,7 +19,7 @@ export async function createAnnouncement(data: {
   category?: string
   priority?: 'normal' | 'important' | 'urgent'
   publishedAt?: string | null
-}) {
+}): Promise<{ success: true; id: number } | { success: false; error: string }> {
   await verifyPermission('announcements.create')
 
   const [result] = await db.insert(announcements).values({
@@ -29,7 +29,7 @@ export async function createAnnouncement(data: {
     category: data.category || 'umum',
     priority: data.priority || 'normal',
     publishedAt: data.publishedAt ? new Date(data.publishedAt) : null,
-    authorId: null, // Set by session in real implementation
+    authorId: null,
   })
   return { success: true, id: result.insertId }
 }
@@ -40,7 +40,7 @@ export async function updateAnnouncement(id: number, data: {
   content?: string
   category?: string
   priority?: 'normal' | 'important' | 'urgent'
-}) {
+}): Promise<{ success: true } | { success: false; error: string }> {
   await verifyPermission('announcements.update')
 
   const updateFields: Record<string, unknown> = {}
@@ -53,37 +53,36 @@ export async function updateAnnouncement(id: number, data: {
   await db.update(announcements)
     .set(updateFields)
     .where(and(eq(announcements.id, id), isNull(announcements.deletedAt)))
-  
+
   return { success: true }
 }
 
-export async function publishAnnouncement(id: number) {
+export async function publishAnnouncement(id: number): Promise<{ success: true } | { success: false; error: string }> {
   await verifyPermission('announcements.publish')
 
   await db.update(announcements)
     .set({ publishedAt: new Date() })
     .where(and(eq(announcements.id, id), isNull(announcements.deletedAt)))
-  
+
   return { success: true }
 }
 
-export async function unpublishAnnouncement(id: number) {
+export async function unpublishAnnouncement(id: number): Promise<{ success: true } | { success: false; error: string }> {
   await verifyPermission('announcements.publish')
 
   await db.update(announcements)
     .set({ publishedAt: null })
     .where(and(eq(announcements.id, id), isNull(announcements.deletedAt)))
-  
+
   return { success: true }
 }
 
-export async function deleteAnnouncement(id: number) {
+export async function deleteAnnouncement(id: number): Promise<{ success: true } | { success: false; error: string }> {
   await verifyPermission('announcements.delete')
-  
-  // Soft delete
+
   await db.update(announcements)
     .set({ deletedAt: new Date() })
     .where(and(eq(announcements.id, id), isNull(announcements.deletedAt)))
-  
+
   return { success: true }
 }
