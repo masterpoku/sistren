@@ -18,6 +18,7 @@ export async function getGradesWithRelations(filters?: {
       id: grades.id,
       enrollmentId: grades.enrollmentId,
       subjectId: grades.subjectId,
+      semesterId: grades.semesterId,
       score: grades.score,
       grade: grades.grade,
       predicate: grades.predicate,
@@ -27,16 +28,25 @@ export async function getGradesWithRelations(filters?: {
       subjectCode: subjects.code,
       // Semester info
       semesterName: semesters.name,
+      // Enrollment info (for student/class)
+      studentName: users.name,
+      className: classes.name,
     })
     .from(grades)
     .leftJoin(subjects, eq(grades.subjectId, subjects.id))
     .leftJoin(semesters, eq(grades.semesterId, semesters.id))
+    .leftJoin(enrollments, eq(grades.enrollmentId, enrollments.id))
+    .leftJoin(users, eq(enrollments.studentId, users.id))
+    .leftJoin(classes, eq(enrollments.classId, classes.id))
 
   // Apply soft-delete filters
   const baseCondition = and(
     isNull(grades.deletedAt),
     isNull(subjects.deletedAt),
-    isNull(semesters.deletedAt)
+    isNull(semesters.deletedAt),
+    isNull(enrollments.deletedAt),
+    isNull(users.deletedAt),
+    isNull(classes.deletedAt)
   )
 
   if (filters?.enrollmentId) {
