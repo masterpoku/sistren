@@ -271,5 +271,5 @@ async function seed() {
 }
 
 await seed()
-await db.end()
+;(db as any).end()
 process.exit(0)
