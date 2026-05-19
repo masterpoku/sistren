@@ -143,6 +143,10 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
+# Bun
+bun.lock
+bun.lockb
+
 # Agent working files (keep locally)
 PLAN.md
 MEMORY.md
