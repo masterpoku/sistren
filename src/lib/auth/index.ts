@@ -29,7 +29,6 @@ export const auth = betterAuth({
     },
   },
   plugins: [
-    admin(),
     nextCookies(), // MUST be last
   ],
 })

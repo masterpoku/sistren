@@ -267,6 +267,5 @@ export async function seed() {
 // Only auto-run when executed directly
 if (import.meta.main) {
   await seed()
-  ;(db as any).end()
   process.exit(0)
 }
