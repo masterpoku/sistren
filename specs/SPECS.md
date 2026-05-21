@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Sistren is a school information system (SIS) for Indonesian high schools — a web-based platform that consolidates student records, teacher management, academic data (classes, majors, subjects, semesters), enrollments, grade input and approval, announcements, payment tracking, and user authentication into a single RBAC-protected application.
+Sistren is a school information system (SIS) for Indonesian high schools — a web-based platform that consolidates student records, teacher management, academic data (classes, majors, subjects, semesters), enrollments, Rapor uploads, announcements, payment tracking, and user authentication into a single RBAC-protected application.
 
 ---
 
@@ -37,6 +37,9 @@ All mutations (create/update/delete) live in `src/actions/*.ts` as Next.js Serve
 ### Why better-auth over Auth.js/NextAuth?
 Better-auth is purpose-built for modern Next.js (App Router, Server Components). It provides a cleaner adapter interface for Drizzle ORM and has better TypeScript coverage. Auth.js was considered but had friction with the existing Drizzle schema. RBAC will be implemented through better-auth's `additionalFields.roleId` + custom permissions tables.
 
+### Why better-auth Admin plugin for staff account creation?
+Better-auth's Admin plugin (`admin()`) provides `auth.api.createUser()` — the correct way for administrators to create staff accounts (guru, admin). This is separate from student self-registration which uses `signUpEmail()`. The Admin plugin also provides `listUsers`, `banUser`, `impersonate` out of the box.
+
 ### Why Drizzle ORM over Prisma?
 Drizzle provides SQL-like query patterns that feel natural to developers who know SQL. Prisma's generated types and query engine add overhead for a solo developer who needs to move fast. Drizzle's `db.transaction()` API is also more explicit for multi-step atomic operations.
 
@@ -46,20 +49,42 @@ Instead of checking permissions inside every page component, a Next.js middlewar
 ### Why soft delete everywhere?
 School data has regulatory retention requirements. Soft delete preserves audit history while keeping the UI clean. All queries default to `WHERE deleted_at IS NULL` unless an admin explicitly needs to view deleted records.
 
-### Why 5 roles with granular permissions?
-A single "admin" role doesn't work for a school — a teacher should only input grades for their assigned classes, not see all students. Role levels (100/80/60/40/20) provide quick hierarchy checks, while granular permissions handle fine-grained control (e.g., `grades.input` vs `grades.approve`).
+**Drizzle idiomatic pattern:** `deletedAt` timestamp column. `null` = active, non-null = deleted. No `isDeleted` boolean needed — timestamp gives you both state and timing. Every schema that supports deletion includes this column.
 
-### Why student self-registration with admin approval?
-Indonesian schools require identity verification before granting student access. Self-registration creates a pending record; admin reviews and approves before the better-auth account is activated.
+### Why transaction boundaries are explicit?
+School operations often require atomicity: enrollment + payment creation, user delete + profile delete. Drizzle's `db.transaction(async (tx) => {...})` wraps these. Every multi-step write operation that touches multiple tables MUST be wrapped in a transaction. Single-table operations don't need transactions.
 
-### Why admin inputs grades (not guru)?
-Indonesian schools typically have administrative staff (TU) handle grade entry. Guru provides grades on paper; admin enters them into the system. This reduces error and provides an audit trail.
+### Why student self-registration collects Name, Email, Password, NISN?
+NISN (Nomor Induk Siswa Nasional) is the national student ID issued by Ministry of Education. It's verifiable, unique, and links to the national student database. Self-registration collects: name, email, password, NISN. Admin approval activates the account.
 
-### Why predicate computed from score?
-The standard Indonesian grading system maps 1-100 scores to predicates (A/B/C/D/E). Computing from score ensures consistency and avoids manual entry errors. The formula: 90-100=A, 80-89=B, 70-79=C, 60-69=D, 0-59=E.
+### Why documents stored as encrypted blob in MariaDB?
+All student documents (Ijazah, SKHUN, SKL, Akta Kelahiran, KTP orang tua, Kartu Keluarga, KIP, Pas Foto, Rapor) are stored as encrypted `MEDIUMBLOB` in MariaDB. Same rationale as Rapor: simple, DB-backed backup, no separate storage service. Documents contain sensitive personal data (KTP, KK) so encryption at rest is required.
 
-### Why official documents in government format?
-SKHU, Ijazah, and Rapor are legal documents with specific government-mandated layouts. PDF generation must match these formats for the documents to be legally valid.
+**Encryption:** AES-256-GCM via `DOCUMENT_ENCRYPTION_KEY` env var. Key must be 32 bytes (256-bit). All document blobs are encrypted before insert and decrypted on retrieval. Never store unencrypted blobs.
+
+**MariaDB config requirement:** `max_allowed_packet` must be set to at least 64MB in MariaDB config (`/etc/mysql/mariadb.conf.d/`) — 10 blob fields × 2MB avg + encryption overhead + margin.
+
+**Document types stored as blob:**
+| Field | Label | Max Size | Notes |
+|-------|-------|----------|-------|
+| `ijasah` | Ijazah (SMP/sederajat) | 2MB | Graduation certificate |
+| `skhun` | SKHUN | 2MB | Exam result certificate |
+| `skl` | Surat Keterangan Lulus | 2MB | Graduation confirmation letter |
+| `akta_kelahiran` | Akta Kelahiran | 2MB | Birth certificate |
+| `kk` | Kartu Keluarga | 2MB | Family card — was missing in old system, now included |
+| `ktp_ayah` | KTP Ayah | 2MB | Father's ID card |
+| `ktp_ibu` | KTP Ibu | 2MB | Mother's ID card |
+| `kip` | KIP (Kartu Indonesia Pintar) | 2MB | Social assistance card |
+| `pass_foto` | Pas Foto 3x4 | 1MB | Student photo (B&W or color) |
+| `rapor` | Rapor (per semester) | 16MB | Report card PDF — generated via government software |
+
+**Schema pattern:** Single `student_documents` table with one blob column per document type, linked to `users.id` via `studentId`. Soft delete per document type (each document versionable — upload new, keep old).
+
+### Why payment records + payment methods?
+Schools track who paid what, when, and via which account. Admin records payment entries manually (cash, bank transfer). Payment methods (bank account numbers, virtual accounts) are managed separately. Later phases can add auto-payment integration.
+
+### Why audit logging for auth and payments?
+Indonesian schools require financial accountability. Every login, logout, failed attempt, and payment confirmation is logged with user ID, timestamp, and action. Logs are append-only — never deleted. Useful for: dispute resolution, security audit, compliance.
 
 ---
 
@@ -78,7 +103,7 @@ Enabling `experimental.joins: true` fails on MariaDB because `json_arrayagg` wit
 Tailwind v4 uses CSS-first configuration (`@theme` directive). `tailwind.config.js` is not used. All custom colors, fonts, and plugins must be defined in CSS.
 
 ### ❌ Using better-auth `signUpEmail()` for staff accounts
-Staff accounts (guru, admin) are created by admin from the dashboard. Student self-registration uses `signUpEmail()` with admin approval. Better-auth's `signUpEmail()` is for student self-service only.
+Staff accounts (guru, admin) are created by admin using the Admin plugin (`auth.api.createUser()`). Student self-registration uses `signUpEmail()` with admin approval. Better-auth's `signUpEmail()` is for student self-service only.
 
 ### ❌ Skipping `typecheck` before commits
 The codebase has no CI yet. Running `bun run typecheck` before every commit prevents type regressions from silently entering the codebase.
@@ -89,12 +114,18 @@ The codebase has no CI yet. Running `bun run typecheck` before every commit prev
 
 | Date | Decision | Rationale |
 |------|----------|-----------|
-| 2026-05-21 | Student self-registration with admin approval | Schools need identity verification before granting access |
-| 2026-05-21 | Admin inputs grades (not guru) | Indonesian schools typically have admin/TU handle grade entry |
+| 2026-05-21 | Student self-registration collects Name + Email + Password + NISN | NISN is national student ID, verifiable and unique |
+| 2026-05-21 | Staff accounts created via better-auth Admin plugin | `auth.api.createUser()` is the correct path — not manual insert bypassing better-auth |
 | 2026-05-21 | Keep API route placeholders for SSO | Future SSO integration without restructuring |
 | 2026-05-21 | Official documents in government format | Legal requirement for SKHU/Ijazah |
-| 2026-05-21 | Replace RBAC with better-auth roles | Align with better-auth's additionalFields system |
-| 2026-05-21 | Score 1-100, predicate computed | Standard Indonesian grading system |
+| 2026-05-21 | Replace RBAC with better-auth roles | Align with better-auth's additionalFields system + Admin plugin |
+| 2026-05-21 | Rapor stored as MEDIUMBLOB in MariaDB | Government software generates PDF; blob keeps file + DB together, simple backup |
+| 2026-05-21 | Grades table kept for future extensibility | Table stays in schema (unused for now) — can add structured input later if needed |
+| 2026-05-21 | Soft delete via deletedAt timestamp | Drizzle idiomatic — timestamp gives state + timing, no boolean needed |
+| 2026-05-21 | Explicit transaction wrapping | Every multi-step write across tables must be in `db.transaction()` |
+| 2026-05-21 | Audit log auth + payments | Financial and academic accountability; Rapor is uploaded not entered so no grade audit |
+| 2026-05-21 | Env vars: DATABASE_URL, BETTER_AUTH_SECRET, BETTER_AUTH_URL, DOCUMENT_ENCRYPTION_KEY | Minimal config for VPS deployment; DOCUMENT_ENCRYPTION_KEY = 32-byte key for AES-256-GCM |
+| 2026-05-21 | MariaDB `max_allowed_packet` = 64MB minimum | 10 blob fields per student × 2MB avg + encryption overhead + margin |
 
 ---
 

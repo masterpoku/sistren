@@ -48,7 +48,7 @@ bunx drizzle-kit migrate
 1. **bun only** — Use `bun` for all package management and scripts. Never `npm`, `yarn`, `pnpm`.
 2. **No manual deps** — Use `bun add` or `bun remove`. Never edit `package.json` manually.
 3. **No pinned versions** — Use ranges (`^`). Let bun resolve compatible versions.
-4. **Never commit secrets** — Never commit `.env`, `.env.*`, or any file containing credentials.
+4. **Never commit secrets** — Never commit `.env`, `.env.*`, or any file containing credentials. Required env vars: `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `DOCUMENT_ENCRYPTION_KEY` (32-byte key for AES-256-GCM blob encryption).
 5. **Soft delete aware** — Every user-facing query MUST filter `deletedAt IS NULL`. Forgot = data leak.
 6. **Read before edit** — Always read existing files before modifying them.
 7. **Verify before execute** — Run typecheck/lint before assuming code is correct.
@@ -61,11 +61,22 @@ bunx drizzle-kit migrate
 - Soft delete pattern: `isNull(users.deletedAt)` filter required on every query
 - `drizzle-kit push` for dev schema changes, `generate + migrate` for prod
 - Transactions: use `db.transaction(async (tx) => { ... })` for atomic ops
+- Blob columns: `Buffer` in Node.js maps to `mediumblob()` / `MEDIUMBLOB` in MariaDB. Use `mediumblob()` for files up to 16MB.
 
-### better-auth
-- Session user ID is string; cast to Number for DB queries: `Number(session.user.id)`
-- Session stored in DB via drizzle adapter; custom queries use `getUserWithRole()`
-- `verifySession()` / `verifyPermission()` redirect to `/login` or `/unauthorized`
+### better-auth Admin Plugin
+- Staff accounts (guru, admin) must be created via Admin plugin: `auth.api.createUser()` — never bypass better-auth with direct DB inserts
+- Admin plugin also provides `listUsers`, `banUser`, `impersonate`
+- `additionalFields.roleId` configured in auth options; maps to custom `roles` table
+
+### File Uploads (Student Documents)
+- All student documents are stored as **encrypted** `MEDIUMBLOB` — AES-256-GCM, key via `DOCUMENT_ENCRYPTION_KEY` env var
+- Encryption utility: encrypt before insert, decrypt on retrieval. Never store unencrypted blobs.
+- Document types: `ijasah`, `skhun`, `skl`, `akta_kelahiran`, `kk`, `ktp_ayah`, `ktp_ibu`, `kip`, `pass_foto`, `rapor` (per semester)
+- Next.js Server Actions accept `FormData`. Extract file via `formData.get('file')`
+- Default Server Action body size limit is 1MB. Set `serverActions.bodySizeLimit: 16 * 1024 * 1024` in `next.config.ts`
+- MariaDB `max_allowed_packet` must be **64MB minimum** in `/etc/mysql/mariadb.conf.d/` for 10 blob fields per student
+- Serve blob files via `Response` with correct `Content-Type` header — do not serve from page component
+- Each document field is versionable — upload new version, soft-delete old
 
 ### RBAC
 - Permission check: `hasPermission(userId, 'resource.action')`
@@ -98,6 +109,25 @@ payments.create/read_any/read_own/update/approve/generate_report
 payment_methods.manage, system_configs.manage
 profile.edit_own/edit_any/assets.upload
 ```
+
+## Specs Structure
+
+```
+specs/
+  SPECS.md      — Purpose, constraints, architecture decisions, anti-patterns
+  PLAN.md       — Phase roadmap, dependencies, out-of-scope
+  TASKS.md      — Cross-session goal tracker (milestones, not atomic tasks)
+  issues.md     — Critical bugs blocking development
+  tasks/        — Atomic task documentation during planning sessions
+    tasks-YYYY-MM-DD.md  — Task list for a specific planning/implementation session
+```
+
+## Task Tracking
+
+- **Atomic tasks** are documented in `specs/tasks/tasks-{date}.md` — created during planning sessions, each task is self-contained and completable in one session
+- **After implementing a task**, the agent MUST update `specs/TASKS.md` (mark done, add notes) and update the relevant `tasks-{date}.md` file
+- **During planning**: when breaking down a phase or goal into actionable tasks, write the task list to `specs/tasks/tasks-{date}.md` first, then register milestones in `TASKS.md`
+- **Cross-session goals** stay in `TASKS.md`; atomic tasks live in `specs/tasks/`
 
 ## Role Levels
 
