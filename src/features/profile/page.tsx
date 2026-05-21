@@ -17,7 +17,7 @@ import {
 import Link from 'next/link'
 
 interface UserData {
-  id: number
+  id: string
   email: string
   name: string | null
   role?: {

@@ -232,7 +232,7 @@ export function AcademicTabs({ classes: initialClasses, majors: initialMajors, s
     if (!window.confirm('Yakin ingin menghapus mapel ini?')) return
     const result = await deleteSubject(id)
     if (!result.success) {
-      toast({ title: 'Gagal', description: result.error || 'Tidak bisa menghapus mapel', variant: 'destructive' })
+      toast({ title: 'Gagal', description: 'Tidak bisa menghapus mapel', variant: 'destructive' })
       return
     }
     toast({ title: 'Berhasil', description: 'Mapel dihapus' })

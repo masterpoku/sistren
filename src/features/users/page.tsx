@@ -28,11 +28,11 @@ import { RequirePermission } from '@/components/auth/RequirePermission'
 import { useToast } from '@/hooks/use-toast'
 
 interface User {
-  id: number
+  id: string
   name: string | null
   email: string
   roleId: number | null
-  confirmed: boolean | null
+  emailVerified: boolean
   createdAt: Date | null
 }
 
@@ -76,11 +76,11 @@ export default function UsersPage() {
     loadUsers()
   }, [toast])
 
-  const handleDelete = async (id: number, name: string) => {
+  const handleDelete = async (id: string, name: string) => {
     if (!window.confirm(`Yakin ingin menghapus user "${name}"? Data tidak bisa dikembalikan.`)) return
 
     try {
-      const result = await deleteUser(id)
+      const result = await deleteUser(Number(id))
       if (result.success) {
         toast({ title: 'Berhasil', description: 'User berhasil dihapus' })
         // Reload
@@ -162,13 +162,13 @@ export default function UsersPage() {
       },
     },
     {
-      accessorKey: 'confirmed',
+      accessorKey: 'emailVerified',
       header: 'Status',
       cell: ({ row }) => {
-        const confirmed = row.getValue('confirmed') as boolean | null
+        const verified = row.getValue('emailVerified') as boolean
         return (
-          <Badge variant={confirmed ? 'default' : 'secondary'}>
-            {confirmed ? 'Aktif' : 'Pending'}
+          <Badge variant={verified ? 'default' : 'secondary'}>
+            {verified ? 'Aktif' : 'Pending'}
           </Badge>
         )
       },

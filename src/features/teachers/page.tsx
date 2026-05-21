@@ -28,7 +28,7 @@ import { RequirePermission } from '@/components/auth/RequirePermission'
 import { useToast } from '@/hooks/use-toast'
 
 interface Teacher {
-  id: number
+  id: string
   name: string
   email: string
   roleId: number | null
@@ -69,9 +69,9 @@ export default function TeachersPage() {
     loadTeachers()
   }, [loadTeachers])
 
-  const handleEdit = async (id: number) => {
+  const handleEdit = async (id: string) => {
     try {
-      const profile = await fetchTeacherById(id)
+      const profile = await fetchTeacherById(Number(id))
       if (profile) {
         setEditingTeacher(profile)
         setFormOpen(true)
@@ -85,11 +85,11 @@ export default function TeachersPage() {
     }
   }
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     if (!window.confirm('Yakin ingin menghapus guru ini? Data tidak bisa dikembalikan.')) return
 
     try {
-      await deleteTeacher(id)
+      await deleteTeacher(Number(id))
       toast({
         title: 'Berhasil',
         description: 'Guru berhasil dihapus',
@@ -109,7 +109,7 @@ export default function TeachersPage() {
     try {
       if (editingTeacher) {
         await updateTeacher({
-          id: editingTeacher.id,
+          id: Number(editingTeacher.id),
           name: data.name,
           nik: data.nik,
           phone: data.phone,
@@ -228,7 +228,7 @@ export default function TeachersPage() {
   )
 }
 
-function buildColumns(onEdit: (id: number) => void, onDelete: (id: number) => void): ColumnDef<Teacher>[] {
+function buildColumns(onEdit: (id: string) => void, onDelete: (id: string) => void): ColumnDef<Teacher>[] {
   return [
     {
       id: 'select',

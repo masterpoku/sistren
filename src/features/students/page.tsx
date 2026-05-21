@@ -28,7 +28,7 @@ import { RequirePermission } from '@/components/auth/RequirePermission'
 import { useToast } from '@/hooks/use-toast'
 
 interface Student {
-  id: number
+  id: string
   name: string
   email: string
   roleId: number | null
@@ -75,9 +75,9 @@ export default function StudentsPage() {
     loadStudents()
   }, [loadStudents])
 
-  const handleEdit = async (id: number) => {
+  const handleEdit = async (id: string) => {
     try {
-      const profile = await fetchStudentById(id)
+      const profile = await fetchStudentById(Number(id))
       if (profile) {
         setEditingStudent(profile)
         setFormOpen(true)
@@ -91,11 +91,11 @@ export default function StudentsPage() {
     }
   }
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: string) => {
     if (!window.confirm('Yakin ingin menghapus siswa ini? Data tidak bisa dikembalikan.')) return
 
     try {
-      await deleteStudent(id)
+      await deleteStudent(Number(id))
       toast({
         title: 'Berhasil',
         description: 'Siswa berhasil dihapus',
@@ -115,7 +115,7 @@ export default function StudentsPage() {
     try {
       if (editingStudent) {
         await updateStudent({
-          id: editingStudent.id,
+          id: Number(editingStudent.id),
           name: data.name,
           nik: data.nik,
           nisn: data.nisn,
@@ -247,7 +247,7 @@ export default function StudentsPage() {
   )
 }
 
-function buildColumns(onEdit: (id: number) => void, onDelete: (id: number) => void): ColumnDef<Student>[] {
+function buildColumns(onEdit: (id: string) => void, onDelete: (id: string) => void): ColumnDef<Student>[] {
   return [
     {
       id: 'select',
