@@ -2,11 +2,11 @@
 'use node'
 
 import { verifyPermission } from '@/lib/auth/verify-session'
-import { getGrades, inputGrade, updateGrade, getEnrollments } from '@/lib/db/queries'
+import { getGradesWithRelations, getEnrollments } from '@/lib/db/queries'
 
 export async function fetchGrades(userId?: number, semesterId?: number, enrollmentId?: number) {
   await verifyPermission('grades.read_any')
-  return await getGrades({ userId, semesterId, enrollmentId })
+  return await getGradesWithRelations({ userId, semesterId, enrollmentId })
 }
 
 export async function fetchEnrollmentOptions() {
@@ -23,18 +23,8 @@ export interface InputGradeData {
   predicate?: string
 }
 
-export async function inputGradeAction(data: InputGradeData): Promise<{ success: true } | { success: false; error: string }> {
-  await verifyPermission('grades.input')
-
-  await inputGrade({
-    enrollmentId: data.enrollmentId,
-    subjectId: data.subjectId,
-    semesterId: data.semesterId,
-    score: data.score,
-    grade: data.grade,
-    predicate: data.predicate || null,
-  })
-  return { success: true }
+export async function inputGradeAction(_data: InputGradeData): Promise<{ success: true } | { success: false; error: string }> {
+  return { success: false, error: 'Grades not yet implemented' }
 }
 
 export interface UpdateGradeData {
@@ -44,17 +34,8 @@ export interface UpdateGradeData {
   predicate?: string
 }
 
-export async function updateGradeAction(data: UpdateGradeData): Promise<{ success: true } | { success: false; error: string }> {
-  await verifyPermission('grades.input')
-
-  const updateFields: Record<string, unknown> = {}
-
-  if (data.score !== undefined) updateFields.score = data.score
-  if (data.grade !== undefined) updateFields.grade = data.grade
-  if (data.predicate !== undefined) updateFields.predicate = data.predicate
-
-  await updateGrade(data.id, updateFields)
-  return { success: true }
+export async function updateGradeAction(_data: UpdateGradeData): Promise<{ success: true } | { success: false; error: string }> {
+  return { success: false, error: 'Grades not yet implemented' }
 }
 
 // NOTE: deleteGradeAction is intentionally NOT provided.

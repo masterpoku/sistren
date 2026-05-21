@@ -42,13 +42,12 @@ export async function createUser(data: CreateUserData) {
     password: hashedPassword,
     name: data.name,
     roleId: data.roleId,
-    confirmed: true,
   })
 
   // Get the newly created user
   const [newUser] = await db.select({ id: users.id }).from(users).where(eq(users.email, data.email))
 
-  return { success: true, userId: newUser?.id }
+  return { success: true, userId: Number(newUser?.id) }
 }
 
 export interface UpdateUserData {
@@ -66,7 +65,7 @@ export async function updateUser(data: UpdateUserData) {
     const [user] = await db
       .select({ roleId: users.roleId })
       .from(users)
-      .where(and(eq(users.id, data.id), isNull(users.deletedAt)))
+      .where(and(eq(users.id, String(data.id)), isNull(users.deletedAt)))
     
     if (user?.roleId === 1) {
       const [{ count: superadminCount }] = await db
@@ -85,7 +84,7 @@ export async function updateUser(data: UpdateUserData) {
   if (data.email !== undefined) updateFields.email = data.email
   if (data.roleId !== undefined) updateFields.roleId = data.roleId
 
-  await db.update(users).set(updateFields).where(eq(users.id, data.id))
+  await db.update(users).set(updateFields).where(eq(users.id, String(data.id)))
 
   return { success: true }
 }
@@ -97,7 +96,7 @@ export async function deleteUser(id: number) {
   const [user] = await db
     .select({ roleId: users.roleId })
     .from(users)
-    .where(and(eq(users.id, id), isNull(users.deletedAt)))
+    .where(and(eq(users.id, String(id)), isNull(users.deletedAt)))
   
   if (user?.roleId === 1) {
     const [{ count: superadminCount }] = await db
@@ -119,7 +118,7 @@ export async function deleteUser(id: number) {
     // Soft delete user
     await tx.update(users)
       .set({ deletedAt: new Date() })
-      .where(eq(users.id, id))
+      .where(eq(users.id, String(id)))
   })
   
   return { success: true }

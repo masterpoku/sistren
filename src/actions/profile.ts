@@ -33,12 +33,11 @@ export async function updateUserProfile(data: UpdateProfileData) {
 
   // Update user name if provided
   if (data.name) {
-    await db.update(users).set({ name: data.name }).where(eq(users.id, userId))
+    await db.update(users).set({ name: data.name }).where(eq(users.id, String(userId)))
   }
 
   // Update profile fields
   await updateProfile(userId, {
-    name: data.name,
     nik: data.nik,
     phone: data.phone,
     birthPlace: data.birthPlace,

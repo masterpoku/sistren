@@ -5,7 +5,7 @@ import { verifyPermission } from '@/lib/auth/verify-session'
 import { db } from '@/lib/db'
 import { 
   classes, majors, semesters, subjects, 
-  enrollments, profiles, grades
+  enrollments, profiles
 } from '@/lib/db/schema'
 import { eq, and, isNull, count, desc } from 'drizzle-orm'
 
@@ -78,16 +78,6 @@ export async function deleteClass(id: number): Promise<{ success: true } | { suc
     return { success: false, error: `Kelas memiliki ${enrollmentCount.count} enrollment aktif. Hapus enrollment terlebih dahulu.` }
   }
 
-  // GUARD: Check active subjects
-  const [subjectCount] = await db
-    .select({ count: count() })
-    .from(subjects)
-    .where(and(eq(subjects.classId, id), isNull(subjects.deletedAt)))
-  
-  if ((subjectCount?.count ?? 0) > 0) {
-    return { success: false, error: `Kelas memiliki ${subjectCount.count} mapel aktif. Hapus mapel terlebih dahulu.` }
-  }
-
   // Soft delete
   await db.update(classes).set({ deletedAt: new Date() }).where(eq(classes.id, id))
   return { success: true }
@@ -147,16 +137,6 @@ export async function deleteMajor(id: number): Promise<{ success: true } | { suc
   
   if ((profileCount?.count ?? 0) > 0) {
     return { success: false, error: `Jurusan memiliki ${profileCount.count} siswa/guru aktif. Hapus data peserta terlebih dahulu.` }
-  }
-
-  // GUARD: Check active subjects
-  const [subjectCount] = await db
-    .select({ count: count() })
-    .from(subjects)
-    .where(and(eq(subjects.majorId, id), isNull(subjects.deletedAt)))
-  
-  if ((subjectCount?.count ?? 0) > 0) {
-    return { success: false, error: `Jurusan memiliki ${subjectCount.count} mapel aktif. Hapus mapel terlebih dahulu.` }
   }
 
   // Soft delete
@@ -229,16 +209,6 @@ export async function deleteSemester(id: number): Promise<{ success: true } | { 
   
   if ((enrollmentCount?.count ?? 0) > 0) {
     return { success: false, error: `Semester memiliki ${enrollmentCount.count} enrollment aktif. Hapus enrollment terlebih dahulu.` }
-  }
-
-  // GUARD: Check active grades
-  const [gradeCount] = await db
-    .select({ count: count() })
-    .from(grades)
-    .where(and(eq(grades.semesterId, id), isNull(grades.deletedAt)))
-  
-  if ((gradeCount?.count ?? 0) > 0) {
-    return { success: false, error: `Semester memiliki ${gradeCount.count} data nilai. Hapus nilai terlebih dahulu.` }
   }
 
   // Soft delete
@@ -325,16 +295,6 @@ export async function updateSubject(id: number, data: {
 
 export async function deleteSubject(id: number) {
   await verifyPermission('subjects.manage')
-
-  // GUARD: Check active grades
-  const [gradeCount] = await db
-    .select({ count: count() })
-    .from(grades)
-    .where(and(eq(grades.subjectId, id), isNull(grades.deletedAt)))
-  
-  if ((gradeCount?.count ?? 0) > 0) {
-    return { success: false, error: `Mapel memiliki ${gradeCount.count} data nilai. Tidak bisa dihapus.` }
-  }
 
   // Soft delete
   await db.update(subjects).set({ deletedAt: new Date() }).where(eq(subjects.id, id))

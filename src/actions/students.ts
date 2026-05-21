@@ -84,7 +84,6 @@ export async function createStudent(data: CreateStudentData) {
     password: hashedPassword,
     name: data.name,
     roleId: 4, // siswa
-    confirmed: true,
   })
 
   // Get the newly created user
@@ -93,8 +92,7 @@ export async function createStudent(data: CreateStudentData) {
   if (newUser) {
     // Create profile
     await createProfile({
-      userId: newUser.id,
-      name: data.name,
+      userId: Number(newUser.id),
       nik: data.nik || null,
       nisn: data.nisn || null,
       birthPlace: data.birthPlace || null,
@@ -135,13 +133,12 @@ export async function updateStudent(data: UpdateStudentData) {
 
   // Update user name
   if (profileData.name) {
-    await db.update(users).set({ name: profileData.name }).where(eq(users.id, id))
+    await db.update(users).set({ name: profileData.name }).where(eq(users.id, String(id)))
   }
 
   // Update profile
   const { updateProfile } = await import('@/lib/db/queries')
   await updateProfile(id, {
-    name: profileData.name,
     nik: profileData.nik,
     nisn: profileData.nisn,
     birthPlace: profileData.birthPlace,
@@ -163,10 +160,10 @@ export async function deleteStudent(id: number) {
   
   // Soft delete user and profile atomically
   await db.transaction(async (tx) => {
-    // Soft delete profile
+    // Soft delete user
     await tx.update(users)
       .set({ deletedAt: new Date() })
-      .where(eq(users.id, id))
+      .where(eq(users.id, String(id)))
     
     // Soft delete profile (from queries.ts, uses same pattern)
     const { profiles } = await import('@/lib/db/schema')

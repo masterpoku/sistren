@@ -72,7 +72,6 @@ export async function createTeacher(data: CreateTeacherData) {
     password: hashedPassword,
     name: data.name,
     roleId: 3, // guru
-    confirmed: true,
   })
 
   // Get the newly created user
@@ -80,8 +79,7 @@ export async function createTeacher(data: CreateTeacherData) {
 
   if (newUser) {
     await createProfile({
-      userId: newUser.id,
-      name: data.name,
+      userId: Number(newUser.id),
       nik: data.nik || null,
       birthPlace: data.birthPlace || null,
       birthDate: data.birthDate ? new Date(data.birthDate) : null,
@@ -109,12 +107,11 @@ export async function updateTeacher(data: UpdateTeacherData) {
   const { id, ...profileData } = data
 
   if (profileData.name) {
-    await db.update(users).set({ name: profileData.name }).where(eq(users.id, id))
+    await db.update(users).set({ name: profileData.name }).where(eq(users.id, String(id)))
   }
 
   const { updateProfile } = await import('@/lib/db/queries')
   await updateProfile(id, {
-    name: profileData.name,
     nik: profileData.nik,
     birthPlace: profileData.birthPlace,
     birthDate: profileData.birthDate ? new Date(profileData.birthDate) : null,
@@ -131,7 +128,7 @@ export async function deleteTeacher(id: number) {
   await db.transaction(async (tx) => {
     await tx.update(users)
       .set({ deletedAt: new Date() })
-      .where(eq(users.id, id))
+      .where(eq(users.id, String(id)))
     
     await tx.update(profiles)
       .set({ deletedAt: new Date() })
