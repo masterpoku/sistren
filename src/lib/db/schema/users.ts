@@ -7,28 +7,23 @@ import { accounts } from './accounts'
  * Users table — core authentication (Better Auth compatible).
  *
  * Columns:
- * - id: BIGINT PK (Better Auth uses bigint)
+ * - id: UUID v4 (Better Auth compatible)
  * - email: unique login
+ * - emailVerified: boolean flag (Better Auth convention)
  * - password: hashed
  * - role_id: FK to roles
- * - last_login_at: track login activity
  */
 export const users = mysqlTable('users', {
-  id: bigint('id', { mode: 'number' }).primaryKey().autoincrement(),
-  confirmed: boolean('confirmed').default(false),
-  username: varchar('username', { length: 255 }).unique(),
+  id: varchar('id', { length: 36 }).primaryKey().default(crypto.randomUUID()),
   name: varchar('name', { length: 255 }).notNull(),
   email: varchar('email', { length: 255 }).unique().notNull(),
+  emailVerified: boolean('email_verified').default(false).notNull(),
   image: varchar('image', { length: 255 }),
-  emailVerifiedAt: timestamp('email_verified_at'),
   password: varchar('password', { length: 255 }).notNull(),
   roleId: bigint('role_id', { mode: 'number' }).references(() => roles.id, { onDelete: 'cascade' }),
-  rememberToken: varchar('remember_token', { length: 100 }),
-  lastLoginAt: timestamp('last_login_at'),
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').onUpdateNow(),
-deletedAt: timestamp('deleted_at'),
-  
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').onUpdateNow().notNull(),
+  deletedAt: timestamp('deleted_at'),
 })
 
 export const usersRelations = relations(users, ({ one, many }) => ({

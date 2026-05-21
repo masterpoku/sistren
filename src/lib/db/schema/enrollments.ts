@@ -1,4 +1,4 @@
-import { mysqlTable, bigint, timestamp } from 'drizzle-orm/mysql-core'
+import { mysqlTable, bigint, varchar, timestamp } from 'drizzle-orm/mysql-core'
 import { relations } from 'drizzle-orm'
 import { users } from './users'
 import { classes } from './classes'
@@ -12,7 +12,7 @@ import { semesters } from './semesters'
  */
 export const enrollments = mysqlTable('enrollments', {
   id: bigint('id', { mode: 'number' }).primaryKey().autoincrement(),
-  studentId: bigint('student_id', { mode: 'number' }).notNull().references(() => users.id, { onDelete: 'cascade' }),
+  studentId: varchar('student_id', { length: 36 }).notNull().references(() => users.id, { onDelete: 'cascade' }),
   semesterId: bigint('semester_id', { mode: 'number' }).notNull().references(() => semesters.id, { onDelete: 'cascade' }),
   classId: bigint('class_id', { mode: 'number' }).notNull().references(() => classes.id, { onDelete: 'cascade' }),
   createdAt: timestamp('created_at').defaultNow(),

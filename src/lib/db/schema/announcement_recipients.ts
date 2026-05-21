@@ -1,4 +1,4 @@
-import { mysqlTable, bigint, boolean, timestamp } from 'drizzle-orm/mysql-core'
+import { mysqlTable, bigint, varchar, boolean, timestamp } from 'drizzle-orm/mysql-core'
 import { relations } from 'drizzle-orm'
 import { announcements } from './announcements'
 import { users } from './users'
@@ -11,7 +11,7 @@ import { users } from './users'
  */
 export const announcementRecipients = mysqlTable('announcement_recipients', {
   announcementId: bigint('announcement_id', { mode: 'number' }).notNull().references(() => announcements.id, { onDelete: 'cascade' }),
-  userId: bigint('user_id', { mode: 'number' }).notNull().references(() => users.id, { onDelete: 'cascade' }),
+  userId: varchar('user_id', { length: 36 }).notNull().references(() => users.id, { onDelete: 'cascade' }),
   isRead: boolean('is_read').default(false),
   readAt: timestamp('read_at'),
   createdAt: timestamp('created_at').defaultNow(),

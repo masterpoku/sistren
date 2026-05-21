@@ -1,16 +1,13 @@
-import { mysqlTable, bigint, varchar, timestamp } from 'drizzle-orm/mysql-core'
+import { mysqlTable, varchar, timestamp } from 'drizzle-orm/mysql-core'
 
-/**
- * Verifications table — email verification tokens for Better Auth.
- *
- * Stores temporary tokens for email verification flow.
- * Cleanup via MySQL event scheduler (cleanup_expired_sessions).
- */
-export const verifications = mysqlTable('verifications', {
-  id: bigint('id', { mode: 'number' }).primaryKey().autoincrement(),
-  identifier: varchar('identifier', { length: 255 }).notNull(),
-  token: varchar('token', { length: 255 }).notNull(),
-  expiresAt: timestamp('expires_at').notNull(),
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').onUpdateNow(),
-})
+export const verifications = mysqlTable(
+  'verifications',
+  {
+    id: varchar('id', { length: 36 }).primaryKey().default(crypto.randomUUID()),
+    identifier: varchar('identifier', { length: 255 }).notNull(),
+    value: varchar('value', { length: 255 }).notNull(),
+    expiresAt: timestamp('expires_at').notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').onUpdateNow().notNull(),
+  },
+)

@@ -13,7 +13,7 @@ import { users } from './users'
  */
 export const payments = mysqlTable('payments', {
   id: bigint('id', { mode: 'number' }).primaryKey().autoincrement(),
-  studentId: bigint('student_id', { mode: 'number' }).notNull().references(() => users.id, { onDelete: 'cascade' }),
+  studentId: varchar('student_id', { length: 36 }).notNull().references(() => users.id, { onDelete: 'cascade' }),
   code: varchar('code', { length: 100 }).unique().notNull(),
   description: varchar('description', { length: 255 }).notNull(),
   price: decimal('price', { precision: 10, scale: 2 }).notNull(),

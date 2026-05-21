@@ -15,7 +15,7 @@ export const announcements = mysqlTable('announcements', {
   content: text('content').notNull(),
   category: varchar('category', { length: 50 }),
   priority: mysqlEnum('priority', ['normal', 'important', 'urgent']).default('normal'),
-  authorId: bigint('author_id', { mode: 'number' }).references(() => users.id, { onDelete: 'set null' }),
+  authorId: varchar('author_id', { length: 36 }).references(() => users.id, { onDelete: 'set null' }),
   publishedAt: timestamp('published_at'),
   expiresAt: timestamp('expires_at'),
   createdAt: timestamp('created_at').defaultNow(),
