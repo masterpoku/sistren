@@ -13,4 +13,5 @@ export const paymentMethods = mysqlTable('payment_methods', {
   isActive: boolean('is_active').default(true),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').onUpdateNow(),
+  deletedAt: timestamp('deleted_at'),
 })
