@@ -1,11 +1,11 @@
 import { db } from './index'
-import { roles, majors, classes, semesters, subjects, paymentMethods, systemConfigs, users } from './schema'
+import { roles, majors, classes, semesters, subjects, paymentMethods, users } from './schema'
 import { hash } from 'argon2'
 import { eq, isNull, and } from 'drizzle-orm'
 
 console.log('🌱 Starting seed...')
 
-async function seed() {
+export async function seed() {
 
   // ==================== ROLES ====================
   const roleEntries = [
@@ -199,33 +199,18 @@ async function seed() {
     }
   }
 
-  // ==================== SYSTEM CONFIGS ====================
-  const systemConfigEntries = [
-    { key: 'school_name', value: 'SMK TERPADU', description: 'School name in header' },
-    { key: 'school_address', value: 'Jl. Pendidikan No. 123', description: 'Full address' },
-    { key: 'school_phone', value: '021-1234567', description: 'Contact number' },
-    { key: 'academic_year', value: '2025/2026', description: 'Current academic year' },
-  ]
 
-  for (const entry of systemConfigEntries) {
-    const [existing] = await db
-      .select({ id: systemConfigs.id })
-      .from(systemConfigs)
-      .where(eq(systemConfigs.key, entry.key))
-      .limit(1)
-
-    if (existing) {
-      console.log(`⏭️  System config '${entry.key}' already exists, skipping`)
-    } else {
-      await db.insert(systemConfigs).values(entry)
-      console.log(`✅ Seeded system config: ${entry.key}`)
-    }
-  }
 
   // ==================== ADMIN USERS ====================
+  // Look up role IDs by name (DB may have different IDs than schema seed order)
+  const roleResult = await db.execute<{ id: number; name: string }[]>('SELECT id, name FROM roles');
+  const roleRows: { id: number; name: string }[] = Array.from(roleResult as any);
+  const roleIdByName: Record<string, number> = {};
+  for (const row of roleRows) roleIdByName[row.name] = row.id;
+
   const adminUsers = [
-    { name: 'Super Admin', email: 'superadmin@sistren.com', roleId: 1 },
-    { name: 'Administrator', email: 'admin@sistren.com', roleId: 2 },
+    { name: 'Super Admin', email: 'superadmin@sistren.com', roleName: 'superadmin' },
+    { name: 'Administrator', email: 'admin@sistren.com', roleName: 'administrator' },
   ]
 
   const superadminPassword = await hash('Password123!')
@@ -234,6 +219,12 @@ async function seed() {
   for (let i = 0; i < adminUsers.length; i++) {
     const entry = adminUsers[i]
     const pw = i === 0 ? superadminPassword : adminPassword
+    const roleId = roleIdByName[entry.roleName]
+
+    if (!roleId) {
+      console.log(`⏭️  Role '${entry.roleName}' not found, skipping user '${entry.email}'`)
+      continue
+    }
 
     const [existing] = await db
       .select({ id: users.id })
@@ -254,22 +245,28 @@ async function seed() {
         await db.update(users).set({ deletedAt: null }).where(eq(users.id, softDeleted.id))
         console.log(`♻️  User '${entry.email}' restored from soft-delete`)
       } else {
-        await db.insert(users).values({
-          name: entry.name,
-          email: entry.email,
-          password: pw,
-          confirmed: true,
-          roleId: entry.roleId,
-          deletedAt: null,
-        })
+        // Escape single quotes for raw SQL — values are safe (argon2 hash, controlled seeds)
+        const esc = (s: string) => s.replace(/'/g, "\\'");
+        await db.execute(
+          `INSERT INTO users (name, email, password, role_id, deleted_at, created_at, updated_at)
+           VALUES ('${esc(entry.name)}', '${esc(entry.email)}', '${pw}', ${roleId}, NULL, NOW(), NOW())
+           ON DUPLICATE KEY UPDATE id=id`
+        )
         console.log(`✅ Seeded user: ${entry.email}`)
       }
     }
   }
 
   console.log('🎉 All seed data processed successfully')
+
+  // Seed permissions and role_permissions
+  const { seedPermissions } = await import('./seed-permissions')
+  await seedPermissions()
 }
 
-await seed()
-;(db as any).end()
-process.exit(0)
+// Only auto-run when executed directly
+if (import.meta.main) {
+  await seed()
+  ;(db as any).end()
+  process.exit(0)
+}

@@ -64,7 +64,7 @@ export async function getUserPermissions(userId: number): Promise<UserPermission
   }
 
   return {
-    userId: user.id,
+    userId: Number(user.id),
     roleId: user.roleId as number,
     roleName: user.role.name,
     roleLevel: user.role.level as number,

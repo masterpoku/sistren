@@ -1,76 +1,18 @@
 import { db } from './index'
-import { users, announcements, payments, classes, majors, semesters, profiles, subjects, enrollments, grades } from './schema'
-import { eq, desc, count, and, inArray, isNull } from 'drizzle-orm'
+import { users, announcements, payments, classes, majors, semesters, profiles, subjects, enrollments } from './schema'
+import { eq, desc, count, and, isNull } from 'drizzle-orm'
 import { getUserWithRole } from './queries-user'
 import { getEnrollmentsWithRelations, getEnrollmentByIdWithRelations, getProfilesWithRelations } from './queries-joins'
 
 /**
- * Get grades with subject and semester info using manual joins.
- * Filters soft-deleted records from grades, subjects, semesters, and enrollments.
+ * Get grades with subject and semester info — STUB until schema reimplemented.
  */
-export async function getGradesWithRelations(filters?: { 
+export async function getGradesWithRelations(_filters?: { 
   userId?: number 
   semesterId?: number 
   enrollmentId?: number 
 }) {
-  let query = db
-    .select({
-      id: grades.id,
-      enrollmentId: grades.enrollmentId,
-      subjectId: grades.subjectId,
-      semesterId: grades.semesterId,
-      score: grades.score,
-      grade: grades.grade,
-      predicate: grades.predicate,
-      createdAt: grades.createdAt,
-      // Subject info
-      subjectName: subjects.name,
-      subjectCode: subjects.code,
-      // Semester info
-      semesterName: semesters.name,
-      // Enrollment info (for student/class)
-      studentName: users.name,
-      className: classes.name,
-    })
-    .from(grades)
-    .leftJoin(subjects, eq(grades.subjectId, subjects.id))
-    .leftJoin(semesters, eq(grades.semesterId, semesters.id))
-    .leftJoin(enrollments, eq(grades.enrollmentId, enrollments.id))
-    .leftJoin(users, eq(enrollments.studentId, users.id))
-    .leftJoin(classes, eq(enrollments.classId, classes.id))
-
-  // Apply soft-delete filters
-  const baseCondition = and(
-    isNull(grades.deletedAt),
-    isNull(subjects.deletedAt),
-    isNull(semesters.deletedAt),
-    isNull(enrollments.deletedAt),
-    isNull(users.deletedAt),
-    isNull(classes.deletedAt)
-  )
-
-  if (filters?.enrollmentId) {
-    return query.where(and(baseCondition, eq(grades.enrollmentId, filters.enrollmentId)))
-  }
-
-  if (filters?.userId) {
-    // Get enrollment IDs for this user (only active enrollments)
-    const userEnrollments = await db
-      .select({ id: enrollments.id })
-      .from(enrollments)
-      .where(and(eq(enrollments.studentId, filters.userId), isNull(enrollments.deletedAt)))
-    
-    const enrollmentIds = userEnrollments.map(e => e.id)
-    if (enrollmentIds.length === 0) return []
-    
-    return query.where(and(baseCondition, inArray(grades.enrollmentId, enrollmentIds)))
-  }
-
-  if (filters?.semesterId) {
-    return query.where(and(baseCondition, eq(grades.semesterId, filters.semesterId)))
-  }
-
-  return query.where(baseCondition)
+  return []
 }
 
 export interface DashboardStats {
@@ -305,45 +247,19 @@ export async function deleteEnrollment(id: number) {
 }
 
 // ============================================
-// GRADES CRUD (KHS)
+// GRADES CRUD (KHS) — stubs until schema reimplemented
 // ============================================
 
-export async function getGrades(filters?: { userId?: number; semesterId?: number; enrollmentId?: number }) {
-  return getGradesWithRelations(filters)
+export async function getGradeById(_id: number) {
+  return null
 }
 
-export async function getGradeById(id: number) {
-  const results = await db
-    .select({
-      id: grades.id,
-      enrollmentId: grades.enrollmentId,
-      subjectId: grades.subjectId,
-      semesterId: grades.semesterId,
-      score: grades.score,
-      grade: grades.grade,
-      predicate: grades.predicate,
-      createdAt: grades.createdAt,
-      subjectName: subjects.name,
-      subjectCode: subjects.code,
-      semesterName: semesters.name,
-    })
-    .from(grades)
-    .leftJoin(subjects, eq(grades.subjectId, subjects.id))
-    .leftJoin(semesters, eq(grades.semesterId, semesters.id))
-    .where(and(eq(grades.id, id), isNull(grades.deletedAt)))
-    .limit(1)
-  
-  return results[0] ?? null
+export async function inputGrade(_data: never) {
+  throw new Error('Grades not yet implemented')
 }
 
-export async function inputGrade(data: typeof grades.$inferInsert) {
-  const result = await db.insert(grades).values(data)
-  return result
-}
-
-export async function updateGrade(id: number, data: Partial<typeof grades.$inferInsert>) {
-  const result = await db.update(grades).set(data).where(eq(grades.id, id))
-  return result
+export async function updateGrade(_id: number, _data: never) {
+  throw new Error('Grades not yet implemented')
 }
 
 // No deleteGrade — grades are immutable academic records

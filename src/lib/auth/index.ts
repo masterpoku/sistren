@@ -1,5 +1,7 @@
 import { betterAuth } from 'better-auth'
-import { drizzleAdapter } from 'better-auth/adapters/drizzle'
+import { drizzleAdapter } from '@better-auth/drizzle-adapter'
+import { admin } from 'better-auth/plugins/admin'
+import { nextCookies } from 'better-auth/next-js'
 import { db } from '@/lib/db'
 import * as schema from '@/lib/db/schema'
 
@@ -11,20 +13,23 @@ export const auth = betterAuth({
     schema,
     usePlural: true,
   }),
-  // Disable experimental.joins - MariaDB doesn't support json_arrayagg with LATERAL JOIN
-  experimental: {
-    // joins: true  // <-- CANNOT enable - MariaDB syntax error
-  },
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: false,
   },
   session: {
-    expiresIn: 60 * 60 * 24 * 7,
-    updateAge: 60 * 60 * 24,
+    expiresIn: 60 * 60 * 24 * 7, // 7 days
+    updateAge: 60 * 60 * 24,    // 1 day
   },
-  // Add debug logging
-  logger: {
-    level: 'debug',
+  additionalFields: {
+    roleId: {
+      type: 'number',
+      required: false,
+      input: false, // admin-only, not user-settable during signup
+    },
   },
+  plugins: [
+    admin(),
+    nextCookies(), // MUST be last
+  ],
 })

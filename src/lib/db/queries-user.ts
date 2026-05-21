@@ -13,9 +13,8 @@ export async function getUserWithRole(userId: number) {
       id: users.id,
       name: users.name,
       email: users.email,
-      username: users.username,
+      emailVerified: users.emailVerified,
       password: users.password,
-      confirmed: users.confirmed,
       roleId: users.roleId,
       createdAt: users.createdAt,
       // Role fields
@@ -25,7 +24,7 @@ export async function getUserWithRole(userId: number) {
     })
     .from(users)
     .leftJoin(roles, eq(users.roleId, roles.id))
-    .where(and(eq(users.id, userId), isNull(users.deletedAt)))
+    .where(and(eq(users.id, String(userId)), isNull(users.deletedAt)))
     .limit(1)
 
   if (result.length === 0) return null
@@ -35,9 +34,8 @@ export async function getUserWithRole(userId: number) {
     id: row.id,
     name: row.name,
     email: row.email,
-    username: row.username,
+    emailVerified: row.emailVerified,
     password: row.password,
-    confirmed: row.confirmed,
     roleId: row.roleId,
     createdAt: row.createdAt,
     role: row.roleName ? {
@@ -59,9 +57,8 @@ export async function getUserByEmailWithRole(email: string) {
       id: users.id,
       name: users.name,
       email: users.email,
-      username: users.username,
+      emailVerified: users.emailVerified,
       password: users.password,
-      confirmed: users.confirmed,
       roleId: users.roleId,
       createdAt: users.createdAt,
       roleName: roles.name,
@@ -80,9 +77,8 @@ export async function getUserByEmailWithRole(email: string) {
     id: row.id,
     name: row.name,
     email: row.email,
-    username: row.username,
+    emailVerified: row.emailVerified,
     password: row.password,
-    confirmed: row.confirmed,
     roleId: row.roleId,
     createdAt: row.createdAt,
     role: row.roleName ? {
