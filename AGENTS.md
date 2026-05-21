@@ -43,12 +43,21 @@ bunx drizzle-kit push
 bunx drizzle-kit migrate
 ```
 
+## Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `DATABASE_URL` | MySQL connection string |
+| `BETTER_AUTH_SECRET` | Secret for better-auth session signing |
+| `BETTER_AUTH_URL` | Public URL for better-auth (e.g., http://localhost:3000) |
+| `DOCUMENT_ENCRYPTION_KEY` | 32-byte hex or base64 key for AES-256-GCM blob encryption |
+
 ## Rules
 
 1. **bun only** — Use `bun` for all package management and scripts. Never `npm`, `yarn`, `pnpm`.
 2. **No manual deps** — Use `bun add` or `bun remove`. Never edit `package.json` manually.
 3. **No pinned versions** — Use ranges (`^`). Let bun resolve compatible versions.
-4. **Never commit secrets** — Never commit `.env`, `.env.*`, or any file containing credentials. Required env vars: `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `DOCUMENT_ENCRYPTION_KEY` (32-byte key for AES-256-GCM blob encryption).
+4. **Never commit secrets** — Never commit `.env`, `.env.*`, or any file containing credentials.
 5. **Soft delete aware** — Every user-facing query MUST filter `deletedAt IS NULL`. Forgot = data leak.
 6. **Read before edit** — Always read existing files before modifying them.
 7. **Verify before execute** — Run typecheck/lint before assuming code is correct.
@@ -63,14 +72,24 @@ bunx drizzle-kit migrate
 - Transactions: use `db.transaction(async (tx) => { ... })` for atomic ops
 - Blob columns: `Buffer` in Node.js maps to `mediumblob()` / `MEDIUMBLOB` in MariaDB. Use `mediumblob()` for files up to 16MB.
 
+### better-auth UUID IDs
+All auth-related IDs (users, sessions, accounts, verifications) are `varchar(36)` UUID strings.
+`roles.id` stays `BIGINT auto-increment`.
+
 ### better-auth Admin Plugin
 - Staff accounts (guru, admin) must be created via Admin plugin: `auth.api.createUser()` — never bypass better-auth with direct DB inserts
 - Admin plugin also provides `listUsers`, `banUser`, `impersonate`
 - `additionalFields.roleId` configured in auth options; maps to custom `roles` table
+- **nextCookies plugin** — Required for Server Action cookie setting. Must be last in plugins array.
+
+### Soft Delete Per Table
+`sessions` and `accounts` have their own `deletedAt` column (separate from `users.deletedAt`).
+When a user is soft-deleted, their sessions/accounts are independently soft-deleted.
 
 ### File Uploads (Student Documents)
 - All student documents are stored as **encrypted** `MEDIUMBLOB` — AES-256-GCM, key via `DOCUMENT_ENCRYPTION_KEY` env var
-- Encryption utility: encrypt before insert, decrypt on retrieval. Never store unencrypted blobs.
+- Encryption utility: `encryptBlob`/`decryptBlob` from `src/lib/crypto.ts`. Use for all blob inserts.
+- Never store unencrypted blobs.
 - Document types: `ijasah`, `skhun`, `skl`, `akta_kelahiran`, `kk`, `ktp_ayah`, `ktp_ibu`, `kip`, `pass_foto`, `rapor` (per semester)
 - Next.js Server Actions accept `FormData`. Extract file via `formData.get('file')`
 - Default Server Action body size limit is 1MB. Set `serverActions.bodySizeLimit: 16 * 1024 * 1024` in `next.config.ts`
@@ -128,6 +147,39 @@ specs/
 - **After implementing a task**, the agent MUST update `specs/TASKS.md` (mark done, add notes) and update the relevant `tasks-{date}.md` file
 - **During planning**: when breaking down a phase or goal into actionable tasks, write the task list to `specs/tasks/tasks-{date}.md` first, then register milestones in `TASKS.md`
 - **Cross-session goals** stay in `TASKS.md`; atomic tasks live in `specs/tasks/`
+
+## Style: shadcn/ui + Tailwind CSS v4
+
+**Components:** All UI components must be shadcn/ui. Run `bunx shadcn@latest add <component>` to add. Never manually copy-paste shadcn components — use the CLI.
+
+**Theme tokens (design tokens):**
+```
+background / foreground     ← page shell, default text
+card / card-foreground       ← elevated surfaces (Card, panels)
+popover / popover-foreground
+primary / primary-foreground   ← high-emphasis actions, brand
+secondary / secondary-foreground
+muted / muted-foreground       ← placeholders, helper text
+accent / accent-foreground     ← hover, focus, active states
+destructive / destructive-foreground
+border                        ← cards, menus, tables, dividers
+input                         ← form controls
+ring                          ← focus rings
+```
+
+**CSS variables pattern:** `hsl(var(--primary))` — never hardcode hex/HSL in component files.
+
+**`cn()` utility:** Use for all conditional Tailwind classes. Never template literals.
+```tsx
+import { cn } from "@/lib/utils"
+<div className={cn("base", condition && "conditional")} />
+```
+
+**Variant prop values:** `"default" | "ghost" | "destructive" | "outline" | "secondary"` — follow shadcn naming.
+
+**Server Components by default:** Add `'use client'` only for browser APIs, hooks, event handlers.
+
+**Icons:** Phosphor Icons (`@phosphor-icons/react`).
 
 ## Role Levels
 

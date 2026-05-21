@@ -46,6 +46,48 @@ Drizzle provides SQL-like query patterns that feel natural to developers who kno
 ### Why Route-level Permission Enforcement via `proxy.ts`?
 Instead of checking permissions inside every page component, a Next.js middleware (`proxy.ts`) intercepts all routes and enforces permissions before rendering. This provides a single enforcement point and prevents any route from accidentally becoming publicly accessible. Auth is checked via `auth.api.getSession()` then cross-checked against the `deletedAt` soft-delete flag.
 
+### Why shadcn/ui as the component foundation?
+shadcn/ui is not a component library — it's a component _distribution platform_. Components are copied into the project (`components/ui/`), not installed as a package. This gives full ownership: you own the code, can customize anything, and are not dependent on a library maintainer to ship a fix or feature. The trade-off is that you must maintain the components yourself when shadcn/ui releases updates.
+
+
+**Sistren's shadcn maturity levels:**
+
+| Level | Name | Description |
+|-------|------|-------------|
+| L0 | Ad-hoc | Manually copied components, no `components.json`, no theme system |
+| L1 | Initial | `components.json` exists, CLI can add components, CSS variables defined |
+| L2 | Managed | `ThemeProvider` in root layout, dark mode works, all tokens aligned to shadcn convention |
+| L3 | Defined | Custom registry with Sistren branding, all 50+ shadcn components available, CLI-managed |
+| L4 | Optimized | Component variants frozen to registry, no manual edits outside registry, automated diff checks |
+
+**Target for Sistren: L3** — full shadcn integration with custom branding layer on top.
+
+### Why a shadcn skill for AI agents?
+The shadcn skill (`bunx shadcn@latest init`) gives AI agents project-aware context: framework version, Tailwind version, installed components, aliases, icon library. Without it, agents generate code that doesn't match your project configuration. With it, agents produce correct code on first try.
+
+### UI/UX Anti-Isolation Standards (Anti-Isolops)
+
+"Isolops" = agents working in isolation, producing siloed UI that doesn't integrate with the design system. Each agent writes their own components with inconsistent tokens, variant names, and interaction patterns.
+
+**To prevent isolops, every UI task must:**
+
+
+1. **Use shared CSS variables** — never hardcode hex values, HSL values, or Tailwind color utilities outside the design token system (`hsl(var(--primary))`, `bg-background`, `text-foreground`)
+2. **Extend existing components first** — before building a new UI element, check if a shadcn component covers the use case. Custom components are last resort.
+3. **Use `cn()` for all conditional classes** — never use template literals or string concatenation for Tailwind classes. `cn()` merges Tailwind correctly.
+4. **Follow shadcn variant conventions** — components use `variant` prop with values like `"default"`, `"ghost"`, `"destructive"`, `"outline"`, `"secondary"`. Do not invent custom variant names without documenting them.
+5. **Server Components by default** — add `'use client'` only when the component uses browser APIs, React hooks, or event handlers. Prefer composition: a parent Server Component wrapping child Client Components.
+6. **No layout-specific logic in components** — components are layout-agnostic. Sidebar visibility, page padding, and routing belong in page files, not component internals.
+7. **Document non-obvious patterns** — any custom variant, custom token, or deviation from shadcn defaults must be documented in the component file as a comment.
+
+**Compliance check (before any UI PR merges):**
+- [ ] All colors use design tokens (no raw hex/HSL in component files)
+- [ ] All interactive elements use existing shadcn components or documented custom components
+- [ ] `cn()` used for all conditional class merging
+- [ ] Variant props follow shadcn naming conventions
+- [ ] No `'use client'` without explicit justification
+- [ ] ThemeProvider covers root layout
+
 ### Why soft delete everywhere?
 School data has regulatory retention requirements. Soft delete preserves audit history while keeping the UI clean. All queries default to `WHERE deleted_at IS NULL` unless an admin explicitly needs to view deleted records.
 
@@ -108,6 +150,18 @@ Staff accounts (guru, admin) are created by admin using the Admin plugin (`auth.
 ### ❌ Skipping `typecheck` before commits
 The codebase has no CI yet. Running `bun run typecheck` before every commit prevents type regressions from silently entering the codebase.
 
+### ❌ Isolops — Siloed UI Development
+Producing UI components without referencing the shared design system. Each agent or task writes components in isolation, creating inconsistent tokens, variant names, and interaction patterns.
+
+**Anti-isolops rules:**
+- All colors from design tokens only — no raw hex/HSL in component files
+- Extend shadcn components before building custom — custom is last resort
+- All class merging via `cn()` — never template literals for Tailwind
+- Variant props follow shadcn naming (`variant="default|ghost|destructive|outline|secondary")
+- Server Components by default — `'use client'` only when necessary
+- Layout-agnostic components — sidebar/padding/routing belong in page files
+- Document any custom variant or token deviation inline
+
 ---
 
 ## Decision Log
@@ -126,6 +180,18 @@ The codebase has no CI yet. Running `bun run typecheck` before every commit prev
 | 2026-05-21 | Audit log auth + payments | Financial and academic accountability; Rapor is uploaded not entered so no grade audit |
 | 2026-05-21 | Env vars: DATABASE_URL, BETTER_AUTH_SECRET, BETTER_AUTH_URL, DOCUMENT_ENCRYPTION_KEY | Minimal config for VPS deployment; DOCUMENT_ENCRYPTION_KEY = 32-byte key for AES-256-GCM |
 | 2026-05-21 | MariaDB `max_allowed_packet` = 64MB minimum | 10 blob fields per student × 2MB avg + encryption overhead + margin |
+| 2026-05-21 | shadcn/ui as component foundation, L3 target | Not a package — components copied into project. Full ownership, CLI-managed updates |
+| 2026-05-21 | shadcn skill for AI agents | Project-aware context = correct code on first try from AI agents |
+| 2026-05-21 | UI/UX Anti-Isolation Standards | Prevent siloed UI: shared tokens, extend-first, cn(), variant conventions, SFC by default |
+| 2026-05-21 | UUID v4 for all auth table IDs (users, accounts, sessions, verifications) | better-auth default; `crypto.randomUUID()` on insert. roles.id stays BIGINT. Different ID spaces avoid FK conflicts. |
+| 2026-05-21 | verifications table HAS `id: varchar(36) PK` | CORRECTION: earlier memory claimed "NO id column". Official better-auth docs confirm: `id: string PK` required. Task file had this wrong. |
+| 2026-05-21 | accounts: `accessTokenExpiresAt` + `refreshTokenExpiresAt` (NOT `expiresAt`) | Official better-auth field names. Task file had `expiresAt` wrong. |
+| 2026-05-21 | accounts.`accountId` is NOT NULL | Official better-auth requirement. Task file marked it optional — wrong. |
+| 2026-05-21 | Soft delete per table independently | sessions and accounts have their own deletedAt — not cascaded from users. Each table is independently soft-deletable. |
+| 2026-05-21 | Grades table NOT in schema | Rapor stored as encrypted blob via attachments. No structured grade input in v1. Task file had grades — wrong. |
+| 2026-05-21 | nextCookies() MUST be last in plugins array | better-auth/next-js requirement. Placing any plugin after it breaks cookie handling. |
+| 2026-05-21 | `generateId: "serial"` rejected | Issue #6762: NaN error with passkey plugin, closed not-planned. UUID v4 is safe path for ~1000 users. |
+| 2026-05-21 | Grades table kept for future extensibility | Table stays in schema (unused for now) — can add structured input later if needed |
 
 ---
 
