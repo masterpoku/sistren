@@ -10,7 +10,7 @@ import { users } from './users'
  */
 export const profileAssets = mysqlTable('profile_assets', {
   id: bigint('id', { mode: 'number' }).primaryKey().autoincrement(),
-  userId: bigint('user_id', { mode: 'number' }).notNull().references(() => users.id, { onDelete: 'cascade' }),
+  userId: varchar('user_id', { length: 36 }).notNull().references(() => users.id, { onDelete: 'cascade' }),
   diploma: varchar('diploma', { length: 255 }),
   skhu: varchar('skhu', { length: 255 }),
   skl: varchar('skl', { length: 255 }),
