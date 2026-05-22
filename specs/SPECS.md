@@ -14,7 +14,6 @@ Sistren is a school information system (SIS) for Indonesian high schools — a w
 - bun as the only runtime/package manager
 
 ### Deployment
-- Manual deploy via git hooks
 - `.env` for configuration — never commit secrets
 
 ### Scale
@@ -146,9 +145,6 @@ Tailwind v4 uses CSS-first configuration (`@theme` directive). `tailwind.config.
 
 ### ❌ Using better-auth `signUpEmail()` for staff accounts
 Staff accounts (guru, admin) are created by admin using the Admin plugin (`auth.api.createUser()`). Student self-registration uses `signUpEmail()` with admin approval. Better-auth's `signUpEmail()` is for student self-service only.
-
-### ❌ Skipping `typecheck` before commits
-The codebase has no CI yet. Running `bun run typecheck` before every commit prevents type regressions from silently entering the codebase.
 
 ### ❌ Casting `session.user.id` (UUID string) to `Number()`
 `users.id` is `varchar(36)` UUID string. `Number("uuid-string")` = `NaN`. In MariaDB, `NaN` coerces to `0` on INSERT into a numeric column. Every `Number(userId)` call silently corrupts data — permission overrides get `userId=0`, permission lookups return empty. **Never use `Number()` on a UUID string.**
