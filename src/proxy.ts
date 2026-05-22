@@ -28,20 +28,18 @@ export async function proxy(request: NextRequest) {
 
   const minLevel = ROLE_LEVEL_REQUIREMENTS[pathname]
   if (minLevel !== undefined) {
-    const hasLevel = await hasRoleLevel(Number(session.user.id), minLevel)
+    const hasLevel = await hasRoleLevel(session.user.id, minLevel)
     if (!hasLevel) {
       return NextResponse.redirect(new URL('/unauthorized', request.url))
     }
   }
 
-  // Longest route prefix wins — ensures /academic/grades matches 'grades.read_any'
-  // before /academic matches 'classes.manage'
   const requiredPermission = SORTED_ROUTE_ENTRIES.find(([route]) =>
     pathname.startsWith(route)
   )?.[1]
 
   if (requiredPermission) {
-    const allowed = await hasPermission(Number(session.user.id), requiredPermission)
+    const allowed = await hasPermission(session.user.id, requiredPermission)
     if (!allowed) {
       return NextResponse.redirect(new URL('/unauthorized', request.url))
     }

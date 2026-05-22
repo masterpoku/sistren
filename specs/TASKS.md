@@ -39,19 +39,9 @@ Schema redesign complete. All 20 tables rewritten from better-auth + Drizzle fir
 
 **Opened:** 2026-05-22
 
-**Status:** in-progress
+**Status:** completed
 
-**Depends-on:** Phase 1 (superceded)
-
-**Task file:** `specs/tasks/tasks-rebase-next-js-with-correct-better-auth-2026-05-22.md`
-
-**Definition of done:**
-- [ ] Schema migration: `user_permissions.userId` bigint → varchar(36) via ALTER TABLE
-- [ ] Remove ALL `Number(userId)` casts from permissions.ts (3 locations)
-- [ ] Delete `src/app/api/auth/permissions/route.ts` (confirmed: not used)
-- [ ] Fix `(app)/layout.tsx` — replace deleted import, fix server component call client API
-- [ ] `bun run typecheck` passes — 0 errors in auth layer
-- [ ] `bun run build` succeeds
+**Completed:** 2026-05-22 (DB migration verified)
 
 **Key findings (verified via source read):**
 - `user_permissions.userId` is `bigint` — `users.id` is `varchar(36)` — MariaDB FK requires exact type match

@@ -1,6 +1,5 @@
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from '@better-auth/drizzle-adapter'
-import { admin } from 'better-auth/plugins/admin'
 import { nextCookies } from 'better-auth/next-js'
 import { db } from '@/lib/db'
 import * as schema from '@/lib/db/schema'

@@ -2,12 +2,14 @@ import 'server-only'
 import { auth } from '@/lib/auth'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
+import { getAuthContext } from './permissions'
 
 /**
  * Verifies the user session from the request.
  * Redirects to /login if no valid session.
+ * Returns userId as string (UUID from better-auth).
  */
-export async function verifySession() {
+export async function verifySession(): Promise<{ userId: string; email: string; name: string }> {
   const session = await auth.api.getSession({
     headers: await headers(),
   })
@@ -17,7 +19,7 @@ export async function verifySession() {
   }
 
   return {
-    userId: parseInt(session.user.id),
+    userId: session.user.id,
     email: session.user.email,
     name: session.user.name,
   }
@@ -27,51 +29,62 @@ export async function verifySession() {
  * Verifies the user has admin-level permissions (roleLevel >= 80).
  * Redirects to /unauthorized if not authorized.
  */
-export async function verifyAdmin() {
-  const { userId } = await verifySession()
-  
-  // Import here to avoid circular dependencies
-  const { hasRoleLevel } = await import('@/lib/auth/permissions')
-  
-  const allowed = await hasRoleLevel(userId, 80)
-  if (!allowed) {
+export async function verifyAdmin(): Promise<string> {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
+
+  if (!session?.user) {
+    redirect('/login')
+  }
+
+  const ctx = await getAuthContext(session.user.id)
+  if (!ctx || ctx.roleLevel < 80) {
     redirect('/unauthorized')
   }
-  
-  return userId
+
+  return session.user.id
 }
 
 /**
  * Verifies the user has minimum role level.
  * Redirects to /unauthorized if not authorized.
  */
-export async function verifyRoleLevel(minLevel: number) {
-  const { userId } = await verifySession()
-  
-  const { hasRoleLevel } = await import('@/lib/auth/permissions')
-  
-  const allowed = await hasRoleLevel(userId, minLevel)
-  if (!allowed) {
+export async function verifyRoleLevel(minLevel: number): Promise<string> {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
+
+  if (!session?.user) {
+    redirect('/login')
+  }
+
+  const ctx = await getAuthContext(session.user.id)
+  if (!ctx || ctx.roleLevel < minLevel) {
     redirect('/unauthorized')
   }
-  
-  return userId
+
+  return session.user.id
 }
 
 /**
  * Verifies the user has a specific permission.
- * Superadmin (level >= 100) bypass — handled by hasPermission().
+ * Superadmin (level >= 100) bypass — handled by getAuthContext().
  * Redirects to /unauthorized if not authorized.
  */
-export async function verifyPermission(permissionName: string) {
-  const { userId } = await verifySession()
-  
-  const { hasPermission } = await import('@/lib/auth/permissions')
-  
-  const allowed = await hasPermission(userId, permissionName)
-  if (!allowed) {
+export async function verifyPermission(permissionName: string): Promise<string> {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
+
+  if (!session?.user) {
+    redirect('/login')
+  }
+
+  const ctx = await getAuthContext(session.user.id)
+  if (!ctx || !ctx.permissions.has(permissionName)) {
     redirect('/unauthorized')
   }
-  
-  return userId
+
+  return session.user.id
 }
