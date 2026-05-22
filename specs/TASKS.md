@@ -33,6 +33,35 @@ Schema redesign complete. All 20 tables rewritten from better-auth + Drizzle fir
 
 ---
 
+### Phase 1b: Auth Layer Rebase — Fix 5 Critical QA Issues
+
+**Why:** Phase 1 marked completed but 5 critical issues remain. userId type mismatch (bigint vs varchar), broken imports, server/client confusion. Blocks all downstream work.
+
+**Opened:** 2026-05-22
+
+**Status:** in-progress
+
+**Depends-on:** Phase 1 (superceded)
+
+**Task file:** `specs/tasks/tasks-rebase-next-js-with-correct-better-auth-2026-05-22.md`
+
+**Definition of done:**
+- [ ] Schema migration: `user_permissions.userId` bigint → varchar(36) via ALTER TABLE
+- [ ] Remove ALL `Number(userId)` casts from permissions.ts (3 locations)
+- [ ] Delete `src/app/api/auth/permissions/route.ts` (confirmed: not used)
+- [ ] Fix `(app)/layout.tsx` — replace deleted import, fix server component call client API
+- [ ] `bun run typecheck` passes — 0 errors in auth layer
+- [ ] `bun run build` succeeds
+
+**Key findings (verified via source read):**
+- `user_permissions.userId` is `bigint` — `users.id` is `varchar(36)` — MariaDB FK requires exact type match
+- `Number("uuid")` = NaN in MySQL → coerces to 0 on INSERT → silently corrupted permission overrides
+- `get-session.ts` deleted but `(app)/layout.tsx` still imports it — workers marked done but file not deleted
+- Permissions route imports non-existent `getUserPermissions` function
+- AppLayoutClient interface: `{ id, name, email, role, roleId, roleLevel }` — stays as-is, maps from ctx.roleName → role
+
+---
+
 ### Phase 2: Project scaffolding
 
 **Why:** Clean foundation before feature work. Fix migration journal, empty API routes for SSO, git hooks.
@@ -272,6 +301,33 @@ Schema redesign complete. All 20 tables rewritten from better-auth + Drizzle fir
 4. Task file says accounts.accountId is optional — **actual: NOT NULL** (official requirement)
 5. Task file omits sessions.deletedAt, accounts.deletedAt, role_permissions.deletedAt — **actual: all added** (soft delete per table)
 6. Task file has grades table in spec — **actual: NOT in schema** (Rapor via attachments only)
+
+---
+
+## Quick Wins — 2026-05-22
+
+**What got done today:**
+
+| What | Status | Notes |
+|------|--------|-------|
+| tasks-rebase-next-js-with-correct-better-auth-2026-05-22.md created | ✅ | 5 critical issues + fix plan documented |
+| Deep research session completed | ✅ | session.user.id is string UUID (ZodCoercedString), confirmed via @better-auth/core source |
+| createUser cannot set additionalFields via data | ✅ | GitHub Issue #3602 confirmed — must use Drizzle update after createUser |
+| AppLayoutClient interface verified | ✅ | `{ id, name, email, role, roleId, roleLevel }` stays as-is |
+| Permissions route confirmed unused | ✅ | User confirmed: DELETE |
+| userId FK scan across all schema files | ✅ | enrollments, attachments, profiles, announcements, payments, audit_logs — all varchar(36) |
+| user_permissions.userId — critical miss identified | ⚠️ | Was bigint, schema mismatch, needs migration |
+
+**Critical findings embedded in task file:**
+- `Number(userId)` on UUID string = NaN → coerces to 0 in MySQL → silently corrupts data
+- Schema: user_permissions.userId bigint vs users.id varchar(36) — FK constraint broken at MariaDB level
+- Layout: imports deleted file, calls client API in server component, session shape mismatch
+- All findings verified via source code read + better-auth docs — no assumptions
+
+**What didn't get done:**
+- Migration not executed (workers doing this)
+- Code fixes not applied (workers doing this)
+- Build not verified (blocked by code fixes)
 
 ---
 

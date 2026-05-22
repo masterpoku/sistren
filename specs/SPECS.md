@@ -150,6 +150,11 @@ Staff accounts (guru, admin) are created by admin using the Admin plugin (`auth.
 ### ❌ Skipping `typecheck` before commits
 The codebase has no CI yet. Running `bun run typecheck` before every commit prevents type regressions from silently entering the codebase.
 
+### ❌ Casting `session.user.id` (UUID string) to `Number()`
+`users.id` is `varchar(36)` UUID string. `Number("uuid-string")` = `NaN`. In MariaDB, `NaN` coerces to `0` on INSERT into a numeric column. Every `Number(userId)` call silently corrupts data — permission overrides get `userId=0`, permission lookups return empty. **Never use `Number()` on a UUID string.**
+
+**Fix pattern:** Pass `session.user.id` as-is (string) to all functions. Only cast at the DB boundary if the column type requires it — and if it does, the column type should match first.
+
 ### ❌ Isolops — Siloed UI Development
 Producing UI components without referencing the shared design system. Each agent or task writes components in isolation, creating inconsistent tokens, variant names, and interaction patterns.
 
@@ -190,8 +195,11 @@ Producing UI components without referencing the shared design system. Each agent
 | 2026-05-21 | Soft delete per table independently | sessions and accounts have their own deletedAt — not cascaded from users. Each table is independently soft-deletable. |
 | 2026-05-21 | Grades table NOT in schema | Rapor stored as encrypted blob via attachments. No structured grade input in v1. Task file had grades — wrong. |
 | 2026-05-21 | nextCookies() MUST be last in plugins array | better-auth/next-js requirement. Placing any plugin after it breaks cookie handling. |
-| 2026-05-21 | `generateId: "serial"` rejected | Issue #6762: NaN error with passkey plugin, closed not-planned. UUID v4 is safe path for ~1000 users. |
-| 2026-05-21 | Grades table kept for future extensibility | Table stays in schema (unused for now) — can add structured input later if needed |
+| 2026-05-22 | `user_permissions.userId` bigint → varchar(36) migration | `users.id` is UUID string, `bigint` FK caused NaN coerces to 0 in MariaDB. All user FK columns now varchar(36) for type consistency. |
+| 2026-05-22 | Admin plugin excluded from server auth | Conflicts with custom RBAC roleId FK system. Admin plugin expects `role` string field, we use `roleId` number FK. Admin ops via server actions only. |
+| 2026-05-22 | `createUser()` cannot set additional fields via `data` param | GitHub Issue #3602 confirmed. Must use Drizzle `update()` after `auth.api.createUser()` to set roleId and other additionalFields. |
+| 2026-05-22 | Permissions route `src/app/api/auth/permissions/route.ts` deleted | Not used by any client-side code. Stub code that imported non-existent `getUserPermissions`. |
+| 2026-05-22 | `emailVerified = false` is the pending approval state | No separate status field. Admin sets `emailVerified = true` as the approval action. |
 
 ---
 
