@@ -1,8 +1,11 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { auth } from '@/lib/auth'
+import { db } from '@/lib/db'
+import { users } from '@/lib/db/schema'
 import { PUBLIC_ROUTES, ROUTE_PERMISSIONS, ROLE_LEVEL_REQUIREMENTS } from '@/lib/auth/route-permissions'
 import { hasPermission, hasRoleLevel } from '@/lib/auth/permissions'
+import { eq } from 'drizzle-orm'
 
 // Pre-sort routes by length (longest first) so more specific paths match first
 const SORTED_ROUTE_ENTRIES = Object.entries(ROUTE_PERMISSIONS).sort(
@@ -21,6 +24,20 @@ export async function proxy(request: NextRequest) {
   })
 
   if (!session?.user) {
+    const loginUrl = new URL('/login', request.url)
+    loginUrl.searchParams.set('callbackUrl', pathname)
+    return NextResponse.redirect(loginUrl)
+  }
+
+  // Soft-delete check — redirect to /login if user was deactivated
+  const [userRecord] = await db
+    .select({ deletedAt: users.deletedAt })
+    .from(users)
+    .where(eq(users.id, session.user.id))
+    .limit(1)
+
+  if (userRecord && userRecord.deletedAt !== null) {
+    await auth.api.signOut({ headers: request.headers })
     const loginUrl = new URL('/login', request.url)
     loginUrl.searchParams.set('callbackUrl', pathname)
     return NextResponse.redirect(loginUrl)

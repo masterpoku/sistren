@@ -19,7 +19,7 @@ export const users = mysqlTable('users', {
   email: varchar('email', { length: 255 }).unique().notNull(),
   emailVerified: boolean('email_verified').default(false).notNull(),
   image: varchar('image', { length: 255 }),
-  password: varchar('password', { length: 255 }).notNull(),
+  password: varchar('password', { length: 255 }),
   roleId: bigint('role_id', { mode: 'number' }).references(() => roles.id, { onDelete: 'cascade' }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').onUpdateNow().notNull(),

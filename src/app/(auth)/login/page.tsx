@@ -7,7 +7,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
-import { GraduationCap, ShieldCheck, Student } from '@phosphor-icons/react'
+import { GraduationCap, ShieldCheck, Student, Warning } from '@phosphor-icons/react'
+import { loginAction } from '@/actions/auth'
 
 const authClient = createAuthClient({
   baseURL: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
@@ -15,9 +16,7 @@ const authClient = createAuthClient({
 
 export default function LoginPage() {
   const router = useRouter()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
+  const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
@@ -28,22 +27,19 @@ export default function LoginPage() {
     })
   }, [router])
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    setError('')
+    setError(null)
     setLoading(true)
 
-    try {
-      const result = await authClient.signIn.email({
-        email,
-        password,
-      })
+    const formData = new FormData(e.currentTarget)
 
-      if (result.error) {
-        setError(result.error.message || 'Email atau password salah.')
-      } else {
-        router.push('/dashboard')
+    try {
+      const result = await loginAction(formData)
+      if (result && 'error' in result) {
+        setError(result.error)
       }
+      // redirect happens via loginAction for success case
     } catch (err) {
       setError('Terjadi kesalahan. Silakan coba lagi.')
     } finally {
@@ -51,9 +47,20 @@ export default function LoginPage() {
     }
   }
 
-  const quickLogin = async (email: string) => {
-    setEmail(email)
-    setPassword('Password123!')
+  const quickLogin = (email: string) => {
+    const formData = new FormData()
+    formData.set('email', email)
+    formData.set('password', 'Password123!')
+    setLoading(true)
+    loginAction(formData).then((result) => {
+      if (result && 'error' in result) {
+        setError(result.error)
+        setLoading(false)
+      }
+    }).catch(() => {
+      setError('Terjadi kesalahan.')
+      setLoading(false)
+    })
   }
 
   return (
@@ -81,18 +88,18 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <CardContent className="space-y-4">
               {error && (
-                <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-                  {error}
+                <div className="flex items-center gap-2 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+                  <Warning className="h-4 w-4 shrink-0" />
+                  <span>{error}</span>
                 </div>
               )}
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
+                  name="email"
                   type="email"
                   placeholder="nama@sistren.sch.id"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
                   required
                 />
               </div>
@@ -100,9 +107,8 @@ export default function LoginPage() {
                 <Label htmlFor="password">Password</Label>
                 <Input
                   id="password"
+                  name="password"
                   type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
                   required
                 />
               </div>

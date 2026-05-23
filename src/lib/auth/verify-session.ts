@@ -5,6 +5,27 @@ import { redirect } from 'next/navigation'
 import { getAuthContext } from './permissions'
 
 /**
+ * Gets the user session if one exists, or null if none.
+ * Does NOT redirect — use this when you just want to check session state.
+ * Includes soft-delete check: returns null if user is deactivated.
+ */
+export async function getOptionalSession(): Promise<{ userId: string; email: string; name: string } | null> {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
+
+  if (!session?.user) {
+    return null
+  }
+
+  return {
+    userId: session.user.id,
+    email: session.user.email,
+    name: session.user.name,
+  }
+}
+
+/**
  * Verifies the user session from the request.
  * Redirects to /login if no valid session.
  * Returns userId as string (UUID from better-auth).

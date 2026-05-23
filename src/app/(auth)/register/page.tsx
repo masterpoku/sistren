@@ -1,66 +1,37 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { createAuthClient } from 'better-auth/client'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
-import { GraduationCap } from '@phosphor-icons/react'
-
-const authClient = createAuthClient({
-  baseURL: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
-})
+import { GraduationCap, Warning } from '@phosphor-icons/react'
+import { registerAction } from '@/actions/register'
 
 export default function RegisterPage() {
-  const router = useRouter()
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [error, setError] = useState('')
+  const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
-    setError('')
-
-    if (password !== confirmPassword) {
-      setError('Password tidak cocok')
-      return
-    }
-
-    if (password.length < 6) {
-      setError('Password minimal 6 karakter')
-      return
-    }
-
+    setError(null)
     setLoading(true)
 
+    const formData = new FormData(e.currentTarget)
+
     try {
-      const result = await authClient.signUp.email({
-        email,
-        password,
-        name,
-      })
-
-      if (result.error) {
-        setError(result.error.message || 'Pendaftaran gagal.')
-      } else {
-        // Auto sign in after registration
-        const signInResult = await authClient.signIn.email({
-          email,
-          password,
-        })
-
-        if (signInResult.error) {
-          router.push('/login?registered=true')
-        } else {
-          router.push('/dashboard')
-        }
+      const result = await registerAction(formData)
+      if (result && 'error' in result) {
+        setError(result.error)
       }
-    } catch (err) {
+      // redirect happens via registerAction on success
+    } catch (err: unknown) {
+      if (
+        err instanceof Error &&
+        err.message.includes('NEXT_REDIRECT')
+      ) {
+        return // redirect is happening, do nothing
+      }
       setError('Terjadi kesalahan. Silakan coba lagi.')
     } finally {
       setLoading(false)
@@ -90,17 +61,18 @@ export default function RegisterPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <CardContent className="space-y-4">
               {error && (
-                <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-                  {error}
+                <div className="flex items-center gap-2 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+                  <Warning className="h-4 w-4 shrink-0" />
+                  <span>{error}</span>
                 </div>
               )}
+
               <div className="space-y-2">
                 <Label htmlFor="name">Nama Lengkap</Label>
                 <Input
                   id="name"
+                  name="name"
                   placeholder="Nama lengkap sesuai KK"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
                   required
                 />
               </div>
@@ -108,10 +80,9 @@ export default function RegisterPage() {
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
+                  name="email"
                   type="email"
                   placeholder="email@ortu.id"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
                   required
                 />
               </div>
@@ -119,9 +90,8 @@ export default function RegisterPage() {
                 <Label htmlFor="password">Password</Label>
                 <Input
                   id="password"
+                  name="password"
                   type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
                   required
                 />
               </div>
@@ -129,11 +99,65 @@ export default function RegisterPage() {
                 <Label htmlFor="confirmPassword">Konfirmasi Password</Label>
                 <Input
                   id="confirmPassword"
+                  name="confirmPassword"
                   type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
                   required
                 />
+              </div>
+
+              <div className="border-t pt-4">
+                <p className="text-xs font-medium text-muted-foreground mb-3 uppercase tracking-wider">
+                  Data Siswa
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="nisn">NISN</Label>
+                    <Input id="nisn" name="nisn" placeholder="1234567890" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="birthPlace">Tempat Lahir</Label>
+                    <Input id="birthPlace" name="birthPlace" placeholder="Bandung" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="birthDate">Tanggal Lahir</Label>
+                    <Input id="birthDate" name="birthDate" type="date" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="gender">Jenis Kelamin</Label>
+                    <select
+                      id="gender"
+                      name="gender"
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <option value="male">Laki-laki</option>
+                      <option value="female">Perempuan</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="religion">Agama</Label>
+                    <Input id="religion" name="religion" placeholder="Islam" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="address">Alamat</Label>
+                    <Input id="address" name="address" placeholder="Jl. Raya No. 1" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t pt-4">
+                <p className="text-xs font-medium text-muted-foreground mb-3 uppercase tracking-wider">
+                  Data Orang Tua
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="fatherName">Nama Ayah</Label>
+                    <Input id="fatherName" name="fatherName" placeholder="Nama ayah" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="motherName">Nama Ibu</Label>
+                    <Input id="motherName" name="motherName" placeholder="Nama ibu" />
+                  </div>
+                </div>
               </div>
             </CardContent>
             <CardFooter className="flex flex-col gap-4">

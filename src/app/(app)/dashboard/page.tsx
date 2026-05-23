@@ -1,20 +1,14 @@
-import { redirect } from 'next/navigation'
-import { getSession } from '@/lib/auth/session'
+import { verifySession } from '@/lib/auth/verify-session'
 
 export default async function DashboardPage() {
-  const session = await getSession()
-
-  if (!session?.user) {
-    redirect('/login')
-  }
+  const session = await verifySession()
 
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold">Dashboard</h1>
       <p className="text-muted-foreground mt-2">
-        Selamat datang, {session.user.name}
+        Selamat datang, {session.name}
       </p>
-      {/* Full dashboard implementation in Phase 11 */}
     </div>
   )
 }

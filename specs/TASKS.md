@@ -72,11 +72,30 @@ Schema redesign complete. All 20 tables rewritten from better-auth + Drizzle fir
 
 **Why:** Auth + all user CRUD + student self-registration with admin approval.
 
+
 **Opened:** 2026-05-21
 
-**Status:** not-started
+**Status:** in-progress
 
 **Depends-on:** Phase 1
+
+**Completed sub-tasks (2026-05-23):**
+- [x] seed.ts — roles, permissions, role_permissions, 4 test users via `signUpEmail`
+- [x] `loginAction` + `registerAction` Server Actions (`src/actions/`)
+- [x] Login page migrated to Server Action form
+- [x] Register page migrated to Server Action form
+- [x] `proxy.ts` soft-delete check
+- [x] `getOptionalSession` added to verify-session.ts
+
+**In progress:**
+- Dashboard role badge + quick actions (Turbopack/shadcn `createContext` incompatibility — needs client component boundary)
+
+**Remaining:**
+- Admin approval UI for pending registrations
+- Staff account creation by admin
+- Profile edit page
+- Attachment upload (encrypted blob)
+
 
 **Definition of done:**
 - [ ] better-auth `signUpEmail()` for student registration
