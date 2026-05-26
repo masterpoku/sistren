@@ -1,67 +1,81 @@
-'use client'
+'use client';
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { createAuthClient } from 'better-auth/client'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
-import { GraduationCap, ShieldCheck, Student, Warning } from '@phosphor-icons/react'
-import { loginAction } from '@/actions/auth'
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { createAuthClient } from 'better-auth/client';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import {
+  GraduationCap,
+  ShieldCheck,
+  Student,
+  Warning,
+} from '@phosphor-icons/react';
+import { loginAction } from '@/actions/auth';
 
 const authClient = createAuthClient({
   baseURL: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
-})
+});
 
 export default function LoginPage() {
-  const router = useRouter()
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
+  const router = useRouter();
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     authClient.getSession().then((session) => {
       if (session?.data) {
-        router.push('/dashboard')
+        router.push('/dashboard');
       }
-    })
-  }, [router])
+    });
+  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setError(null)
-    setLoading(true)
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
 
-    const formData = new FormData(e.currentTarget)
+    const formData = new FormData(e.currentTarget);
 
     try {
-      const result = await loginAction(formData)
+      const result = await loginAction(formData);
       if (result && 'error' in result) {
-        setError(result.error)
+        setError(result.error);
       }
       // redirect happens via loginAction for success case
     } catch (err) {
-      setError('Terjadi kesalahan. Silakan coba lagi.')
+      setError('Terjadi kesalahan. Silakan coba lagi.');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const quickLogin = (email: string) => {
-    const formData = new FormData()
-    formData.set('email', email)
-    formData.set('password', 'Password123!')
-    setLoading(true)
-    loginAction(formData).then((result) => {
-      if (result && 'error' in result) {
-        setError(result.error)
-        setLoading(false)
-      }
-    }).catch(() => {
-      setError('Terjadi kesalahan.')
-      setLoading(false)
-    })
-  }
+    const formData = new FormData();
+    formData.set('email', email);
+    formData.set('password', 'Password123!');
+    setLoading(true);
+    loginAction(formData)
+      .then((result) => {
+        if (result && 'error' in result) {
+          setError(result.error);
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        setError('Terjadi kesalahan.');
+        setLoading(false);
+      });
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
@@ -105,12 +119,7 @@ export default function LoginPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  required
-                />
+                <Input id="password" name="password" type="password" required />
               </div>
             </CardContent>
             <CardFooter className="flex flex-col gap-4">
@@ -180,5 +189,5 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

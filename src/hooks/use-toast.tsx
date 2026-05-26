@@ -1,36 +1,42 @@
-'use client'
+'use client';
 
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react'
+import {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  ReactNode,
+} from 'react';
 
 export interface Toast {
-  id: string
-  title?: string
-  description?: string
-  variant?: 'default' | 'destructive'
+  id: string;
+  title?: string;
+  description?: string;
+  variant?: 'default' | 'destructive';
 }
 
 interface ToastContextType {
-  toasts: Toast[]
-  toast: (toast: Omit<Toast, 'id'>) => void
-  dismiss: (id: string) => void
+  toasts: Toast[];
+  toast: (toast: Omit<Toast, 'id'>) => void;
+  dismiss: (id: string) => void;
 }
 
-const ToastContext = createContext<ToastContextType | undefined>(undefined)
+const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
 export function ToastProvider({ children }: { children: ReactNode }) {
-  const [toasts, setToasts] = useState<Toast[]>([])
+  const [toasts, setToasts] = useState<Toast[]>([]);
 
   const toast = useCallback((newToast: Omit<Toast, 'id'>) => {
-    const id = Math.random().toString(36).substring(7)
-    setToasts((prev) => [...prev, { ...newToast, id }])
+    const id = Math.random().toString(36).substring(7);
+    setToasts((prev) => [...prev, { ...newToast, id }]);
     setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id))
-    }, 5000)
-  }, [])
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 5000);
+  }, []);
 
   const dismiss = useCallback((id: string) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id))
-  }, [])
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
 
   return (
     <ToastContext.Provider value={{ toasts, toast, dismiss }}>
@@ -46,21 +52,25 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             }`}
           >
             {t.title && <div className="font-medium">{t.title}</div>}
-            {t.description && <div className="text-sm text-muted-foreground">{t.description}</div>}
+            {t.description && (
+              <div className="text-sm text-muted-foreground">
+                {t.description}
+              </div>
+            )}
           </div>
         ))}
       </div>
     </ToastContext.Provider>
-  )
+  );
 }
 
 export function useToast() {
-  const context = useContext(ToastContext)
+  const context = useContext(ToastContext);
   if (!context) {
     return {
       toast: () => {},
       dismiss: () => {},
-    }
+    };
   }
-  return context
+  return context;
 }

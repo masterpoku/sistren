@@ -24,6 +24,7 @@
 ## Tasks
 
 ### [T1] Rebuild login page at `/login`
+
 **File:** `src/app/(auth)/login/page.tsx`
 **Why:** Login is the entry point. Existing page used client-side `authClient.signIn.email()` — migrated to Server Action pattern.
 
@@ -40,6 +41,7 @@
 ---
 
 ### [T2] Rebuild registration page at `/register`
+
 **File:** `src/app/(auth)/register/page.tsx`
 **Why:** Student self-registration is the primary user onboarding path.
 
@@ -56,6 +58,7 @@
 ---
 
 ### [T3] Create `verifySession` server-side utility
+
 **File:** `src/lib/auth/verify-session.ts`
 **Why:** All Server Actions and page components need a consistent way to get the current session + role context.
 
@@ -67,6 +70,7 @@
 ---
 
 ### [T4] Create `login` Server Action
+
 **File:** `src/actions/auth.ts`
 **Why:** Keep form handling logic in Server Action, not in page component.
 
@@ -81,6 +85,7 @@
 ---
 
 ### [T5] Create `register` Server Action
+
 **File:** `src/actions/register.ts`
 **Why:** Registration logic goes here — profile creation, validation, role assignment.
 
@@ -97,6 +102,7 @@
 ---
 
 ### [T6] Rebuild minimal dashboard at `/dashboard`
+
 **File:** `src/app/(app)/dashboard/page.tsx`
 **Why:** Currently 19-line stub. Needs session-based content once Phase 3 progresses.
 
@@ -112,6 +118,7 @@
 ---
 
 ### [T7] Protect `/app` routes — verify proxy.ts is blocking correctly
+
 **File:** `src/proxy.ts`
 **Why:** All `/app/*` routes must require auth. proxy.ts is the enforcement point.
 
@@ -126,6 +133,7 @@
 ## Additional Work Completed (not in original task list)
 
 ### [T0] Create `seed.ts` — seed roles, permissions, test users
+
 **File:** `src/lib/db/seed.ts`
 **Why:** No seed script existed. `package.json` referenced `bun run src/lib/db/seed.ts` but file was missing.
 
@@ -161,6 +169,7 @@ T7 (proxy.ts)            → already had soft-delete logic, added check
 ## What NOT included in quick wins (deferred)
 
 These are deferred to later in Phase 3:
+
 - Admin approval UI for pending registrations
 - Staff account creation by admin
 - Profile edit page

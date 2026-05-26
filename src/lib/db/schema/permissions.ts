@@ -1,4 +1,10 @@
-import { mysqlTable, bigint, varchar, text, timestamp } from 'drizzle-orm/mysql-core'
+import {
+  mysqlTable,
+  bigint,
+  varchar,
+  text,
+  timestamp,
+} from 'drizzle-orm/mysql-core';
 
 /**
  * Permissions table — defines all available system permissions for RBAC.
@@ -16,4 +22,4 @@ export const permissions = mysqlTable('permissions', {
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').onUpdateNow(),
   deletedAt: timestamp('deleted_at'),
-})
+});

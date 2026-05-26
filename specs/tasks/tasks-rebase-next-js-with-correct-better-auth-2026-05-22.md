@@ -59,16 +59,16 @@ These are confirmed by source code + better-auth docs + MariaDB:
 
 ### Code Fixes Applied
 
-| # | Change | File |
-|---|--------|------|
-| 1 | Removed `Number(userId)` from userOverrides query | `src/lib/auth/permissions.ts` line 65 |
-| 2 | Removed `Number(userId)` from `grantPermission` | `src/lib/auth/permissions.ts` line 151 |
-| 3 | Removed `Number(userId)` from `revokePermission` | `src/lib/auth/permissions.ts` line 167 |
-| 4 | Deleted dead permissions route | `src/app/api/auth/permissions/route.ts` |
-| 5 | Rewrote layout — `getSession` + `getAuthContext` + `auth.api.signOut` | `src/app/(app)/layout.tsx` |
-| 6 | Removed verbose comment | `src/proxy.ts` |
-| 7 | Changed `user_permissions.userId` from `bigint` to `varchar(36)` | `src/lib/db/schema/user_permissions.ts` |
-| 8 | Added `varchar` import | `src/lib/db/schema/user_permissions.ts` |
+| #   | Change                                                                | File                                    |
+| --- | --------------------------------------------------------------------- | --------------------------------------- |
+| 1   | Removed `Number(userId)` from userOverrides query                     | `src/lib/auth/permissions.ts` line 65   |
+| 2   | Removed `Number(userId)` from `grantPermission`                       | `src/lib/auth/permissions.ts` line 151  |
+| 3   | Removed `Number(userId)` from `revokePermission`                      | `src/lib/auth/permissions.ts` line 167  |
+| 4   | Deleted dead permissions route                                        | `src/app/api/auth/permissions/route.ts` |
+| 5   | Rewrote layout — `getSession` + `getAuthContext` + `auth.api.signOut` | `src/app/(app)/layout.tsx`              |
+| 6   | Removed verbose comment                                               | `src/proxy.ts`                          |
+| 7   | Changed `user_permissions.userId` from `bigint` to `varchar(36)`      | `src/lib/db/schema/user_permissions.ts` |
+| 8   | Added `varchar` import                                                | `src/lib/db/schema/user_permissions.ts` |
 
 ### Cascade Deletions (Option A — unblock build)
 
@@ -78,12 +78,12 @@ These are confirmed by source code + better-auth docs + MariaDB:
 
 **Files deleted to unblock build:**
 
-| Category | Files |
-|----------|-------|
-| Actions (argon2 + userId type errors) | `students.ts`, `teachers.ts`, `users.ts`, `dashboard.ts`, `enrollments.ts`, `grades.ts`, `payments.ts`, `permissions.ts`, `profile.ts`, `announcements.ts`, `academic.ts` |
-| Features (depended on deleted actions) | `users/`, `students/`, `teachers/`, `dashboard/`, `finance/`, `academic/`, `announcements/`, `profile/`, `permissions/`, `roles/` |
-| App pages (depended on deleted features) | `users/`, `students/`, `teachers/`, `academic/`, `announcements/`, `finance/`, `permissions/`, `profile/`, `roles/` |
-| Query files (Phase 3 scope, blocking build) | `queries.ts`, `queries-joins.ts`, `queries-user.ts`, `seed.ts` |
+| Category                                    | Files                                                                                                                                                                     |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Actions (argon2 + userId type errors)       | `students.ts`, `teachers.ts`, `users.ts`, `dashboard.ts`, `enrollments.ts`, `grades.ts`, `payments.ts`, `permissions.ts`, `profile.ts`, `announcements.ts`, `academic.ts` |
+| Features (depended on deleted actions)      | `users/`, `students/`, `teachers/`, `dashboard/`, `finance/`, `academic/`, `announcements/`, `profile/`, `permissions/`, `roles/`                                         |
+| App pages (depended on deleted features)    | `users/`, `students/`, `teachers/`, `academic/`, `announcements/`, `finance/`, `permissions/`, `profile/`, `roles/`                                                       |
+| Query files (Phase 3 scope, blocking build) | `queries.ts`, `queries-joins.ts`, `queries-user.ts`, `seed.ts`                                                                                                            |
 
 ### Build Verification
 
@@ -109,18 +109,18 @@ Route (app)
 
 ## DEFINITION OF DONE — ACTUAL RESULTS
 
-| Criterion | Status |
-|-----------|--------|
-| `user_permissions.userId` schema = `varchar(36)` | ✅ Done (schema file) |
-| MariaDB column = `varchar(36)` | ✅ Done — `SHOW CREATE TABLE` confirmed |
-| FK constraint re-added | ✅ Done — already existed (workers ran manually) |
-| Unique constraint on (userId, permissionId) | ✅ Done — `idx_user_permission` added |
-| Zero `Number(userId)` casts in permissions.ts | ✅ Done — `grep` returns nothing |
-| Permissions route deleted | ✅ Done |
-| Layout imports correct files | ✅ Done — no reference to `get-session.ts` |
-| Layout uses `auth.api.signOut` | ✅ Done — server-side logout |
-| Layout passes `role: ctx.roleName` | ✅ Done |
-| `bun run build` succeeds | ✅ Done — 8 routes clean |
+| Criterion                                        | Status                                           |
+| ------------------------------------------------ | ------------------------------------------------ |
+| `user_permissions.userId` schema = `varchar(36)` | ✅ Done (schema file)                            |
+| MariaDB column = `varchar(36)`                   | ✅ Done — `SHOW CREATE TABLE` confirmed          |
+| FK constraint re-added                           | ✅ Done — already existed (workers ran manually) |
+| Unique constraint on (userId, permissionId)      | ✅ Done — `idx_user_permission` added            |
+| Zero `Number(userId)` casts in permissions.ts    | ✅ Done — `grep` returns nothing                 |
+| Permissions route deleted                        | ✅ Done                                          |
+| Layout imports correct files                     | ✅ Done — no reference to `get-session.ts`       |
+| Layout uses `auth.api.signOut`                   | ✅ Done — server-side logout                     |
+| Layout passes `role: ctx.roleName`               | ✅ Done                                          |
+| `bun run build` succeeds                         | ✅ Done — 8 routes clean                         |
 
 ---
 
@@ -166,6 +166,7 @@ All Phase 3 user management files were deleted to unblock build:
 - `src/lib/db/seed.ts` — seed file (argon2 import)
 
 These must be rewritten in Phase 3 with:
+
 - No `argon2` — use better-auth internal hashing
 - `userId: string` (UUID) — not `number`
 - Use new `verifySession` / `verifyPermission` helpers
@@ -174,9 +175,9 @@ These must be rewritten in Phase 3 with:
 
 ## DECISIONS LOG
 
-| Decision | Reason |
-|----------|--------|
-| Delete action files instead of fixing | Build blocked by argon2 missing + userId type errors. Action files are Phase 3 scope. Deleting is faster than fixing 11 files that will be rewritten anyway. |
-| Cascade delete features + app pages | Each deleted action exposed feature pages that imported from it. Kept removing until build passed. |
-| Delete query/seed files | Phase 3 scope, blocking typecheck. Will be rewritten in Phase 3. |
-| Fix schema file, not just DB | Changed `user_permissions.userId` from `bigint` to `varchar(36)` in Drizzle schema. This makes TypeScript happy and documents the intended column type. DB migration still pending. |
+| Decision                              | Reason                                                                                                                                                                              |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Delete action files instead of fixing | Build blocked by argon2 missing + userId type errors. Action files are Phase 3 scope. Deleting is faster than fixing 11 files that will be rewritten anyway.                        |
+| Cascade delete features + app pages   | Each deleted action exposed feature pages that imported from it. Kept removing until build passed.                                                                                  |
+| Delete query/seed files               | Phase 3 scope, blocking typecheck. Will be rewritten in Phase 3.                                                                                                                    |
+| Fix schema file, not just DB          | Changed `user_permissions.userId` from `bigint` to `varchar(36)` in Drizzle schema. This makes TypeScript happy and documents the intended column type. DB migration still pending. |

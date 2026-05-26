@@ -1,13 +1,19 @@
-import { db } from '@/lib/db'
-import { permissions, rolePermissions, userPermissions, users, roles } from '@/lib/db/schema'
-import { eq, and, isNull, or, gt } from 'drizzle-orm'
+import { db } from '@/lib/db';
+import {
+  permissions,
+  rolePermissions,
+  userPermissions,
+  users,
+  roles,
+} from '@/lib/db/schema';
+import { eq, and, isNull, or, gt } from 'drizzle-orm';
 
 export interface AuthContext {
-  userId: string       // string UUID
-  roleId: number
-  roleLevel: number
-  roleName: string
-  permissions: Set<string>
+  userId: string; // string UUID
+  roleId: number;
+  roleLevel: number;
+  roleName: string;
+  permissions: Set<string>;
 }
 
 /**
@@ -21,7 +27,9 @@ export interface AuthContext {
  *    - granted=false removes permission
  *    - expired overrides are ignored
  */
-export async function getAuthContext(userId: string): Promise<AuthContext | null> {
+export async function getAuthContext(
+  userId: string
+): Promise<AuthContext | null> {
   // Query users table with role join
   const userResult = await db
     .select({
@@ -34,22 +42,22 @@ export async function getAuthContext(userId: string): Promise<AuthContext | null
     .from(users)
     .leftJoin(roles, eq(users.roleId, roles.id))
     .where(and(eq(users.id, userId), isNull(users.deletedAt)))
-    .limit(1)
+    .limit(1);
 
-  if (userResult.length === 0) return null
+  if (userResult.length === 0) return null;
 
-  const user = userResult[0]
+  const user = userResult[0];
 
-  if (user.roleId === null) return null
+  if (user.roleId === null) return null;
 
   // Get role permissions via junction table
   const rolePermResults = await db
     .select({ name: permissions.name })
     .from(rolePermissions)
     .innerJoin(permissions, eq(rolePermissions.permissionId, permissions.id))
-    .where(eq(rolePermissions.roleId, user.roleId))
+    .where(eq(rolePermissions.roleId, user.roleId));
 
-  const rolePermissionSet = new Set(rolePermResults.map(p => p.name))
+  const rolePermissionSet = new Set(rolePermResults.map((p) => p.name));
 
   // Get user-specific permission overrides
   const userOverrides = await db
@@ -63,16 +71,19 @@ export async function getAuthContext(userId: string): Promise<AuthContext | null
     .where(
       and(
         eq(userPermissions.userId, userId),
-        or(isNull(userPermissions.expiresAt), gt(userPermissions.expiresAt, new Date()))
+        or(
+          isNull(userPermissions.expiresAt),
+          gt(userPermissions.expiresAt, new Date())
+        )
       )
-    )
+    );
 
-  const effectivePermissions = new Set(rolePermissionSet)
+  const effectivePermissions = new Set(rolePermissionSet);
   for (const override of userOverrides) {
     if (override.granted) {
-      effectivePermissions.add(override.name)
+      effectivePermissions.add(override.name);
     } else {
-      effectivePermissions.delete(override.name)
+      effectivePermissions.delete(override.name);
     }
   }
 
@@ -82,61 +93,73 @@ export async function getAuthContext(userId: string): Promise<AuthContext | null
     roleName: user.roleName || 'unknown',
     roleLevel: (user.roleLevel as number) ?? 0,
     permissions: effectivePermissions,
-  }
+  };
 }
 
 /**
  * Checks if a user has a specific permission.
  * Superadmin (level >= 100) has all permissions implicitly.
  */
-export async function hasPermission(userId: string, permission: string): Promise<boolean> {
-  const ctx = await getAuthContext(userId)
-  if (!ctx) return false
+export async function hasPermission(
+  userId: string,
+  permission: string
+): Promise<boolean> {
+  const ctx = await getAuthContext(userId);
+  if (!ctx) return false;
 
   if (ctx.roleLevel >= 100) {
-    return true
+    return true;
   }
 
-  return ctx.permissions.has(permission)
+  return ctx.permissions.has(permission);
 }
 
 /**
  * Checks if a user has any of the specified permissions.
  */
-export async function hasAnyPermission(userId: string, permissionList: string[]): Promise<boolean> {
-  const ctx = await getAuthContext(userId)
-  if (!ctx) return false
+export async function hasAnyPermission(
+  userId: string,
+  permissionList: string[]
+): Promise<boolean> {
+  const ctx = await getAuthContext(userId);
+  if (!ctx) return false;
 
   if (ctx.roleLevel >= 100) {
-    return true
+    return true;
   }
 
-  return permissionList.some(p => ctx.permissions.has(p))
+  return permissionList.some((p) => ctx.permissions.has(p));
 }
 
 /**
  * Checks if a user has all of the specified permissions.
  */
-export async function hasAllPermissions(userId: string, permissionList: string[]): Promise<boolean> {
-  const ctx = await getAuthContext(userId)
-  if (!ctx) return false
+export async function hasAllPermissions(
+  userId: string,
+  permissionList: string[]
+): Promise<boolean> {
+  const ctx = await getAuthContext(userId);
+  if (!ctx) return false;
 
   if (ctx.roleLevel >= 100) {
-    return true
+    return true;
   }
 
-  return permissionList.every(p => ctx.permissions.has(p))
+  return permissionList.every((p) => ctx.permissions.has(p));
 }
 
 /**
  * Checks if a user's role level is at or above the specified level.
  * Useful for hierarchical checks (e.g., "can manage teachers").
  */
-export async function hasRoleLevel(userId: string, minLevel: number): Promise<boolean> {
-  const ctx = await getAuthContext(userId)
-  if (!ctx) return false
+export async function hasRoleLevel(
+  userId: string,
+  minLevel: number
+): Promise<boolean> {
+  const ctx = await getAuthContext(userId);
+  if (!ctx) return false;
 
-  return ctx.roleLevel >= minLevel
+  return ctx.roleLevel >= minLevel;
 }
 
 /**
@@ -152,7 +175,7 @@ export async function grantPermission(
     permissionId,
     granted: true,
     expiresAt,
-  })
+  });
 }
 
 /**
@@ -168,5 +191,5 @@ export async function revokePermission(
     permissionId,
     granted: false,
     expiresAt,
-  })
+  });
 }

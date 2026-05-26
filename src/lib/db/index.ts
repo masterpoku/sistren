@@ -1,5 +1,5 @@
-import { drizzle } from 'drizzle-orm/mysql2'
-import * as schema from './schema'
+import { drizzle } from 'drizzle-orm/mysql2';
+import * as schema from './schema';
 
 export const db = drizzle({
   connection: {
@@ -10,8 +10,7 @@ export const db = drizzle({
     database: process.env.DB_NAME ?? 'sistren',
   },
   schema,
-  mode: 'default'
-})
+  mode: 'default',
+});
 
-export type Database = typeof db
-
+export type Database = typeof db;

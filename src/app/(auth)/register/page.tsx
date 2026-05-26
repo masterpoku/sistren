@@ -1,40 +1,44 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
-import { GraduationCap, Warning } from '@phosphor-icons/react'
-import { registerAction } from '@/actions/register'
+import { useState } from 'react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { GraduationCap, Warning } from '@phosphor-icons/react';
+import { registerAction } from '@/actions/register';
 
 export default function RegisterPage() {
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    setError(null)
-    setLoading(true)
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
 
-    const formData = new FormData(e.currentTarget)
+    const formData = new FormData(e.currentTarget);
 
     try {
-      const result = await registerAction(formData)
+      const result = await registerAction(formData);
       if (result && 'error' in result) {
-        setError(result.error)
+        setError(result.error);
       }
       // redirect happens via registerAction on success
     } catch (err: unknown) {
-      if (
-        err instanceof Error &&
-        err.message.includes('NEXT_REDIRECT')
-      ) {
-        return // redirect is happening, do nothing
+      if (err instanceof Error && err.message.includes('NEXT_REDIRECT')) {
+        return; // redirect is happening, do nothing
       }
-      setError('Terjadi kesalahan. Silakan coba lagi.')
+      setError('Terjadi kesalahan. Silakan coba lagi.');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -88,12 +92,7 @@ export default function RegisterPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  required
-                />
+                <Input id="password" name="password" type="password" required />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Konfirmasi Password</Label>
@@ -116,7 +115,11 @@ export default function RegisterPage() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="birthPlace">Tempat Lahir</Label>
-                    <Input id="birthPlace" name="birthPlace" placeholder="Bandung" />
+                    <Input
+                      id="birthPlace"
+                      name="birthPlace"
+                      placeholder="Bandung"
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="birthDate">Tanggal Lahir</Label>
@@ -139,7 +142,11 @@ export default function RegisterPage() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="address">Alamat</Label>
-                    <Input id="address" name="address" placeholder="Jl. Raya No. 1" />
+                    <Input
+                      id="address"
+                      name="address"
+                      placeholder="Jl. Raya No. 1"
+                    />
                   </div>
                 </div>
               </div>
@@ -151,11 +158,19 @@ export default function RegisterPage() {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
                     <Label htmlFor="fatherName">Nama Ayah</Label>
-                    <Input id="fatherName" name="fatherName" placeholder="Nama ayah" />
+                    <Input
+                      id="fatherName"
+                      name="fatherName"
+                      placeholder="Nama ayah"
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="motherName">Nama Ibu</Label>
-                    <Input id="motherName" name="motherName" placeholder="Nama ibu" />
+                    <Input
+                      id="motherName"
+                      name="motherName"
+                      placeholder="Nama ibu"
+                    />
                   </div>
                 </div>
               </div>
@@ -175,5 +190,5 @@ export default function RegisterPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

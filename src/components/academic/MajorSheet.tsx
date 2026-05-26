@@ -1,53 +1,71 @@
-'use client'
+'use client';
 
-import * as React from 'react'
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from '@/components/ui/sheet'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import * as React from 'react';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+} from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 export interface MajorSheetData {
-  name: string
-  description?: string
+  name: string;
+  description?: string;
 }
 
 interface MajorSheetProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onSubmit: (data: MajorSheetData) => Promise<void>
-  initialData?: { id: number; name: string; description?: string | null }
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSubmit: (data: MajorSheetData) => Promise<void>;
+  initialData?: { id: number; name: string; description?: string | null };
 }
 
-export function MajorSheet({ open, onOpenChange, onSubmit, initialData }: MajorSheetProps) {
-  const [loading, setLoading] = React.useState(false)
-  const [name, setName] = React.useState(initialData?.name || '')
-  const [description, setDescription] = React.useState(initialData?.description || '')
+export function MajorSheet({
+  open,
+  onOpenChange,
+  onSubmit,
+  initialData,
+}: MajorSheetProps) {
+  const [loading, setLoading] = React.useState(false);
+  const [name, setName] = React.useState(initialData?.name || '');
+  const [description, setDescription] = React.useState(
+    initialData?.description || ''
+  );
 
   React.useEffect(() => {
     if (open) {
-      setName(initialData?.name || '')
-      setDescription(initialData?.description || '')
+      setName(initialData?.name || '');
+      setDescription(initialData?.description || '');
     }
-  }, [open, initialData])
+  }, [open, initialData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
+    e.preventDefault();
+    setLoading(true);
     try {
-      await onSubmit({ name, description: description || undefined })
+      await onSubmit({ name, description: description || undefined });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-md">
         <form onSubmit={handleSubmit} className="flex flex-col h-full">
           <SheetHeader className="pb-4">
-            <SheetTitle>{initialData ? 'Edit Jurusan' : 'Tambah Jurusan'}</SheetTitle>
+            <SheetTitle>
+              {initialData ? 'Edit Jurusan' : 'Tambah Jurusan'}
+            </SheetTitle>
             <SheetDescription>
-              {initialData ? 'Perbarui data jurusan.' : 'Tambah jurusan atau program keahlian baru.'}
+              {initialData
+                ? 'Perbarui data jurusan.'
+                : 'Tambah jurusan atau program keahlian baru.'}
             </SheetDescription>
           </SheetHeader>
 
@@ -74,7 +92,12 @@ export function MajorSheet({ open, onOpenChange, onSubmit, initialData }: MajorS
           </div>
 
           <SheetFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={loading}
+            >
               Batal
             </Button>
             <Button type="submit" disabled={loading}>
@@ -84,5 +107,5 @@ export function MajorSheet({ open, onOpenChange, onSubmit, initialData }: MajorS
         </form>
       </SheetContent>
     </Sheet>
-  )
+  );
 }

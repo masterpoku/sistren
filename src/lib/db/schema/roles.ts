@@ -1,4 +1,11 @@
-import { mysqlTable, bigint, varchar, timestamp, int, boolean } from 'drizzle-orm/mysql-core'
+import {
+  mysqlTable,
+  bigint,
+  varchar,
+  timestamp,
+  int,
+  boolean,
+} from 'drizzle-orm/mysql-core';
 
 /**
  * Roles table — stores user role definitions for RBAC.
@@ -16,6 +23,5 @@ export const roles = mysqlTable('roles', {
   level: int('level').default(0),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').onUpdateNow(),
-deletedAt: timestamp('deleted_at'),
-  
-})
+  deletedAt: timestamp('deleted_at'),
+});

@@ -1,4 +1,11 @@
-import { mysqlTable, bigint, varchar, date, boolean, timestamp } from 'drizzle-orm/mysql-core'
+import {
+  mysqlTable,
+  bigint,
+  varchar,
+  date,
+  boolean,
+  timestamp,
+} from 'drizzle-orm/mysql-core';
 
 /**
  * Academic semesters with academic year.
@@ -13,6 +20,5 @@ export const semesters = mysqlTable('semesters', {
   isActive: boolean('is_active').default(false),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').onUpdateNow(),
-deletedAt: timestamp('deleted_at'),
-  
-})
+  deletedAt: timestamp('deleted_at'),
+});

@@ -1,8 +1,8 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { usePathname } from 'next/navigation'
-import Link from 'next/link'
+import { useState } from 'react';
+import { usePathname } from 'next/navigation';
+import Link from 'next/link';
 import {
   House,
   GraduationCap,
@@ -16,13 +16,13 @@ import {
   X,
   Shield,
   Gear,
-} from 'phosphor-react'
+} from 'phosphor-react';
 
 interface NavItem {
-  title: string
-  href: string
-  icon: React.ElementType
-  minLevel?: number // Minimum role level to see this item
+  title: string;
+  href: string;
+  icon: React.ElementType;
+  minLevel?: number; // Minimum role level to see this item
 }
 
 // Role levels: superadmin=100, administrator=80, headmaster=70, teacher=60, student=40, parent=30, alumni=20
@@ -37,26 +37,30 @@ const navItems: NavItem[] = [
   // Superadmin only sections
   { title: 'Roles', href: '/roles', icon: Shield, minLevel: 100 },
   { title: 'Permissions', href: '/permissions', icon: Gear, minLevel: 100 },
-]
+];
 
 interface User {
-  id: string
-  name: string
-  email: string
-  role: string
-  roleId: number
-  roleLevel: number
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  roleId: number;
+  roleLevel: number;
 }
 
 interface AppLayoutClientProps {
-  user: User
-  onLogout: () => void
-  children: React.ReactNode
+  user: User;
+  onLogout: () => void;
+  children: React.ReactNode;
 }
 
-export function AppLayoutClient({ user, onLogout, children }: AppLayoutClientProps) {
-  const pathname = usePathname()
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+export function AppLayoutClient({
+  user,
+  onLogout,
+  children,
+}: AppLayoutClientProps) {
+  const pathname = usePathname();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
     <div className="flex min-h-screen bg-slate-50">
@@ -76,10 +80,7 @@ export function AppLayoutClient({ user, onLogout, children }: AppLayoutClientPro
               <p className="text-xs text-muted-foreground">SMK TERPADU</p>
             </div>
           </div>
-          <button
-            onClick={() => setSidebarOpen(false)}
-            className="lg:hidden"
-          >
+          <button onClick={() => setSidebarOpen(false)} className="lg:hidden">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -88,8 +89,8 @@ export function AppLayoutClient({ user, onLogout, children }: AppLayoutClientPro
           {navItems
             .filter((item) => !item.minLevel || user.roleLevel >= item.minLevel)
             .map((item) => {
-              const Icon = item.icon
-              const isActive = pathname === item.href
+              const Icon = item.icon;
+              const isActive = pathname === item.href;
               return (
                 <Link
                   key={item.href}
@@ -103,7 +104,7 @@ export function AppLayoutClient({ user, onLogout, children }: AppLayoutClientPro
                   <Icon className="h-5 w-5" />
                   {item.title}
                 </Link>
-              )
+              );
             })}
         </nav>
 
@@ -116,7 +117,9 @@ export function AppLayoutClient({ user, onLogout, children }: AppLayoutClientPro
             </div>
             <div className="flex-1">
               <p className="text-sm font-medium">{user.name}</p>
-              <p className="text-xs text-muted-foreground capitalize">{user.role}</p>
+              <p className="text-xs text-muted-foreground capitalize">
+                {user.role}
+              </p>
             </div>
             <button
               onClick={onLogout}
@@ -156,10 +159,8 @@ export function AppLayoutClient({ user, onLogout, children }: AppLayoutClientPro
         </header>
 
         {/* Page Content */}
-        <main className="flex-1">
-          {children}
-        </main>
+        <main className="flex-1">{children}</main>
       </div>
     </div>
-  )
+  );
 }

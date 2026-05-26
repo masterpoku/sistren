@@ -1,4 +1,10 @@
-import { mysqlTable, bigint, varchar, text, timestamp } from 'drizzle-orm/mysql-core'
+import {
+  mysqlTable,
+  bigint,
+  varchar,
+  text,
+  timestamp,
+} from 'drizzle-orm/mysql-core';
 
 /**
  * Academic majors/programs (e.g., TKJ, RPL, Automotive).
@@ -9,6 +15,5 @@ export const majors = mysqlTable('majors', {
   description: text('description'),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').onUpdateNow(),
-deletedAt: timestamp('deleted_at'),
-  
-})
+  deletedAt: timestamp('deleted_at'),
+});

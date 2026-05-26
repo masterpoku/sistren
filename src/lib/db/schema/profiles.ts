@@ -1,7 +1,16 @@
-import { mysqlTable, bigint, varchar, text, date, timestamp, mysqlEnum, int } from 'drizzle-orm/mysql-core'
-import { relations } from 'drizzle-orm'
-import { users } from './users'
-import { majors } from './majors'
+import {
+  mysqlTable,
+  bigint,
+  varchar,
+  text,
+  date,
+  timestamp,
+  mysqlEnum,
+  int,
+} from 'drizzle-orm/mysql-core';
+import { relations } from 'drizzle-orm';
+import { users } from './users';
+import { majors } from './majors';
 
 /**
  * Extended user profiles for students (siswa) and teachers (guru).
@@ -18,8 +27,12 @@ import { majors } from './majors'
  */
 export const profiles = mysqlTable('profiles', {
   id: bigint('id', { mode: 'number' }).primaryKey().autoincrement(),
-  userId: varchar('user_id', { length: 36 }).notNull().references(() => users.id, { onDelete: 'cascade' }),
-  type: mysqlEnum('type', ['siswa', 'guru', 'admin', 'superadmin']).default('siswa'),
+  userId: varchar('user_id', { length: 36 })
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  type: mysqlEnum('type', ['siswa', 'guru', 'admin', 'superadmin']).default(
+    'siswa'
+  ),
   previousSchool: varchar('previous_school', { length: 255 }),
   nik: varchar('nik', { length: 255 }),
   nisn: varchar('nisn', { length: 255 }),
@@ -59,7 +72,7 @@ export const profiles = mysqlTable('profiles', {
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').onUpdateNow(),
   deletedAt: timestamp('deleted_at'),
-})
+});
 
 export const profilesRelations = relations(profiles, ({ one }) => ({
   user: one(users, {
@@ -70,4 +83,4 @@ export const profilesRelations = relations(profiles, ({ one }) => ({
     fields: [profiles.majorId],
     references: [majors.id],
   }),
-}))
+}));

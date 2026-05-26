@@ -1,53 +1,69 @@
-'use client'
+'use client';
 
-import * as React from 'react'
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from '@/components/ui/sheet'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import * as React from 'react';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+} from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 export interface ClassSheetData {
-  name: string
-  code: string
+  name: string;
+  code: string;
 }
 
 interface ClassSheetProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onSubmit: (data: ClassSheetData) => Promise<void>
-  initialData?: { id: number; name: string; code: string }
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSubmit: (data: ClassSheetData) => Promise<void>;
+  initialData?: { id: number; name: string; code: string };
 }
 
-export function ClassSheet({ open, onOpenChange, onSubmit, initialData }: ClassSheetProps) {
-  const [loading, setLoading] = React.useState(false)
-  const [name, setName] = React.useState(initialData?.name || '')
-  const [code, setCode] = React.useState(initialData?.code || '')
+export function ClassSheet({
+  open,
+  onOpenChange,
+  onSubmit,
+  initialData,
+}: ClassSheetProps) {
+  const [loading, setLoading] = React.useState(false);
+  const [name, setName] = React.useState(initialData?.name || '');
+  const [code, setCode] = React.useState(initialData?.code || '');
 
   React.useEffect(() => {
     if (open) {
-      setName(initialData?.name || '')
-      setCode(initialData?.code || '')
+      setName(initialData?.name || '');
+      setCode(initialData?.code || '');
     }
-  }, [open, initialData])
+  }, [open, initialData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
+    e.preventDefault();
+    setLoading(true);
     try {
-      await onSubmit({ name, code })
+      await onSubmit({ name, code });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-md">
         <form onSubmit={handleSubmit} className="flex flex-col h-full">
           <SheetHeader className="pb-4">
-            <SheetTitle>{initialData ? 'Edit Kelas' : 'Tambah Kelas'}</SheetTitle>
+            <SheetTitle>
+              {initialData ? 'Edit Kelas' : 'Tambah Kelas'}
+            </SheetTitle>
             <SheetDescription>
-              {initialData ? 'Perbarui data kelas.' : 'Tambah kelas baru untuk tingkat pendidikan.'}
+              {initialData
+                ? 'Perbarui data kelas.'
+                : 'Tambah kelas baru untuk tingkat pendidikan.'}
             </SheetDescription>
           </SheetHeader>
 
@@ -75,7 +91,12 @@ export function ClassSheet({ open, onOpenChange, onSubmit, initialData }: ClassS
           </div>
 
           <SheetFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={loading}
+            >
               Batal
             </Button>
             <Button type="submit" disabled={loading}>
@@ -85,5 +106,5 @@ export function ClassSheet({ open, onOpenChange, onSubmit, initialData }: ClassS
         </form>
       </SheetContent>
     </Sheet>
-  )
+  );
 }

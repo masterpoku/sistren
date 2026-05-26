@@ -1,40 +1,47 @@
-'use client'
+'use client';
 
-import * as React from 'react'
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from '@/components/ui/sheet'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import * as React from 'react';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+} from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
+} from '@/components/ui/select';
 
 export interface AnnouncementSheetData {
-  title: string
-  description?: string
-  content: string
-  category?: string
-  priority?: 'normal' | 'important' | 'urgent'
-  publishedAt?: string | null
+  title: string;
+  description?: string;
+  content: string;
+  category?: string;
+  priority?: 'normal' | 'important' | 'urgent';
+  publishedAt?: string | null;
 }
 
 interface AnnouncementSheetProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onSubmit: (data: AnnouncementSheetData) => Promise<void>
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSubmit: (data: AnnouncementSheetData) => Promise<void>;
   initialData?: {
-    id: number
-    title: string
-    description?: string | null
-    content: string | null
-    category?: string | null
-    priority?: 'normal' | 'important' | 'urgent' | null
-    publishedAt?: Date | string | null
-  }
+    id: number;
+    title: string;
+    description?: string | null;
+    content: string | null;
+    category?: string | null;
+    priority?: 'normal' | 'important' | 'urgent' | null;
+    publishedAt?: Date | string | null;
+  };
 }
 
 const CATEGORIES = [
@@ -42,44 +49,55 @@ const CATEGORIES = [
   { value: 'akademik', label: 'Akademik' },
   { value: 'keuangan', label: 'Keuangan' },
   { value: 'kegiatan', label: 'Kegiatan' },
-]
+];
 
 const PRIORITIES = [
   { value: 'normal', label: 'Normal' },
   { value: 'important', label: 'Penting' },
   { value: 'urgent', label: 'Urgent' },
-]
+];
 
-export function AnnouncementSheet({ open, onOpenChange, onSubmit, initialData }: AnnouncementSheetProps) {
-  const [loading, setLoading] = React.useState(false)
-  const [title, setTitle] = React.useState(initialData?.title || '')
-  const [description, setDescription] = React.useState(initialData?.description || '')
-  const [content, setContent] = React.useState(initialData?.content || '')
-  const [category, setCategory] = React.useState(initialData?.category || 'umum')
-  const [priority, setPriority] = React.useState<'normal' | 'important' | 'urgent'>(initialData?.priority || 'normal')
-  const [publishedAt, setPublishedAt] = React.useState('')
+export function AnnouncementSheet({
+  open,
+  onOpenChange,
+  onSubmit,
+  initialData,
+}: AnnouncementSheetProps) {
+  const [loading, setLoading] = React.useState(false);
+  const [title, setTitle] = React.useState(initialData?.title || '');
+  const [description, setDescription] = React.useState(
+    initialData?.description || ''
+  );
+  const [content, setContent] = React.useState(initialData?.content || '');
+  const [category, setCategory] = React.useState(
+    initialData?.category || 'umum'
+  );
+  const [priority, setPriority] = React.useState<
+    'normal' | 'important' | 'urgent'
+  >(initialData?.priority || 'normal');
+  const [publishedAt, setPublishedAt] = React.useState('');
 
   const toDateString = (val: string | Date | null | undefined) => {
-    if (!val) return ''
-    if (typeof val === 'string') return val.split('T')[0]
-    return val.toISOString().split('T')[0]
-  }
+    if (!val) return '';
+    if (typeof val === 'string') return val.split('T')[0];
+    return val.toISOString().split('T')[0];
+  };
 
   React.useEffect(() => {
     if (open) {
-      setTitle(initialData?.title || '')
-      setDescription(initialData?.description || '')
-      setContent(initialData?.content || '')
-      setCategory(initialData?.category || 'umum')
-      setPriority(initialData?.priority || 'normal')
-      setPublishedAt(toDateString(initialData?.publishedAt))
+      setTitle(initialData?.title || '');
+      setDescription(initialData?.description || '');
+      setContent(initialData?.content || '');
+      setCategory(initialData?.category || 'umum');
+      setPriority(initialData?.priority || 'normal');
+      setPublishedAt(toDateString(initialData?.publishedAt));
     }
-  }, [open, initialData])
+  }, [open, initialData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!title.trim() || !content.trim()) return
-    setLoading(true)
+    e.preventDefault();
+    if (!title.trim() || !content.trim()) return;
+    setLoading(true);
     try {
       await onSubmit({
         title: title.trim(),
@@ -88,20 +106,24 @@ export function AnnouncementSheet({ open, onOpenChange, onSubmit, initialData }:
         category,
         priority,
         publishedAt: publishedAt || null,
-      })
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-md">
         <form onSubmit={handleSubmit} className="flex flex-col h-full">
           <SheetHeader className="pb-4">
-            <SheetTitle>{initialData ? 'Edit Pengumuman' : 'Buat Pengumuman'}</SheetTitle>
+            <SheetTitle>
+              {initialData ? 'Edit Pengumuman' : 'Buat Pengumuman'}
+            </SheetTitle>
             <SheetDescription>
-              {initialData ? 'Perbarui data pengumuman.' : 'Buat pengumuman baru untuk siswa dan guru.'}
+              {initialData
+                ? 'Perbarui data pengumuman.'
+                : 'Buat pengumuman baru untuk siswa dan guru.'}
             </SheetDescription>
           </SheetHeader>
 
@@ -158,7 +180,12 @@ export function AnnouncementSheet({ open, onOpenChange, onSubmit, initialData }:
 
               <div className="space-y-2">
                 <Label htmlFor="ann-priority">Prioritas</Label>
-                <Select value={priority} onValueChange={(v) => setPriority(v as 'normal' | 'important' | 'urgent')}>
+                <Select
+                  value={priority}
+                  onValueChange={(v) =>
+                    setPriority(v as 'normal' | 'important' | 'urgent')
+                  }
+                >
                   <SelectTrigger id="ann-priority">
                     <SelectValue />
                   </SelectTrigger>
@@ -185,15 +212,27 @@ export function AnnouncementSheet({ open, onOpenChange, onSubmit, initialData }:
           </div>
 
           <SheetFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={loading}
+            >
               Batal
             </Button>
-            <Button type="submit" disabled={loading || !title.trim() || !content.trim()}>
-              {loading ? 'Menyimpan...' : initialData ? 'Perbarui' : 'Publikasi'}
+            <Button
+              type="submit"
+              disabled={loading || !title.trim() || !content.trim()}
+            >
+              {loading
+                ? 'Menyimpan...'
+                : initialData
+                  ? 'Perbarui'
+                  : 'Publikasi'}
             </Button>
           </SheetFooter>
         </form>
       </SheetContent>
     </Sheet>
-  )
+  );
 }

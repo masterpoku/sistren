@@ -1,4 +1,10 @@
-import { mysqlTable, bigint, varchar, text, timestamp } from 'drizzle-orm/mysql-core'
+import {
+  mysqlTable,
+  bigint,
+  varchar,
+  text,
+  timestamp,
+} from 'drizzle-orm/mysql-core';
 
 /**
  * System key-value configuration.
@@ -10,4 +16,4 @@ export const systemConfigs = mysqlTable('system_configs', {
   description: varchar('description', { length: 255 }),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').onUpdateNow(),
-})
+});

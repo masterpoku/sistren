@@ -11,6 +11,7 @@ description: >-
 ## When to use
 
 Use when:
+
 - Setting up better-auth with Drizzle adapter for the first time
 - Adding or configuring better-auth plugins (admin, email, OAuth)
 - Mapping Drizzle table/field names to better-auth config
@@ -19,6 +20,7 @@ Use when:
 - Extending better-auth with custom additionalFields
 
 Do NOT use when:
+
 - Working on non-auth code (use drizzle-schema-patterns skill instead)
 - Setting up Prisma (different adapter)
 - Just adding a component (use shadcn-ui-integration skill)
@@ -37,9 +39,9 @@ bun add -d drizzle-kit
 `src/lib/db/index.ts`:
 
 ```ts
-import { drizzle } from "drizzle-orm/mysql2"
-import mysql from "mysql2/promise"
-import * as schema from "./schema"
+import { drizzle } from 'drizzle-orm/mysql2';
+import mysql from 'mysql2/promise';
+import * as schema from './schema';
 
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
@@ -50,10 +52,10 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-})
+});
 
-export const db = drizzle(pool, { schema })
-export type DB = typeof db
+export const db = drizzle(pool, { schema });
+export type DB = typeof db;
 ```
 
 ### 3. Generate better-auth schema via CLI
@@ -73,13 +75,13 @@ The CLI outputs the exact Drizzle schema code. Copy it to your schema file.
 `src/lib/auth/index.ts`:
 
 ```ts
-import { betterAuth } from "better-auth"
-import { drizzleAdapter } from "@better-auth/drizzle-adapter"
-import { db } from "../db"
+import { betterAuth } from 'better-auth';
+import { drizzleAdapter } from '@better-auth/drizzle-adapter';
+import { db } from '../db';
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
-    provider: "mysql", // or "pg", "sqlite"
+    provider: 'mysql', // or "pg", "sqlite"
     schema: {
       users: schema.users,
       sessions: schema.sessions,
@@ -89,22 +91,22 @@ export const auth = betterAuth({
     usePlural: true, // when table names are plural (users, sessions)
   }),
   // ... plugins and config
-})
+});
 ```
 
 ### 5. Configure additionalFields (custom user fields)
 
 ```ts
 export const auth = betterAuth({
-  database: drizzleAdapter(db, { provider: "mysql", schema, usePlural: true }),
+  database: drizzleAdapter(db, { provider: 'mysql', schema, usePlural: true }),
   additionalFields: {
     roleId: {
-      type: "number",
+      type: 'number',
       required: false,
       input: false, // admin-only, not user-settable
     },
   },
-})
+});
 ```
 
 The Drizzle user table must have the `roleId` column matching the type.
@@ -112,18 +114,14 @@ The Drizzle user table must have the `roleId` column matching the type.
 ### 6. Add plugins
 
 ```ts
-import { admin } from "better-auth/plugins/admin"
-import { twoFactor } from "better-auth/plugins/two-factor"
-import { oAuthProxy } from "better-auth/plugins/oauth-proxy"
+import { admin } from 'better-auth/plugins/admin';
+import { twoFactor } from 'better-auth/plugins/two-factor';
+import { oAuthProxy } from 'better-auth/plugins/oauth-proxy';
 
 export const auth = betterAuth({
-  database: drizzleAdapter(db, { provider: "mysql", schema, usePlural: true }),
-  plugins: [
-    admin(),
-    twoFactor(),
-    oAuthProxy(),
-  ],
-})
+  database: drizzleAdapter(db, { provider: 'mysql', schema, usePlural: true }),
+  plugins: [admin(), twoFactor(), oAuthProxy()],
+});
 ```
 
 Plugins add their own schema tables automatically.
@@ -131,7 +129,7 @@ Plugins add their own schema tables automatically.
 ### 7. Use nextCookies plugin (Next.js required)
 
 ```ts
-import { nextCookies } from "better-auth/next-js"
+import { nextCookies } from 'better-auth/next-js';
 
 export const auth = betterAuth({
   // ...
@@ -139,7 +137,7 @@ export const auth = betterAuth({
     // ... other plugins
     nextCookies(),
   ],
-})
+});
 ```
 
 `nextCookies` must be last in the plugins array.
@@ -149,10 +147,10 @@ export const auth = betterAuth({
 `src/app/api/auth/[...all]/route.ts`:
 
 ```ts
-import { toNextJsRequestHandler } from "better-auth/next-js"
-import { auth } from "@/lib/auth"
+import { toNextJsRequestHandler } from 'better-auth/next-js';
+import { auth } from '@/lib/auth';
 
-export const { GET, POST } = toNextJsRequestHandler(auth)
+export const { GET, POST } = toNextJsRequestHandler(auth);
 ```
 
 ### 9. Generate and run migrations
@@ -179,22 +177,22 @@ npx drizzle-kit migrate
 Better-auth reads Drizzle property names, not column names:
 
 | Drizzle Property | Better-auth Expects | MariaDB Column |
-|-----------------|---------------------|----------------|
-| `email` | user email | `email` |
-| `emailVerified` | boolean | `tinyint(1)` |
-| `name` | user display name | `name` |
-| `image` | avatar URL | `image` |
-| `createdAt` | creation timestamp | `datetime` |
-| `updatedAt` | update timestamp | `datetime` |
+| ---------------- | ------------------- | -------------- |
+| `email`          | user email          | `email`        |
+| `emailVerified`  | boolean             | `tinyint(1)`   |
+| `name`           | user display name   | `name`         |
+| `image`          | avatar URL          | `image`        |
+| `createdAt`      | creation timestamp  | `datetime`     |
+| `updatedAt`      | update timestamp    | `datetime`     |
 
 For `accounts` table, these fields are correct:
 
-| Field | Type |
-|-------|------|
-| `accessTokenExpiresAt` | timestamp (NOT `expiresAt`) |
-| `refreshTokenExpiresAt` | timestamp |
-| `scope` | text |
-| `accountId` | varchar (required, NOT optional) |
+| Field                   | Type                             |
+| ----------------------- | -------------------------------- |
+| `accessTokenExpiresAt`  | timestamp (NOT `expiresAt`)      |
+| `refreshTokenExpiresAt` | timestamp                        |
+| `scope`                 | text                             |
+| `accountId`             | varchar (required, NOT optional) |
 
 ## CLI Commands Reference
 

@@ -74,7 +74,7 @@ export const ROUTE_PERMISSIONS: Record<string, string> = {
   // Academic
   '/academic/enrollments': 'enrollments.read',
   '/academic/grades': 'grades.read_any',
-}
+};
 
 /**
  * Public routes that don't require authentication.
@@ -89,32 +89,82 @@ export const PUBLIC_ROUTES = [
   '/',
   '/_not-found',
   '/api/health',
-]
+];
 
 /**
  * Routes that require specific minimum role level.
  * Format: route -> minimum level
  */
 export const ROLE_LEVEL_REQUIREMENTS: Record<string, number> = {
-  '/users': 80,      // administrator minimum
-  '/academic': 60,   // guru minimum
-  '/finance': 80,    // administrator minimum
-  '/settings': 100,  // superadmin only
+  '/users': 80, // administrator minimum
+  '/academic': 60, // guru minimum
+  '/finance': 80, // administrator minimum
+  '/settings': 100, // superadmin only
   '/system-configs': 100, // superadmin only
-}
+};
 
 /**
  * Permission groups for UI rendering decisions.
  */
 export const PERMISSION_GROUPS = {
-  USER_MANAGEMENT: ['users.create', 'users.read', 'users.update', 'users.delete', 'users.impersonate'],
-  STUDENT_MANAGEMENT: ['students.create', 'students.read', 'students.update', 'students.delete', 'students.promote', 'students.graduate', 'students.import'],
-  TEACHER_MANAGEMENT: ['teachers.create', 'teachers.read', 'teachers.update', 'teachers.delete', 'teachers.assign_class', 'teachers.assign_subject'],
-  ACADEMIC: ['classes.manage', 'majors.manage', 'subjects.manage', 'semesters.manage'],
-  ENROLLMENTS: ['enrollments.create', 'enrollments.read', 'enrollments.update', 'enrollments.delete'],
-  GRADES: ['grades.input', 'grades.read_any', 'grades.read_own', 'grades.approve', 'grades.print'],
-  ANNOUNCEMENTS: ['announcements.create', 'announcements.read', 'announcements.update', 'announcements.delete', 'announcements.publish'],
-  PAYMENTS: ['payments.create', 'payments.read_any', 'payments.read_own', 'payments.update', 'payments.approve', 'payments.generate_report'],
+  USER_MANAGEMENT: [
+    'users.create',
+    'users.read',
+    'users.update',
+    'users.delete',
+    'users.impersonate',
+  ],
+  STUDENT_MANAGEMENT: [
+    'students.create',
+    'students.read',
+    'students.update',
+    'students.delete',
+    'students.promote',
+    'students.graduate',
+    'students.import',
+  ],
+  TEACHER_MANAGEMENT: [
+    'teachers.create',
+    'teachers.read',
+    'teachers.update',
+    'teachers.delete',
+    'teachers.assign_class',
+    'teachers.assign_subject',
+  ],
+  ACADEMIC: [
+    'classes.manage',
+    'majors.manage',
+    'subjects.manage',
+    'semesters.manage',
+  ],
+  ENROLLMENTS: [
+    'enrollments.create',
+    'enrollments.read',
+    'enrollments.update',
+    'enrollments.delete',
+  ],
+  GRADES: [
+    'grades.input',
+    'grades.read_any',
+    'grades.read_own',
+    'grades.approve',
+    'grades.print',
+  ],
+  ANNOUNCEMENTS: [
+    'announcements.create',
+    'announcements.read',
+    'announcements.update',
+    'announcements.delete',
+    'announcements.publish',
+  ],
+  PAYMENTS: [
+    'payments.create',
+    'payments.read_any',
+    'payments.read_own',
+    'payments.update',
+    'payments.approve',
+    'payments.generate_report',
+  ],
   CONFIG: ['payment_methods.manage', 'system_configs.manage'],
   PROFILE: ['profile.edit_own', 'profile.edit_any', 'profile.assets.upload'],
-} as const
+} as const;

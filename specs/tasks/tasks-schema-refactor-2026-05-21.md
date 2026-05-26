@@ -5,6 +5,7 @@
 > **Status: COMPLETED.** Current schema is correct and verified against better-auth official docs. `auth.api.signInEmail()` returns user + token successfully.
 
 **Key Decisions (locked and verified):**
+
 - users/sessions/accounts/verifications use `varchar(36)` UUID (better-auth default) — NOT bigint
 - all business table FKs to users use `varchar(36)` to match users.id (NOT bigint)
 - verifications HAS `id: varchar(36) PK` — NOT a natural key table
@@ -21,7 +22,9 @@
 ## Phase 1: Better-auth Core Tables
 
 ### 1.1 Define `users` table
+
 **Why:** Core auth table. Only better-auth required fields + our custom `roleId`.
+
 - [x] `id` — `varchar('id', { length: 36 }).primaryKey().default(crypto.randomUUID())` ← **CHANGED: UUID v4, not bigint**
 - [x] `name` — `varchar('name', { length: 255 }).notNull()`
 - [x] `email` — `varchar('email', { length: 255 }).unique().notNull()`
@@ -34,7 +37,9 @@
 - [x] `deletedAt` — `timestamp('deleted_at')` ← soft delete
 
 ### 1.2 Define `accounts` table
+
 **Why:** OAuth/provider accounts linked to users.
+
 - [x] `id` — `varchar('id', { length: 36 }).primaryKey().default(crypto.randomUUID())` ← **CHANGED: UUID v4**
 - [x] `userId` — `varchar('user_id', { length: 36 }).notNull().references(() => users.id, { onDelete: 'cascade' })` ← **CHANGED: varchar FK**
 - [x] `providerId` — `varchar('provider_id', { length: 255 }).notNull()`
@@ -50,7 +55,9 @@
 - [x] `updatedAt` — `timestamp('updated_at').onUpdateNow().notNull()`
 
 ### 1.3 Define `sessions` table
+
 **Why:** Session records for better-auth.
+
 - [x] `id` — `varchar('id', { length: 36 }).primaryKey().default(crypto.randomUUID())` ← **CHANGED: UUID v4**
 - [x] `userId` — `varchar('user_id', { length: 36 }).notNull().references(() => users.id, { onDelete: 'cascade' })` ← **CHANGED: varchar FK**
 - [x] `token` — `varchar('token', { length: 255 }).notNull().unique()`
@@ -61,7 +68,9 @@
 - [x] `updatedAt` — `timestamp('updated_at').onUpdateNow().notNull()`
 
 ### 1.4 Define `verifications` table
+
 **Why:** Email verification tokens. **HAS `id` column** — better-auth official schema includes it.
+
 - [x] `id` — `varchar('id', { length: 36 }).primaryKey().default(crypto.randomUUID())` ← **CHANGED: HAS id column**
 - [x] `identifier` — `varchar('identifier', { length: 255 }).notNull()`
 - [x] `value` — `varchar('value', { length: 255 }).notNull()` ← **CHANGED: 'value' not 'token'**
@@ -70,7 +79,9 @@
 - [x] `updatedAt` — `timestamp('updated_at').onUpdateNow().notNull()`
 
 ### 1.5 Define `roles` table
+
 **Why:** Role definitions for RBAC.
+
 - [x] `id` — `bigint('id', { mode: 'number' }).primaryKey().autoincrement()`
 - [x] `name` — `varchar('name', { length: 255 }).unique().notNull()`
 - [x] `description` — `varchar('description', { length: 255 })`
@@ -81,7 +92,9 @@
 - [x] `deletedAt` — `timestamp('deleted_at')` ← soft delete
 
 ### 1.6 Define `permissions` table
+
 **Why:** All available system permissions.
+
 - [x] `id` — `bigint('id', { mode: 'number' }).primaryKey().autoincrement()`
 - [x] `name` — `varchar('name', { length: 255 }).unique().notNull()` ← e.g., `users.create`
 - [x] `description` — `text('description')`
@@ -93,13 +106,17 @@
 - [x] `deletedAt` — `timestamp('deleted_at')` ← soft delete
 
 ### 1.7 Define `role_permissions` table
+
 **Why:** Role-permission pivot table.
+
 - [x] `roleId` — `bigint('role_id', { mode: 'number' }).notNull().references(() => roles.id, { onDelete: 'cascade' })`
 - [x] `permissionId` — `bigint('permission_id', { mode: 'number' }).notNull().references(() => permissions.id, { onDelete: 'cascade' })`
 - [x] `deletedAt` — `timestamp('deleted_at')` ← soft delete
 
 ### 1.8 Define `user_permissions` table
+
 **Why:** Per-user permission overrides (temporary grants or explicit denies).
+
 - [x] `id` — `bigint('id', { mode: 'number' }).primaryKey().autoincrement()`
 - [x] `userId` — `varchar('user_id', { length: 36 }).notNull().references(() => users.id, { onDelete: 'cascade' })` ← **CHANGED: varchar FK**
 - [x] `permissionId` — `bigint('permission_id', { mode: 'number' }).notNull().references(() => permissions.id, { onDelete: 'cascade' })`
@@ -113,6 +130,7 @@
 ## Phase 2: Academic Core Tables
 
 ### 2.1 Define `majors` table
+
 - [x] `id` — `bigint('id', { mode: 'number' }).primaryKey().autoincrement()`
 - [x] `name` — `varchar('name', { length: 255 }).notNull()`
 - [x] `description` — `text('description')`
@@ -121,6 +139,7 @@
 - [x] `deletedAt` — `timestamp('deleted_at')` ← soft delete
 
 ### 2.2 Define `classes` table
+
 - [x] `id` — `bigint('id', { mode: 'number' }).primaryKey().autoincrement()`
 - [x] `name` — `varchar('name', { length: 255 }).notNull()`
 - [x] `code` — `varchar('code', { length: 255 }).unique().notNull()` ← **CHANGED: code instead of level**
@@ -129,6 +148,7 @@
 - [x] `deletedAt` — `timestamp('deleted_at')` ← soft delete
 
 ### 2.3 Define `subjects` table
+
 - [x] `id` — `bigint('id', { mode: 'number' }).primaryKey().autoincrement()`
 - [x] `name` — `varchar('name', { length: 255 }).notNull()`
 - [x] `code` — `varchar('code', { length: 50 })` ← e.g., "MAT101"
@@ -141,6 +161,7 @@
 - [x] `deletedAt` — `timestamp('deleted_at')` ← soft delete
 
 ### 2.4 Define `semesters` table
+
 - [x] `id` — `bigint('id', { mode: 'number' }).primaryKey().autoincrement()`
 - [x] `name` — `varchar('name', { length: 100 }).notNull()` ← e.g., "Semester 1"
 - [x] `academicYear` — `varchar('academic_year', { length: 255 }).notNull()` ← e.g., "2025/2026"
@@ -152,6 +173,7 @@
 - [x] `deletedAt` — `timestamp('deleted_at')` ← soft delete
 
 ### 2.5 Define `enrollments` table
+
 - [x] `id` — `bigint('id', { mode: 'number' }).primaryKey().autoincrement()`
 - [x] `studentId` — `varchar('student_id', { length: 36 }).notNull().references(() => users.id, { onDelete: 'cascade' })` ← **CHANGED: varchar FK (student is a user)**
 - [x] `semesterId` — `bigint('semester_id', { mode: 'number' }).notNull().references(() => semesters.id, { onDelete: 'cascade' })`
@@ -161,6 +183,7 @@
 - [x] `deletedAt` — `timestamp('deleted_at')` ← soft delete
 
 ### 2.6 Define `grades` table ← **KEPT (was marked REMOVE in original spec)**
+
 - [x] `id` — `bigint('id', { mode: 'number' }).primaryKey().autoincrement()`
 - [x] `enrollmentId` — `bigint('enrollment_id', { mode: 'number' }).notNull().references(() => enrollments.id, { onDelete: 'cascade' })`
 - [x] `subjectId` — `bigint('subject_id', { mode: 'number' }).notNull().references(() => subjects.id, { onDelete: 'cascade' })`
@@ -177,7 +200,9 @@
 ## Phase 3: Profiles Table
 
 ### 3.1 Define `profiles` table
+
 **Why:** Extended user data. Single table with `type` discriminator. Fixed from old PHP (all fields properly fillable, no duplicates).
+
 - [x] `id` — `bigint('id', { mode: 'number' }).primaryKey().autoincrement()`
 - [x] `userId` — `varchar('user_id', { length: 36 }).notNull().references(() => users.id, { onDelete: 'cascade' }).unique()` ← **CHANGED: varchar FK**
 - [x] `type` — `mysqlEnum('type', ['siswa', 'guru', 'admin', 'superadmin']).default('siswa')`
@@ -223,7 +248,9 @@
 ## Phase 4: Attachments Table (Polymorphic)
 
 ### 4.1 Define `attachments` table
+
 **Why:** Polymorphic file storage. Encrypted blob storage for documents.
+
 - [x] `id` — `bigint('id', { mode: 'number' }).primaryKey().autoincrement()`
 - [x] `modelRef` — `varchar('model_ref', { length: 100 }).notNull()` ← e.g., `'student'`, `'announcement'`
 - [x] `idRef` — `bigint('id_ref', { mode: 'number' }).notNull()` ← FK to the referenced entity
@@ -237,6 +264,7 @@
 - [x] `deletedAt` — `timestamp('deleted_at')` ← soft delete per file
 
 **Document types for `document_type` field:**
+
 - `ijasah` — Ijazah
 - `skhun` — SKHUN
 - `skl` — Surat Keterangan Lulus
@@ -253,6 +281,7 @@
 ## Phase 5: Financial Tables
 
 ### 5.1 Define `payment_methods` table
+
 - [x] `id` — `bigint('id', { mode: 'number' }).primaryKey().autoincrement()`
 - [x] `name` — `varchar('name', { length: 100 }).notNull()` ← e.g., "Transfer Bank BCA"
 - [x] `provider` — `varchar('provider', { length: 100 })` ← **ADDED**
@@ -265,6 +294,7 @@
 - [x] `deletedAt` — `timestamp('deleted_at')` ← soft delete
 
 ### 5.2 Define `payments` table
+
 - [x] `id` — `bigint('id', { mode: 'number' }).primaryKey().autoincrement()`
 - [x] `studentId` — `varchar('student_id', { length: 36 }).notNull().references(() => users.id, { onDelete: 'cascade' })` ← **CHANGED: varchar FK**
 - [x] `code` — `varchar('code', { length: 100 }).notNull().unique()` ← **CHANGED: payment code**
@@ -284,6 +314,7 @@
 ## Phase 6: Announcements Table
 
 ### 6.1 Define `announcements` table
+
 - [x] `id` — `bigint('id', { mode: 'number' }).primaryKey().autoincrement()`
 - [x] `title` — `varchar('title', { length: 255 }).notNull()`
 - [x] `description` — `varchar('description', { length: 255 })` ← **ADDED**
@@ -298,6 +329,7 @@
 - [x] `deletedAt` — `timestamp('deleted_at')` ← soft delete
 
 ### 6.2 Define `announcement_recipients` table
+
 - [x] `announcementId` — `bigint('announcement_id', { mode: 'number' }).notNull().references(() => announcements.id, { onDelete: 'cascade' })`
 - [x] `userId` — `varchar('user_id', { length: 36 }).notNull().references(() => users.id, { onDelete: 'cascade' })` ← **CHANGED: varchar FK**
 - [x] `isRead` — `boolean('is_read').default(false)` ← **CHANGED: isRead not readAt**
@@ -309,7 +341,9 @@
 ## Phase 7: Audit Log Table
 
 ### 7.1 Define `audit_logs` table
+
 **Why:** Append-only audit trail. Tracks auth events, payments, documents, profile changes.
+
 - [x] `id` — `bigint('id', { mode: 'number' }).primaryKey().autoincrement()`
 - [x] `userId` — `varchar('user_id', { length: 36 })` ← **CHANGED: varchar FK, nullable**
 - [x] `action` — `varchar('action', { length: 100 }).notNull()` ← `auth.login`, `auth.logout`, `auth.fail`, `auth.register`, `payment.confirmed`, `document.uploaded`, `profile.updated`
@@ -325,7 +359,9 @@
 ## Phase 8: Additional Tables (Not in original spec)
 
 ### 8.1 Define `profile_assets` table ← **KEPT (was marked REMOVE in original spec)**
+
 **Why:** Stores file paths for profile documents (not encrypted blobs — those go to attachments).
+
 - [x] `id` — `bigint('id', { mode: 'number' }).primaryKey().autoincrement()`
 - [x] `userId` — `varchar('user_id', { length: 36 }).notNull().references(() => users.id, { onDelete: 'cascade' })` ← varchar FK
 - [x] `diploma` — `varchar('diploma', { length: 255 })`
@@ -340,7 +376,9 @@
 - [x] `updatedAt` — `timestamp('updated_at').onUpdateNow()`
 
 ### 8.2 Define `system_configs` table ← **KEPT (was marked REMOVE in original spec)**
+
 **Why:** Key-value store for system configuration.
+
 - [x] `id` — `bigint('id', { mode: 'number' }).primaryKey().autoincrement()`
 - [x] `key` — `varchar('key', { length: 100 }).notNull().unique()`
 - [x] `value` — `text('value')`
@@ -353,6 +391,7 @@
 ## Phase 9: Schema Setup
 
 ### 9.1 Create schema files
+
 - [x] Create `src/lib/db/schema/users.ts` — better-auth users table (UUID, nullable password/image)
 - [x] Create `src/lib/db/schema/accounts.ts` — OAuth accounts (UUID, varchar FK)
 - [x] Create `src/lib/db/schema/sessions.ts` — sessions (UUID, varchar FK)
@@ -378,15 +417,18 @@
 - [x] Create `src/lib/db/schema/system_configs.ts` — system configs (KEPT despite original spec saying REMOVE)
 
 ### 9.2 Update schema/index.ts
+
 - [x] Export all schema files
 - [x] Pass full schema object to better-auth drizzleAdapter with `usePlural: true`
 
 ### 9.3 Create crypto utility
+
 - [x] Create `src/lib/crypto.ts` — AES-256-GCM encrypt/decrypt
 - [x] Validate `DOCUMENT_ENCRYPTION_KEY` is 32 bytes at startup
 - [x] Export `encryptBlob(Buffer): Buffer` and `decryptBlob(Buffer): Buffer`
 
 ### 9.4 Create better-auth config
+
 - [x] Update `src/lib/auth/index.ts` with fresh config
 - [x] Configure `additionalFields: { roleId: { type: 'number', required: false, input: false } }`
 - [x] Add `nextCookies()` plugin (MUST be last in plugins array)
@@ -395,34 +437,41 @@
 - [x] **REMOVED admin() plugin** — it expects a `role` field on users table (string for admin plugin's own role system), conflicting with our custom `roleId` (number FK to our RBAC roles table). Our RBAC is managed separately via our own `roles` + `role_permissions` tables.
 
 ### 9.5 Create auth client
+
 - [x] Create `src/lib/auth-client.ts` — client-side auth instance with admin plugin
 
 ### 9.6 Create test-connection
+
 - [x] Create `src/lib/db/test-connection.ts` — quick DB connectivity check
 - [x] Add `db:test` script to package.json pointing to test-connection.ts
 
 ### 9.7 Update AGENTS.md
+
 - [x] Document new env vars: `DOCUMENT_ENCRYPTION_KEY` (32-byte hex for AES-256-GCM)
 - [x] Document new schema structure (UUID, varchar FKs, nullable password/image)
 - [x] Document password hashing: scrypt via `@better-auth/utils/password`
 
 ### 9.8 Fix seed.ts
+
 - [x] Remove `db.end()` call at end of seed (mysql2 driver doesn't have end())
 - [x] Remove `systemConfigs` reference (no such table in old seed logic)
 
 ### 9.9 Generate initial migration
+
 - [x] Run `bunx drizzle-kit generate` — produced `0001_mean_payback.sql` (ALTER statements)
 - [x] Manual migration needed: `drizzle-kit push` hangs on "Pulling schema" — run SQL manually via DB tool
 - [x] Migration SQL fixes: `binary(16777215)` → `mediumblob()`, add `verifications.id`, change bigint FKs to varchar(36)
 - [x] Created `scripts/fix-attachments.ts` to fix attachments table creation
 
 ### 9.10 Push schema to database
+
 - [x] Drop all existing tables (FK order)
 - [x] Run migration SQL via mysql2 direct connection
 - [x] Fix attachments table (mediumblob, varchar FK for uploaded_by)
 - [x] Verify 23 tables created
 
 ### 9.11 Seed database
+
 - [x] Run `bun run db:seed` — creates roles, permissions, majors, classes, semesters, subjects, payment_methods
 - [x] Permissions seeded: 48 permissions across all resources
 - [x] Role permissions assigned to all 5 roles (superadmin, administrator, guru, siswa, alumni)
@@ -433,6 +482,7 @@
 ## Verification Checklist
 
 After all tasks:
+
 - [x] `bun run typecheck` passes for schema files (cascade errors in actions/pages expected, deferred to Phase 3)
 - [x] `bun run db:test` connects successfully
 - [x] 23 tables created in MariaDB
@@ -445,23 +495,23 @@ After all tasks:
 
 ## Decisions Made (vs original spec)
 
-| Decision | Original Spec | Final Decision | Reason |
-|----------|---------------|----------------|--------|
-| users.id type | bigint (number) | varchar(36) UUID | better-auth default, matches better-auth internal requirements |
-| FK to users (all business tables) | bigint | varchar(36) | matches users.id type for MariaDB FK constraint compatibility |
-| verifications.id | none (natural key) | varchar(36) PK | better-auth official schema has id column |
-| accounts.accountId | optional | NOT NULL | better-auth requires accountId for credential provider |
-| accounts.expiresAt | single expiresAt | accessTokenExpiresAt + refreshTokenExpiresAt | better-auth official field names |
-| users.password | notNull | nullable().default(null) | better-auth createUser doesn't set password on signup — only creates user record |
-| users.image | notNull | nullable().default(null) | better-auth createUser doesn't set image on signup |
-| admin plugin | included | excluded | conflicts with our custom RBAC role system — admin plugin expects `role` string field, we have `roleId` number FK |
-| users.roleId reference | with references() | without references() | .references() on bigint FK causes issues with better-auth additionalFields |
-| grades table | REMOVE | KEPT | included in actual migration |
-| profile_assets | REMOVE | KEPT | stores file paths as varchar, separate from attachments encrypted blob table |
-| system_configs | REMOVE | KEPT | included in actual migration |
-| attachments.data | binary(16777215) | mediumblob() | binary() invalid in MariaDB, max 255 bytes; mediumblob() supports up to 16MB |
-| password hashing | argon2 (assumed) | scrypt via @better-auth/utils/password | better-auth uses Node.js node:crypto scrypt, NOT argon2 |
-| drizzle-kit push | expected to work | hangs on "Pulling schema" | bypass with manual SQL via DB admin tool |
+| Decision                          | Original Spec      | Final Decision                               | Reason                                                                                                            |
+| --------------------------------- | ------------------ | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| users.id type                     | bigint (number)    | varchar(36) UUID                             | better-auth default, matches better-auth internal requirements                                                    |
+| FK to users (all business tables) | bigint             | varchar(36)                                  | matches users.id type for MariaDB FK constraint compatibility                                                     |
+| verifications.id                  | none (natural key) | varchar(36) PK                               | better-auth official schema has id column                                                                         |
+| accounts.accountId                | optional           | NOT NULL                                     | better-auth requires accountId for credential provider                                                            |
+| accounts.expiresAt                | single expiresAt   | accessTokenExpiresAt + refreshTokenExpiresAt | better-auth official field names                                                                                  |
+| users.password                    | notNull            | nullable().default(null)                     | better-auth createUser doesn't set password on signup — only creates user record                                  |
+| users.image                       | notNull            | nullable().default(null)                     | better-auth createUser doesn't set image on signup                                                                |
+| admin plugin                      | included           | excluded                                     | conflicts with our custom RBAC role system — admin plugin expects `role` string field, we have `roleId` number FK |
+| users.roleId reference            | with references()  | without references()                         | .references() on bigint FK causes issues with better-auth additionalFields                                        |
+| grades table                      | REMOVE             | KEPT                                         | included in actual migration                                                                                      |
+| profile_assets                    | REMOVE             | KEPT                                         | stores file paths as varchar, separate from attachments encrypted blob table                                      |
+| system_configs                    | REMOVE             | KEPT                                         | included in actual migration                                                                                      |
+| attachments.data                  | binary(16777215)   | mediumblob()                                 | binary() invalid in MariaDB, max 255 bytes; mediumblob() supports up to 16MB                                      |
+| password hashing                  | argon2 (assumed)   | scrypt via @better-auth/utils/password       | better-auth uses Node.js node:crypto scrypt, NOT argon2                                                           |
+| drizzle-kit push                  | expected to work   | hangs on "Pulling schema"                    | bypass with manual SQL via DB admin tool                                                                          |
 
 ---
 

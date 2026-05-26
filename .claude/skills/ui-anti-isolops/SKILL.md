@@ -11,6 +11,7 @@ description: >-
 ## When to use
 
 Use when:
+
 - Building any new UI element (button, card, form, table, badge, etc.)
 - Creating a page layout or composing multiple components
 - Adding a custom variant to an existing component
@@ -18,6 +19,7 @@ Use when:
 - Reviewing UI code for design system compliance
 
 Do NOT use when:
+
 - Running terminal commands (use shadcn-ui-integration skill instead)
 - Working on non-UI code (auth, DB schema, API logic)
 - The UI task is purely data-fetching without rendering (use server actions skill)
@@ -44,19 +46,19 @@ NEVER use raw hex or HSL values in component files. Use design tokens:
 
 **Design token reference** (defined in `globals.css` under `:root`):
 
-| Token | Usage |
-|-------|-------|
-| `background / foreground` | Page shell, default text |
-| `card / card-foreground` | Elevated surfaces, panels |
-| `popover / popover-foreground` | Floating surfaces |
-| `primary / primary-foreground` | High-emphasis actions, brand |
-| `secondary / secondary-foreground` | Lower-emphasis actions |
-| `muted / muted-foreground` | Placeholders, helper text |
-| `accent / accent-foreground` | Hover, focus, active states |
-| `destructive / destructive-foreground` | Errors, destructive actions |
-| `border` | Cards, menus, tables, dividers |
-| `input` | Form controls |
-| `ring` | Focus rings |
+| Token                                  | Usage                          |
+| -------------------------------------- | ------------------------------ |
+| `background / foreground`              | Page shell, default text       |
+| `card / card-foreground`               | Elevated surfaces, panels      |
+| `popover / popover-foreground`         | Floating surfaces              |
+| `primary / primary-foreground`         | High-emphasis actions, brand   |
+| `secondary / secondary-foreground`     | Lower-emphasis actions         |
+| `muted / muted-foreground`             | Placeholders, helper text      |
+| `accent / accent-foreground`           | Hover, focus, active states    |
+| `destructive / destructive-foreground` | Errors, destructive actions    |
+| `border`                               | Cards, menus, tables, dividers |
+| `input`                                | Form controls                  |
+| `ring`                                 | Focus rings                    |
 
 ### 2. Always extend shadcn first
 
@@ -119,13 +121,15 @@ Components must NOT contain layout-specific logic. Keep them reusable:
 ```tsx
 // ❌ WRONG — component contains sidebar logic
 export function SidebarNav() {
-  const { collapsed } = useSidebar()
-  return <nav className={cn("flex", collapsed ? "w-16" : "w-64")} />
+  const { collapsed } = useSidebar();
+  return <nav className={cn('flex', collapsed ? 'w-16' : 'w-64')} />;
 }
 
 // ✅ CORRECT — component accepts props, layout decision is external
 export function SidebarNav({ collapsed }: { collapsed: boolean }) {
-  return <nav className={cn("flex transition-all", collapsed ? "w-16" : "w-64")} />
+  return (
+    <nav className={cn('flex transition-all', collapsed ? 'w-16' : 'w-64')} />
+  );
 }
 ```
 
@@ -137,15 +141,15 @@ If you must extend a component with a custom variant:
 // Custom badge variant for attendance status
 // Non-standard variants: "attended" (green), "absent" (red), "late" (amber)
 // These map to shadcn's color tokens but use semantic names
-const badgeVariants = cva("...", {
+const badgeVariants = cva('...', {
   variants: {
     variant: {
-      attended: "bg-emerald-500/10 text-emerald-700 border-emerald-500/20",
-      absent: "bg-red-500/10 text-red-700 border-red-500/20",
-      late: "bg-amber-500/10 text-amber-700 border-amber-500/20",
+      attended: 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20',
+      absent: 'bg-red-500/10 text-red-700 border-red-500/20',
+      late: 'bg-amber-500/10 text-amber-700 border-amber-500/20',
     },
   },
-})
+});
 ```
 
 ## Compliance Checklist
@@ -167,8 +171,15 @@ Before any UI code is considered done:
 ### Card with header + content + footer
 
 ```tsx
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 <Card>
   <CardHeader>
@@ -180,29 +191,29 @@ import { Button } from "@/components/ui/button"
     <Button variant="outline">Cancel</Button>
     <Button>Confirm</Button>
   </CardFooter>
-</Card>
+</Card>;
 ```
 
 ### Form field pattern
 
 ```tsx
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 <div className="space-y-2">
   <Label htmlFor="email">Email</Label>
   <Input id="email" type="email" placeholder="name@example.com" />
-</div>
+</div>;
 ```
 
 ### Data table row with hover state
 
 ```tsx
-import { TableRow, TableCell } from "@/components/ui/table"
+import { TableRow, TableCell } from '@/components/ui/table';
 
 <TableRow className="hover:bg-muted/50 transition-colors">
   <TableCell>Data</TableCell>
-</TableRow>
+</TableRow>;
 ```
 
 ## Gotchas

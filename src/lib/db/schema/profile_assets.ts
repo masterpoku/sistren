@@ -1,6 +1,6 @@
-import { mysqlTable, bigint, varchar, timestamp } from 'drizzle-orm/mysql-core'
-import { relations } from 'drizzle-orm'
-import { users } from './users'
+import { mysqlTable, bigint, varchar, timestamp } from 'drizzle-orm/mysql-core';
+import { relations } from 'drizzle-orm';
+import { users } from './users';
 
 /**
  * Uploaded document file paths for user profiles.
@@ -10,7 +10,9 @@ import { users } from './users'
  */
 export const profileAssets = mysqlTable('profile_assets', {
   id: bigint('id', { mode: 'number' }).primaryKey().autoincrement(),
-  userId: varchar('user_id', { length: 36 }).notNull().references(() => users.id, { onDelete: 'cascade' }),
+  userId: varchar('user_id', { length: 36 })
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
   diploma: varchar('diploma', { length: 255 }),
   skhu: varchar('skhu', { length: 255 }),
   skl: varchar('skl', { length: 255 }),
@@ -21,11 +23,11 @@ export const profileAssets = mysqlTable('profile_assets', {
   kip: varchar('kip', { length: 255 }),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').onUpdateNow(),
-})
+});
 
 export const profileAssetsRelations = relations(profileAssets, ({ one }) => ({
   user: one(users, {
     fields: [profileAssets.userId],
     references: [users.id],
   }),
-}))
+}));

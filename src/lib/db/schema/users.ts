@@ -1,7 +1,13 @@
-import { mysqlTable, bigint, varchar, boolean, timestamp } from 'drizzle-orm/mysql-core'
-import { relations } from 'drizzle-orm'
-import { roles } from './roles'
-import { accounts } from './accounts'
+import {
+  mysqlTable,
+  bigint,
+  varchar,
+  boolean,
+  timestamp,
+} from 'drizzle-orm/mysql-core';
+import { relations } from 'drizzle-orm';
+import { roles } from './roles';
+import { accounts } from './accounts';
 
 /**
  * Users table — core authentication (Better Auth compatible).
@@ -20,11 +26,13 @@ export const users = mysqlTable('users', {
   emailVerified: boolean('email_verified').default(false).notNull(),
   image: varchar('image', { length: 255 }),
   password: varchar('password', { length: 255 }),
-  roleId: bigint('role_id', { mode: 'number' }).references(() => roles.id, { onDelete: 'cascade' }),
+  roleId: bigint('role_id', { mode: 'number' }).references(() => roles.id, {
+    onDelete: 'cascade',
+  }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').onUpdateNow().notNull(),
   deletedAt: timestamp('deleted_at'),
-})
+});
 
 export const usersRelations = relations(users, ({ one, many }) => ({
   role: one(roles, {
@@ -32,4 +40,4 @@ export const usersRelations = relations(users, ({ one, many }) => ({
     references: [roles.id],
   }),
   accounts: many(accounts),
-}))
+}));

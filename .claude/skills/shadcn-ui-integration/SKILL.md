@@ -11,6 +11,7 @@ description: >-
 ## When to use
 
 Use when:
+
 - Starting a fresh shadcn/ui integration
 - Adding shadcn to an existing Next.js project
 - Fixing broken theme variables or dark mode
@@ -19,6 +20,7 @@ Use when:
 - Upgrading to Tailwind v4 theming
 
 Do NOT use when:
+
 - Setting up shadcn in a non-Next.js framework (use Vite/Astro skill instead)
 - Just adding a single component (use the CLI directly: `bunx shadcn@latest add button`)
 - Fixing a broken custom component (not a shadcn integration issue)
@@ -43,6 +45,7 @@ bunx shadcn@latest init
 ```
 
 When prompted:
+
 - **Style**: `base-nova` (Sistren default)
 - **Base color**: `neutral`
 - **CSS file**: `src/assets/global.css` (Sistren path)
@@ -65,16 +68,16 @@ bun add next-themes
 Create `src/components/theme-provider.tsx`:
 
 ```tsx
-"use client"
+'use client';
 
-import * as React from "react"
-import { ThemeProvider as NextThemesProvider } from "next-themes"
+import * as React from 'react';
+import { ThemeProvider as NextThemesProvider } from 'next-themes';
 
 export function ThemeProvider({
   children,
   ...props
 }: React.ComponentProps<typeof NextThemesProvider>) {
-  return <NextThemesProvider {...props}>{children}</NextThemesProvider>
+  return <NextThemesProvider {...props}>{children}</NextThemesProvider>;
 }
 ```
 
@@ -83,7 +86,7 @@ export function ThemeProvider({
 In `src/app/layout.tsx`:
 
 ```tsx
-import { ThemeProvider } from "@/components/theme-provider"
+import { ThemeProvider } from '@/components/theme-provider';
 
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
@@ -99,7 +102,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
         </ThemeProvider>
       </body>
     </html>
-  )
+  );
 }
 ```
 
@@ -135,13 +138,13 @@ Should compile without errors. Dark mode toggle should work.
 
 After setup, verify these files exist:
 
-| File | Purpose |
-|------|---------|
-| `components.json` | CLI config, aliases, installed components |
-| `lib/utils.ts` | `cn()` utility |
-| `src/components/theme-provider.tsx` | Dark mode provider |
-| `src/app/layout.tsx` | Root layout with ThemeProvider |
-| `src/app/globals.css` | CSS variables + `@theme inline` |
+| File                                | Purpose                                   |
+| ----------------------------------- | ----------------------------------------- |
+| `components.json`                   | CLI config, aliases, installed components |
+| `lib/utils.ts`                      | `cn()` utility                            |
+| `src/components/theme-provider.tsx` | Dark mode provider                        |
+| `src/app/layout.tsx`                | Root layout with ThemeProvider            |
+| `src/app/globals.css`               | CSS variables + `@theme inline`           |
 
 Verify dark mode: toggle system preference, page should respond without flash.
 

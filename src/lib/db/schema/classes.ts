@@ -1,4 +1,4 @@
-import { mysqlTable, bigint, varchar, timestamp } from 'drizzle-orm/mysql-core'
+import { mysqlTable, bigint, varchar, timestamp } from 'drizzle-orm/mysql-core';
 
 /**
  * Class/grade levels (X, XI, XII) with numeric code for sorting.
@@ -9,6 +9,5 @@ export const classes = mysqlTable('classes', {
   code: varchar('code', { length: 255 }).unique().notNull(),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').onUpdateNow(),
-deletedAt: timestamp('deleted_at'),
-  
-})
+  deletedAt: timestamp('deleted_at'),
+});

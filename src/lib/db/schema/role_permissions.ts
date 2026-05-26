@@ -1,6 +1,11 @@
-import { mysqlTable, bigint, timestamp, primaryKey } from 'drizzle-orm/mysql-core'
-import { roles } from './roles'
-import { permissions } from './permissions'
+import {
+  mysqlTable,
+  bigint,
+  timestamp,
+  primaryKey,
+} from 'drizzle-orm/mysql-core';
+import { roles } from './roles';
+import { permissions } from './permissions';
 
 /**
  * Role-permission pivot table — assigns permissions to roles.
@@ -9,10 +14,18 @@ import { permissions } from './permissions'
  * across roles (no hierarchy in permissions themselves).
  * OnDelete CASCADE ensures cleanup when role or permission is deleted.
  */
-export const rolePermissions = mysqlTable('role_permissions', {
-  roleId: bigint('role_id', { mode: 'number' }).notNull().references(() => roles.id, { onDelete: 'cascade' }),
-  permissionId: bigint('permission_id', { mode: 'number' }).notNull().references(() => permissions.id, { onDelete: 'cascade' }),
-  deletedAt: timestamp('deleted_at'),
-}, (table) => ({
-  pk: primaryKey({ columns: [table.roleId, table.permissionId] }),
-}))
+export const rolePermissions = mysqlTable(
+  'role_permissions',
+  {
+    roleId: bigint('role_id', { mode: 'number' })
+      .notNull()
+      .references(() => roles.id, { onDelete: 'cascade' }),
+    permissionId: bigint('permission_id', { mode: 'number' })
+      .notNull()
+      .references(() => permissions.id, { onDelete: 'cascade' }),
+    deletedAt: timestamp('deleted_at'),
+  },
+  (table) => ({
+    pk: primaryKey({ columns: [table.roleId, table.permissionId] }),
+  })
+);

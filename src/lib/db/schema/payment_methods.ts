@@ -1,4 +1,11 @@
-import { mysqlTable, bigint, varchar, text, boolean, timestamp } from 'drizzle-orm/mysql-core'
+import {
+  mysqlTable,
+  bigint,
+  varchar,
+  text,
+  boolean,
+  timestamp,
+} from 'drizzle-orm/mysql-core';
 
 /**
  * Available payment methods (bank transfer, cash, e-wallet).
@@ -14,4 +21,4 @@ export const paymentMethods = mysqlTable('payment_methods', {
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').onUpdateNow(),
   deletedAt: timestamp('deleted_at'),
-})
+});

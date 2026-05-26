@@ -13,16 +13,16 @@
 
 ## Legend
 
-| Symbol | Meaning |
-|--------|---------|
-| PK | Primary Key |
-| FK | Foreign Key |
-| NULL | Column can be null |
-| NOT NULL | Column required |
-| UNIQUE | Unique constraint |
-| AI | Auto Increment |
-| ENUM | Enumeration type |
-| CASCADE | Delete/update cascades |
+| Symbol   | Meaning                |
+| -------- | ---------------------- |
+| PK       | Primary Key            |
+| FK       | Foreign Key            |
+| NULL     | Column can be null     |
+| NOT NULL | Column required        |
+| UNIQUE   | Unique constraint      |
+| AI       | Auto Increment         |
+| ENUM     | Enumeration type       |
+| CASCADE  | Delete/update cascades |
 
 ---
 
@@ -32,33 +32,36 @@
 
 **Purpose:** User authentication (Better Auth compatible)
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | BIGINT | PK, AI | User ID |
-| `confirmed` | BOOLEAN | DEFAULT false | Email verification status |
-| `username` | VARCHAR(255) | UNIQUE, NULLABLE | Username (optional) |
-| `name` | VARCHAR(255) | NOT NULL | User's full name |
-| `email` | VARCHAR(255) | UNIQUE, NOT NULL | Email address (login) |
-| `guid` | VARCHAR(255) | NULLABLE | External GUID (if synced) |
-| `email_verified_at` | TIMESTAMP | NULLABLE | Email verification timestamp |
-| `password` | VARCHAR(255) | NOT NULL | Hashed password |
-| `role_id` | BIGINT | FK → `roles.id` ON DELETE CASCADE | User role |
-| `remember_token` | VARCHAR(100) | NULLABLE | Remember me token |
-| `created_at` | TIMESTAMP | NULLABLE | Account creation |
-| `updated_at` | TIMESTAMP | NULLABLE | Last update |
+| Column              | Type         | Constraints                       | Description                  |
+| ------------------- | ------------ | --------------------------------- | ---------------------------- |
+| `id`                | BIGINT       | PK, AI                            | User ID                      |
+| `confirmed`         | BOOLEAN      | DEFAULT false                     | Email verification status    |
+| `username`          | VARCHAR(255) | UNIQUE, NULLABLE                  | Username (optional)          |
+| `name`              | VARCHAR(255) | NOT NULL                          | User's full name             |
+| `email`             | VARCHAR(255) | UNIQUE, NOT NULL                  | Email address (login)        |
+| `guid`              | VARCHAR(255) | NULLABLE                          | External GUID (if synced)    |
+| `email_verified_at` | TIMESTAMP    | NULLABLE                          | Email verification timestamp |
+| `password`          | VARCHAR(255) | NOT NULL                          | Hashed password              |
+| `role_id`           | BIGINT       | FK → `roles.id` ON DELETE CASCADE | User role                    |
+| `remember_token`    | VARCHAR(100) | NULLABLE                          | Remember me token            |
+| `created_at`        | TIMESTAMP    | NULLABLE                          | Account creation             |
+| `updated_at`        | TIMESTAMP    | NULLABLE                          | Last update                  |
 
 **Indexes:**
+
 - `UNIQUE INDEX idx_email (email)`
 - `UNIQUE INDEX idx_username (username)`
 - `INDEX idx_role_id (role_id)`
 
 **Relationships:**
+
 - `role()` → belongsTo `roles`
 - `profile()` → hasOne `profiles`
 - `announcements()` → belongsToMany `announcements` via `announcement_recipients`
 - `payments()` → hasMany `payments`
 
 **Notes:**
+
 - Better Auth compatible (id, email, password, timestamps)
 - Column `confirmed` retains old spelling for compatibility
 
@@ -68,21 +71,24 @@
 
 **Purpose:** User role definitions (RBAC)
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | BIGINT | PK, AI | Role ID |
-| `name` | VARCHAR(255) | UNIQUE, NOT NULL | Role name |
-| `description` | VARCHAR(255) | NULLABLE | Role description |
-| `created_at` | TIMESTAMP | NULLABLE | Creation |
-| `updated_at` | TIMESTAMP | NULLABLE | Update |
+| Column        | Type         | Constraints      | Description      |
+| ------------- | ------------ | ---------------- | ---------------- |
+| `id`          | BIGINT       | PK, AI           | Role ID          |
+| `name`        | VARCHAR(255) | UNIQUE, NOT NULL | Role name        |
+| `description` | VARCHAR(255) | NULLABLE         | Role description |
+| `created_at`  | TIMESTAMP    | NULLABLE         | Creation         |
+| `updated_at`  | TIMESTAMP    | NULLABLE         | Update           |
 
 **Indexes:**
+
 - `UNIQUE INDEX idx_name (name)`
 
 **Relationships:**
+
 - `users()` → hasMany `users`
 
 **Seed Data:**
+
 ```sql
 INSERT INTO roles (name, description) VALUES
 ('superadmin', 'Super Administrator - full access'),
@@ -98,54 +104,57 @@ INSERT INTO roles (name, description) VALUES
 
 **Purpose:** Extended user profile (students & teachers)
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | BIGINT | PK, AI | Profile ID |
-| `user_id` | BIGINT | FK → `users.id` ON DELETE CASCADE | Linked user |
-| `type` | ENUM | ('siswa','guru','admin','superadmin') DEFAULT 'siswa' | Profile type |
-| `name` | VARCHAR(255) | NOT NULL | Full name |
-| `previous_school` | VARCHAR(255) | NULLABLE | Previous school |
-| `nik` | VARCHAR(255) | NULLABLE | National ID (16-digit) |
-| `nisn` | VARCHAR(255) | NULLABLE | Student ID |
-| `birth_place` | VARCHAR(255) | NULLABLE | Birthplace |
-| `birth_date` | DATE | NULLABLE | Date of birth |
-| `gender` | ENUM | ('male','female') DEFAULT 'male' | Gender |
-| `address` | TEXT | NULLABLE | Full address |
-| `birth_order` | INTEGER | NULLABLE | Child number in family |
-| `siblings_count` | INTEGER | NULLABLE | Number of siblings |
-| `weight_kg` | INTEGER | NULLABLE | Weight in kg |
-| `height_cm` | INTEGER | NULLABLE | Height in cm |
-| `phone` | VARCHAR(20) | NULLABLE | Phone number |
-| `religion` | VARCHAR(50) | NULLABLE | Religion |
-| `diploma_number` | VARCHAR(255) | NULLABLE | Diploma number |
-| `skhu_number` | VARCHAR(255) | NULLABLE | SKHU certificate number |
-| `major_id` | BIGINT | FK → `majors.id` NULLABLE | Major/program |
-| `uniform_size` | VARCHAR(10) | NULLABLE | Uniform size (S/M/L/XL) |
-| `father_name` | VARCHAR(255) | NULLABLE | Father's name |
-| `father_nik` | VARCHAR(255) | NULLABLE | Father's NIK |
-| `father_occupation` | VARCHAR(255) | NULLABLE | Father's job |
-| `mother_name` | VARCHAR(255) | NULLABLE | Mother's name |
-| `mother_nik` | VARCHAR(255) | NULLABLE | Mother's NIK |
-| `parents_address` | TEXT | NULLABLE | Parents address |
-| `parents_phone` | VARCHAR(20) | NULLABLE | Parents phone |
-| `teacher_id` | VARCHAR(255) | NULLABLE | Teacher ID (for guru) |
-| `subject_taught` | VARCHAR(255) | NULLABLE | Subject taught (for guru) |
-| `status` | VARCHAR(50) | NULLABLE | Status: active, inactive, graduated |
-| `alternate_address` | TEXT | NULLABLE | Alternate address |
-| `created_at` | TIMESTAMP | NULLABLE | Creation |
-| `updated_at` | TIMESTAMP | NULLABLE | Update |
+| Column              | Type         | Constraints                                           | Description                         |
+| ------------------- | ------------ | ----------------------------------------------------- | ----------------------------------- |
+| `id`                | BIGINT       | PK, AI                                                | Profile ID                          |
+| `user_id`           | BIGINT       | FK → `users.id` ON DELETE CASCADE                     | Linked user                         |
+| `type`              | ENUM         | ('siswa','guru','admin','superadmin') DEFAULT 'siswa' | Profile type                        |
+| `name`              | VARCHAR(255) | NOT NULL                                              | Full name                           |
+| `previous_school`   | VARCHAR(255) | NULLABLE                                              | Previous school                     |
+| `nik`               | VARCHAR(255) | NULLABLE                                              | National ID (16-digit)              |
+| `nisn`              | VARCHAR(255) | NULLABLE                                              | Student ID                          |
+| `birth_place`       | VARCHAR(255) | NULLABLE                                              | Birthplace                          |
+| `birth_date`        | DATE         | NULLABLE                                              | Date of birth                       |
+| `gender`            | ENUM         | ('male','female') DEFAULT 'male'                      | Gender                              |
+| `address`           | TEXT         | NULLABLE                                              | Full address                        |
+| `birth_order`       | INTEGER      | NULLABLE                                              | Child number in family              |
+| `siblings_count`    | INTEGER      | NULLABLE                                              | Number of siblings                  |
+| `weight_kg`         | INTEGER      | NULLABLE                                              | Weight in kg                        |
+| `height_cm`         | INTEGER      | NULLABLE                                              | Height in cm                        |
+| `phone`             | VARCHAR(20)  | NULLABLE                                              | Phone number                        |
+| `religion`          | VARCHAR(50)  | NULLABLE                                              | Religion                            |
+| `diploma_number`    | VARCHAR(255) | NULLABLE                                              | Diploma number                      |
+| `skhu_number`       | VARCHAR(255) | NULLABLE                                              | SKHU certificate number             |
+| `major_id`          | BIGINT       | FK → `majors.id` NULLABLE                             | Major/program                       |
+| `uniform_size`      | VARCHAR(10)  | NULLABLE                                              | Uniform size (S/M/L/XL)             |
+| `father_name`       | VARCHAR(255) | NULLABLE                                              | Father's name                       |
+| `father_nik`        | VARCHAR(255) | NULLABLE                                              | Father's NIK                        |
+| `father_occupation` | VARCHAR(255) | NULLABLE                                              | Father's job                        |
+| `mother_name`       | VARCHAR(255) | NULLABLE                                              | Mother's name                       |
+| `mother_nik`        | VARCHAR(255) | NULLABLE                                              | Mother's NIK                        |
+| `parents_address`   | TEXT         | NULLABLE                                              | Parents address                     |
+| `parents_phone`     | VARCHAR(20)  | NULLABLE                                              | Parents phone                       |
+| `teacher_id`        | VARCHAR(255) | NULLABLE                                              | Teacher ID (for guru)               |
+| `subject_taught`    | VARCHAR(255) | NULLABLE                                              | Subject taught (for guru)           |
+| `status`            | VARCHAR(50)  | NULLABLE                                              | Status: active, inactive, graduated |
+| `alternate_address` | TEXT         | NULLABLE                                              | Alternate address                   |
+| `created_at`        | TIMESTAMP    | NULLABLE                                              | Creation                            |
+| `updated_at`        | TIMESTAMP    | NULLABLE                                              | Update                              |
 
 **Indexes:**
+
 - `INDEX idx_user_id (user_id)`
 - `INDEX idx_major_id (major_id)`
 - `INDEX idx_type (type)`
 - `INDEX idx_nisn (nisn)`
 
 **Relationships:**
+
 - `user()` → belongsTo `users`
 - `major()` → belongsTo `majors`
 
 **Naming Notes (from old schema):**
+
 - Old: `asal_sekolah` → `previous_school`
 - Old: `tempat_lahir` → `birth_place`
 - Old: `tanggal_lahir` → `birth_date`
@@ -164,25 +173,27 @@ INSERT INTO roles (name, description) VALUES
 
 **Purpose:** Uploaded document file paths
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | BIGINT | PK, AI | Asset ID |
-| `user_id` | BIGINT | FK → `users.id` ON DELETE CASCADE | Owner |
-| `diploma` | VARCHAR(255) | NULLABLE | Diploma file |
-| `skhu` | VARCHAR(255) | NULLABLE | SKHU file |
-| `skl` | VARCHAR(255) | NULLABLE | SKL certificate |
-| `nisn_doc` | VARCHAR(255) | NULLABLE | NISN document |
-| `birth_certificate` | VARCHAR(255) | NULLABLE | Akta kelahiran |
-| `father_ktp` | VARCHAR(255) | NULLABLE | Father's KTP |
-| `mother_ktp` | VARCHAR(255) | NULLABLE | Mother's KTP |
-| `kip` | VARCHAR(255) | NULLABLE | KIP card |
-| `created_at` | TIMESTAMP | NULLABLE | Upload |
-| `updated_at` | TIMESTAMP | NULLABLE | Update |
+| Column              | Type         | Constraints                       | Description     |
+| ------------------- | ------------ | --------------------------------- | --------------- |
+| `id`                | BIGINT       | PK, AI                            | Asset ID        |
+| `user_id`           | BIGINT       | FK → `users.id` ON DELETE CASCADE | Owner           |
+| `diploma`           | VARCHAR(255) | NULLABLE                          | Diploma file    |
+| `skhu`              | VARCHAR(255) | NULLABLE                          | SKHU file       |
+| `skl`               | VARCHAR(255) | NULLABLE                          | SKL certificate |
+| `nisn_doc`          | VARCHAR(255) | NULLABLE                          | NISN document   |
+| `birth_certificate` | VARCHAR(255) | NULLABLE                          | Akta kelahiran  |
+| `father_ktp`        | VARCHAR(255) | NULLABLE                          | Father's KTP    |
+| `mother_ktp`        | VARCHAR(255) | NULLABLE                          | Mother's KTP    |
+| `kip`               | VARCHAR(255) | NULLABLE                          | KIP card        |
+| `created_at`        | TIMESTAMP    | NULLABLE                          | Upload          |
+| `updated_at`        | TIMESTAMP    | NULLABLE                          | Update          |
 
 **Indexes:**
+
 - `INDEX idx_user_id (user_id)`
 
 **Notes:**
+
 - One record per user (enforced by app)
 - Stores file paths relative to `public/uploads/`
 
@@ -192,12 +203,12 @@ INSERT INTO roles (name, description) VALUES
 
 **Purpose:** Placeholder for additional user data (unused)
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | BIGINT | PK, AI | Record ID |
-| `user_id` | BIGINT | FK → `users.id` ON DELETE CASCADE | User |
-| `created_at` | TIMESTAMP | NULLABLE | Created |
-| `updated_at` | TIMESTAMP | NULLABLE | Updated |
+| Column       | Type      | Constraints                       | Description |
+| ------------ | --------- | --------------------------------- | ----------- |
+| `id`         | BIGINT    | PK, AI                            | Record ID   |
+| `user_id`    | BIGINT    | FK → `users.id` ON DELETE CASCADE | User        |
+| `created_at` | TIMESTAMP | NULLABLE                          | Created     |
+| `updated_at` | TIMESTAMP | NULLABLE                          | Updated     |
 
 **Recommendation:** Drop this table in fresh install — no useful data.
 
@@ -209,15 +220,16 @@ INSERT INTO roles (name, description) VALUES
 
 **Purpose:** Academic majors/programs
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | BIGINT | PK, AI | Major ID |
-| `name` | VARCHAR(255) | UNIQUE, NOT NULL | Major name |
-| `description` | TEXT | NULLABLE | Description |
-| `created_at` | TIMESTAMP | NULLABLE | Created |
-| `updated_at` | TIMESTAMP | NULLABLE | Updated |
+| Column        | Type         | Constraints      | Description |
+| ------------- | ------------ | ---------------- | ----------- |
+| `id`          | BIGINT       | PK, AI           | Major ID    |
+| `name`        | VARCHAR(255) | UNIQUE, NOT NULL | Major name  |
+| `description` | TEXT         | NULLABLE         | Description |
+| `created_at`  | TIMESTAMP    | NULLABLE         | Created     |
+| `updated_at`  | TIMESTAMP    | NULLABLE         | Updated     |
 
 **Seed Data:**
+
 ```sql
 INSERT INTO majors (name, description) VALUES
 ('Teknik Komputer & Jaringan', 'TKJ - Computer Networking'),
@@ -231,15 +243,16 @@ INSERT INTO majors (name, description) VALUES
 
 **Purpose:** Class/grade levels
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | BIGINT | PK, AI | Class ID |
-| `name` | VARCHAR(255) | NOT NULL | Class name (X, XI, XII) |
-| `code` | VARCHAR(255) | UNIQUE, NOT NULL | Numeric code (10, 11, 12) |
-| `created_at` | TIMESTAMP | NULLABLE | Created |
-| `updated_at` | TIMESTAMP | NULLABLE | Updated |
+| Column       | Type         | Constraints      | Description               |
+| ------------ | ------------ | ---------------- | ------------------------- |
+| `id`         | BIGINT       | PK, AI           | Class ID                  |
+| `name`       | VARCHAR(255) | NOT NULL         | Class name (X, XI, XII)   |
+| `code`       | VARCHAR(255) | UNIQUE, NOT NULL | Numeric code (10, 11, 12) |
+| `created_at` | TIMESTAMP    | NULLABLE         | Created                   |
+| `updated_at` | TIMESTAMP    | NULLABLE         | Updated                   |
 
 **Seed Data:**
+
 ```sql
 INSERT INTO classes (name, code) VALUES
 ('X', '10'),
@@ -248,6 +261,7 @@ INSERT INTO classes (name, code) VALUES
 ```
 
 **Notes:**
+
 - `code` used for numeric sorting
 - Combined with major + section for full class name (e.g., "X-TKJ-1")
 
@@ -257,22 +271,24 @@ INSERT INTO classes (name, code) VALUES
 
 **Purpose:** Academic semesters
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | BIGINT | PK, AI | Semester ID |
-| `name` | VARCHAR(100) | NOT NULL | Semester name |
-| `academic_year` | VARCHAR(255) | NOT NULL | Academic year (e.g., "2025/2026") |
-| `start_date` | DATE | NULLABLE | Semester start |
-| `end_date` | DATE | NULLABLE | Semester end |
-| `is_active` | BOOLEAN | DEFAULT false | Current active semester |
-| `created_at` | TIMESTAMP | NULLABLE | Created |
-| `updated_at` | TIMESTAMP | NULLABLE | Updated |
+| Column          | Type         | Constraints   | Description                       |
+| --------------- | ------------ | ------------- | --------------------------------- |
+| `id`            | BIGINT       | PK, AI        | Semester ID                       |
+| `name`          | VARCHAR(100) | NOT NULL      | Semester name                     |
+| `academic_year` | VARCHAR(255) | NOT NULL      | Academic year (e.g., "2025/2026") |
+| `start_date`    | DATE         | NULLABLE      | Semester start                    |
+| `end_date`      | DATE         | NULLABLE      | Semester end                      |
+| `is_active`     | BOOLEAN      | DEFAULT false | Current active semester           |
+| `created_at`    | TIMESTAMP    | NULLABLE      | Created                           |
+| `updated_at`    | TIMESTAMP    | NULLABLE      | Updated                           |
 
 **Indexes:**
+
 - `INDEX idx_academic_year (academic_year)`
 - `INDEX idx_is_active (is_active)`
 
 **Seed Data:**
+
 ```sql
 INSERT INTO semesters (name, academic_year, start_date, end_date, is_active) VALUES
 ('Semester 1', '2025/2026', '2025-07-15', '2025-12-20', true),
@@ -285,30 +301,33 @@ INSERT INTO semesters (name, academic_year, start_date, end_date, is_active) VAL
 
 **Purpose:** Course/subject catalog
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | BIGINT | PK, AI | Subject ID |
-| `name` | VARCHAR(255) | NOT NULL | Subject name |
-| `code` | VARCHAR(50) | UNIQUE, NULLABLE | Subject code (e.g., "TK101") |
-| `class_id` | BIGINT | FK → `classes.id` ON DELETE CASCADE | Grade level |
-| `major_id` | BIGINT | FK → `majors.id` NULLABLE | Major (NULL = all majors) |
-| `credits` | INTEGER | DEFAULT 0 | Credit hours (SKS) |
-| `description` | TEXT | NULLABLE | Subject description |
-| `created_at` | TIMESTAMP | NULLABLE | Created |
-| `updated_at` | TIMESTAMP | NULLABLE | Updated |
+| Column        | Type         | Constraints                         | Description                  |
+| ------------- | ------------ | ----------------------------------- | ---------------------------- |
+| `id`          | BIGINT       | PK, AI                              | Subject ID                   |
+| `name`        | VARCHAR(255) | NOT NULL                            | Subject name                 |
+| `code`        | VARCHAR(50)  | UNIQUE, NULLABLE                    | Subject code (e.g., "TK101") |
+| `class_id`    | BIGINT       | FK → `classes.id` ON DELETE CASCADE | Grade level                  |
+| `major_id`    | BIGINT       | FK → `majors.id` NULLABLE           | Major (NULL = all majors)    |
+| `credits`     | INTEGER      | DEFAULT 0                           | Credit hours (SKS)           |
+| `description` | TEXT         | NULLABLE                            | Subject description          |
+| `created_at`  | TIMESTAMP    | NULLABLE                            | Created                      |
+| `updated_at`  | TIMESTAMP    | NULLABLE                            | Updated                      |
 
 **Indexes:**
+
 - `INDEX idx_class_id (class_id)`
 - `INDEX idx_major_id (major_id)`
 - `UNIQUE INDEX idx_code (code)`
 
 **Relationships:**
+
 - `class()` → belongsTo `classes`
 - `major()` → belongsTo `majors`
 - `enrollments()` → hasMany `enrollments`
 - `grades()` → hasMany `grades`
 
 **Seed Data:**
+
 ```sql
 INSERT INTO subjects (name, code, class_id, major_id, credits) VALUES
 ('Pemrograman Dasar', 'TK101', 1, 1, 3),
@@ -326,21 +345,23 @@ INSERT INTO subjects (name, code, class_id, major_id, credits) VALUES
 
 **Purpose:** Student course registration per semester (KRS)
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | BIGINT | PK, AI | Enrollment ID |
-| `student_id` | BIGINT | FK → `users.id` ON DELETE CASCADE | Student |
-| `semester_id` | BIGINT | FK → `semesters.id` ON DELETE CASCADE | Semester |
-| `class_id` | BIGINT | FK → `classes.id` ON DELETE CASCADE | Class level |
-| `created_at` | TIMESTAMP | NULLABLE | Enrolled |
-| `updated_at` | TIMESTAMP | NULLABLE | Updated |
+| Column        | Type      | Constraints                           | Description   |
+| ------------- | --------- | ------------------------------------- | ------------- |
+| `id`          | BIGINT    | PK, AI                                | Enrollment ID |
+| `student_id`  | BIGINT    | FK → `users.id` ON DELETE CASCADE     | Student       |
+| `semester_id` | BIGINT    | FK → `semesters.id` ON DELETE CASCADE | Semester      |
+| `class_id`    | BIGINT    | FK → `classes.id` ON DELETE CASCADE   | Class level   |
+| `created_at`  | TIMESTAMP | NULLABLE                              | Enrolled      |
+| `updated_at`  | TIMESTAMP | NULLABLE                              | Updated       |
 
 **Indexes:**
+
 - `UNIQUE INDEX idx_unique_enrollment (student_id, semester_id, class_id)`
 - `INDEX idx_semester_id (semester_id)`
 - `INDEX idx_class_id (class_id)`
 
 **Relationships:**
+
 - `student()` → belongsTo `users`
 - `semester()` → belongsTo `semesters`
 - `class()` → belongsTo `classes`
@@ -352,24 +373,26 @@ INSERT INTO subjects (name, code, class_id, major_id, credits) VALUES
 
 **Purpose:** Student grades per subject per semester (KHS)
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | BIGINT | PK, AI | Grade ID |
-| `enrollment_id` | BIGINT | FK → `enrollments.id` ON DELETE CASCADE | Enrollment |
-| `subject_id` | BIGINT | FK → `subjects.id` ON DELETE CASCADE | Subject |
-| `semester_id` | BIGINT | FK → `semesters.id` ON DELETE CASCADE | Semester |
-| `score` | DECIMAL(5,2) | NULLABLE | Numeric score (0.00–100.00) |
-| `grade` | CHAR(2) | NULLABLE | Letter grade (A, A-, B+, B, ...) |
-| `predicate` | VARCHAR(5) | NULLABLE | Simple grade (A/B/C/D/E) |
-| `created_at` | TIMESTAMP | NULLABLE | Entered |
-| `updated_at` | TIMESTAMP | NULLABLE | Updated |
+| Column          | Type         | Constraints                             | Description                      |
+| --------------- | ------------ | --------------------------------------- | -------------------------------- |
+| `id`            | BIGINT       | PK, AI                                  | Grade ID                         |
+| `enrollment_id` | BIGINT       | FK → `enrollments.id` ON DELETE CASCADE | Enrollment                       |
+| `subject_id`    | BIGINT       | FK → `subjects.id` ON DELETE CASCADE    | Subject                          |
+| `semester_id`   | BIGINT       | FK → `semesters.id` ON DELETE CASCADE   | Semester                         |
+| `score`         | DECIMAL(5,2) | NULLABLE                                | Numeric score (0.00–100.00)      |
+| `grade`         | CHAR(2)      | NULLABLE                                | Letter grade (A, A-, B+, B, ...) |
+| `predicate`     | VARCHAR(5)   | NULLABLE                                | Simple grade (A/B/C/D/E)         |
+| `created_at`    | TIMESTAMP    | NULLABLE                                | Entered                          |
+| `updated_at`    | TIMESTAMP    | NULLABLE                                | Updated                          |
 
 **Indexes:**
+
 - `UNIQUE INDEX idx_enrollment_subject (enrollment_id, subject_id)`
 - `INDEX idx_semester_id (semester_id)`
 - `INDEX idx_grade (grade)`
 
 **Computed:**
+
 - `GPA` = average of all `score` values per student per semester
 - `Total Credits` = sum of `subjects.credits` for passed grades
 
@@ -381,27 +404,29 @@ INSERT INTO subjects (name, code, class_id, major_id, credits) VALUES
 
 **Purpose:** Student fee/payment records
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | BIGINT | PK, AI | Payment ID |
-| `student_id` | BIGINT | FK → `users.id` ON DELETE CASCADE | Student |
-| `code` | VARCHAR(100) | UNIQUE, NOT NULL | Payment code |
-| `description` | VARCHAR(255) | NOT NULL | Description |
-| `price` | DECIMAL(10,2) | NOT NULL | Unit price |
-| `quantity` | INTEGER | DEFAULT 1 | Quantity |
-| `total` | DECIMAL(10,2) | NOT NULL | Total (price × quantity) |
-| `order_data` | JSON | NULLABLE | Additional metadata |
-| `status` | ENUM | ('draft','pending','paid','cancelled') DEFAULT 'draft' | Payment status |
-| `paid_at` | TIMESTAMP | NULLABLE | Payment completion |
-| `created_at` | TIMESTAMP | NULLABLE | Created |
-| `updated_at` | TIMESTAMP | NULLABLE | Updated |
+| Column        | Type          | Constraints                                            | Description              |
+| ------------- | ------------- | ------------------------------------------------------ | ------------------------ |
+| `id`          | BIGINT        | PK, AI                                                 | Payment ID               |
+| `student_id`  | BIGINT        | FK → `users.id` ON DELETE CASCADE                      | Student                  |
+| `code`        | VARCHAR(100)  | UNIQUE, NOT NULL                                       | Payment code             |
+| `description` | VARCHAR(255)  | NOT NULL                                               | Description              |
+| `price`       | DECIMAL(10,2) | NOT NULL                                               | Unit price               |
+| `quantity`    | INTEGER       | DEFAULT 1                                              | Quantity                 |
+| `total`       | DECIMAL(10,2) | NOT NULL                                               | Total (price × quantity) |
+| `order_data`  | JSON          | NULLABLE                                               | Additional metadata      |
+| `status`      | ENUM          | ('draft','pending','paid','cancelled') DEFAULT 'draft' | Payment status           |
+| `paid_at`     | TIMESTAMP     | NULLABLE                                               | Payment completion       |
+| `created_at`  | TIMESTAMP     | NULLABLE                                               | Created                  |
+| `updated_at`  | TIMESTAMP     | NULLABLE                                               | Updated                  |
 
 **Indexes:**
+
 - `UNIQUE INDEX idx_code (code)`
 - `INDEX idx_student_id (student_id)`
 - `INDEX idx_status (status)`
 
 **Improvements:**
+
 - ✅ Added `student_id` FK (was missing)
 - ✅ DECIMAL for monetary precision
 - ✅ `paid_at` for payment timestamp
@@ -412,19 +437,20 @@ INSERT INTO subjects (name, code, class_id, major_id, credits) VALUES
 
 **Purpose:** Available payment methods
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | BIGINT | PK, AI | Method ID |
-| `name` | VARCHAR(100) | UNIQUE, NOT NULL | Method name |
-| `provider` | VARCHAR(100) | NULLABLE | Provider (BCA, GoPay, etc.) |
-| `account_number` | VARCHAR(50) | NULLABLE | Receiver account |
-| `account_name` | VARCHAR(255) | NULLABLE | Account holder |
-| `instructions` | TEXT | NULLABLE | Payment instructions |
-| `is_active` | BOOLEAN | DEFAULT true | Available? |
-| `created_at` | TIMESTAMP | NULLABLE | Created |
-| `updated_at` | TIMESTAMP | NULLABLE | Updated |
+| Column           | Type         | Constraints      | Description                 |
+| ---------------- | ------------ | ---------------- | --------------------------- |
+| `id`             | BIGINT       | PK, AI           | Method ID                   |
+| `name`           | VARCHAR(100) | UNIQUE, NOT NULL | Method name                 |
+| `provider`       | VARCHAR(100) | NULLABLE         | Provider (BCA, GoPay, etc.) |
+| `account_number` | VARCHAR(50)  | NULLABLE         | Receiver account            |
+| `account_name`   | VARCHAR(255) | NULLABLE         | Account holder              |
+| `instructions`   | TEXT         | NULLABLE         | Payment instructions        |
+| `is_active`      | BOOLEAN      | DEFAULT true     | Available?                  |
+| `created_at`     | TIMESTAMP    | NULLABLE         | Created                     |
+| `updated_at`     | TIMESTAMP    | NULLABLE         | Updated                     |
 
 **Seed Data:**
+
 ```sql
 INSERT INTO payment_methods (name, provider, account_number, account_name) VALUES
 ('Transfer Bank BCA', 'BCA', '1234567890', 'SMK TERPADU'),
@@ -439,19 +465,21 @@ INSERT INTO payment_methods (name, provider, account_number, account_name) VALUE
 
 **Purpose:** System key-value configuration
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | BIGINT | PK, AI | Config ID |
-| `key` | VARCHAR(100) | UNIQUE, NOT NULL | Config key |
-| `value` | TEXT | NULLABLE | Config value (JSON if needed) |
-| `description` | VARCHAR(255) | NULLABLE | Human-readable description |
-| `created_at` | TIMESTAMP | NULLABLE | Created |
-| `updated_at` | TIMESTAMP | NULLABLE | Updated |
+| Column        | Type         | Constraints      | Description                   |
+| ------------- | ------------ | ---------------- | ----------------------------- |
+| `id`          | BIGINT       | PK, AI           | Config ID                     |
+| `key`         | VARCHAR(100) | UNIQUE, NOT NULL | Config key                    |
+| `value`       | TEXT         | NULLABLE         | Config value (JSON if needed) |
+| `description` | VARCHAR(255) | NULLABLE         | Human-readable description    |
+| `created_at`  | TIMESTAMP    | NULLABLE         | Created                       |
+| `updated_at`  | TIMESTAMP    | NULLABLE         | Updated                       |
 
 **Indexes:**
+
 - `UNIQUE INDEX idx_key (key)`
 
 **Seed Data:**
+
 ```sql
 INSERT INTO system_configs (key, value, description) VALUES
 ('school_name', 'SMK TERPADU', 'School name in header'),
@@ -469,27 +497,29 @@ INSERT INTO system_configs (key, value, description) VALUES
 
 **Purpose:** School announcements
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | BIGINT | PK, AI | Announcement ID |
-| `title` | VARCHAR(255) | NOT NULL | Title |
-| `description` | VARCHAR(255) | NULLABLE | Short summary |
-| `content` | TEXT | NOT NULL | Full content |
-| `category` | VARCHAR(50) | NULLABLE | Category: umum, akademik, keuangan, kegiatan |
-| `priority` | ENUM | ('normal','important','urgent') DEFAULT 'normal' | Priority level |
-| `author_id` | BIGINT | FK → `users.id` ON DELETE SET NULL | Author |
-| `published_at` | TIMESTAMP | NULLABLE | Publish date/time |
-| `expires_at` | TIMESTAMP | NULLABLE | Expiration (optional) |
-| `created_at` | TIMESTAMP | NULLABLE | Created |
-| `updated_at` | TIMESTAMP | NULLABLE | Updated |
+| Column         | Type         | Constraints                                      | Description                                  |
+| -------------- | ------------ | ------------------------------------------------ | -------------------------------------------- |
+| `id`           | BIGINT       | PK, AI                                           | Announcement ID                              |
+| `title`        | VARCHAR(255) | NOT NULL                                         | Title                                        |
+| `description`  | VARCHAR(255) | NULLABLE                                         | Short summary                                |
+| `content`      | TEXT         | NOT NULL                                         | Full content                                 |
+| `category`     | VARCHAR(50)  | NULLABLE                                         | Category: umum, akademik, keuangan, kegiatan |
+| `priority`     | ENUM         | ('normal','important','urgent') DEFAULT 'normal' | Priority level                               |
+| `author_id`    | BIGINT       | FK → `users.id` ON DELETE SET NULL               | Author                                       |
+| `published_at` | TIMESTAMP    | NULLABLE                                         | Publish date/time                            |
+| `expires_at`   | TIMESTAMP    | NULLABLE                                         | Expiration (optional)                        |
+| `created_at`   | TIMESTAMP    | NULLABLE                                         | Created                                      |
+| `updated_at`   | TIMESTAMP    | NULLABLE                                         | Updated                                      |
 
 **Indexes:**
+
 - `INDEX idx_author_id (author_id)`
 - `INDEX idx_category (category)`
 - `INDEX idx_priority (priority)`
 - `INDEX idx_published (published_at)`
 
 **Relationships:**
+
 - `author()` → belongsTo `users`
 - `recipients()` → belongsToMany `users` via `announcement_recipients`
 
@@ -499,21 +529,23 @@ INSERT INTO system_configs (key, value, description) VALUES
 
 **Purpose:** Target specific users for announcements
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `announcement_id` | BIGINT | FK → `announcements.id` ON DELETE CASCADE | Announcement |
-| `user_id` | BIGINT | FK → `users.id` ON DELETE CASCADE | Target user |
-| `is_read` | BOOLEAN | DEFAULT false | Read status |
-| `read_at` | TIMESTAMP | NULLABLE | Read timestamp |
-| `created_at` | TIMESTAMP | NULLABLE | Assigned |
+| Column            | Type      | Constraints                               | Description    |
+| ----------------- | --------- | ----------------------------------------- | -------------- |
+| `announcement_id` | BIGINT    | FK → `announcements.id` ON DELETE CASCADE | Announcement   |
+| `user_id`         | BIGINT    | FK → `users.id` ON DELETE CASCADE         | Target user    |
+| `is_read`         | BOOLEAN   | DEFAULT false                             | Read status    |
+| `read_at`         | TIMESTAMP | NULLABLE                                  | Read timestamp |
+| `created_at`      | TIMESTAMP | NULLABLE                                  | Assigned       |
 
 **Primary Key:** `(announcement_id, user_id)` composite
 
 **Indexes:**
+
 - `INDEX idx_user_id (user_id)`
 - `INDEX idx_is_read (is_read)`
 
 **Notes:**
+
 - Enables targeted announcements (e.g., only to X-class students)
 - Without this, announcements are global
 
@@ -525,15 +557,15 @@ INSERT INTO system_configs (key, value, description) VALUES
 
 **Purpose:** Assign teachers to subjects by class
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | BIGINT | PK, AI | Assignment ID |
-| `teacher_id` | BIGINT | FK → `users.id` ON DELETE CASCADE | Teacher |
-| `subject_id` | BIGINT | FK → `subjects.id` ON DELETE CASCADE | Subject |
-| `class_id` | BIGINT | FK → `classes.id` ON DELETE CASCADE | Class level |
-| `semester_id` | BIGINT | FK → `semesters.id` ON DELETE CASCADE | Semester |
-| `created_at` | TIMESTAMP | NULLABLE | Assigned |
-| `updated_at` | TIMESTAMP | NULLABLE | Updated |
+| Column        | Type      | Constraints                           | Description   |
+| ------------- | --------- | ------------------------------------- | ------------- |
+| `id`          | BIGINT    | PK, AI                                | Assignment ID |
+| `teacher_id`  | BIGINT    | FK → `users.id` ON DELETE CASCADE     | Teacher       |
+| `subject_id`  | BIGINT    | FK → `subjects.id` ON DELETE CASCADE  | Subject       |
+| `class_id`    | BIGINT    | FK → `classes.id` ON DELETE CASCADE   | Class level   |
+| `semester_id` | BIGINT    | FK → `semesters.id` ON DELETE CASCADE | Semester      |
+| `created_at`  | TIMESTAMP | NULLABLE                              | Assigned      |
+| `updated_at`  | TIMESTAMP | NULLABLE                              | Updated       |
 
 **Unique:** `(teacher_id, subject_id, class_id, semester_id)`
 
@@ -543,19 +575,19 @@ INSERT INTO system_configs (key, value, description) VALUES
 
 **Purpose:** Class timetable/schedule
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | BIGINT | PK, AI | Schedule ID |
-| `class_id` | BIGINT | FK → `classes.id` ON DELETE CASCADE | Class |
-| `subject_id` | BIGINT | FK → `subjects.id` ON DELETE CASCADE | Subject |
-| `teacher_id` | BIGINT | FK → `users.id` ON DELETE CASCADE | Teacher |
-| `day_of_week` | ENUM | ('monday','tuesday','wednesday','thursday','friday','saturday') NOT NULL | Day |
-| `start_time` | TIME | NOT NULL | Start time |
-| `end_time` | TIME | NOT NULL | End time |
-| `room` | VARCHAR(50) | NULLABLE | Classroom |
-| `semester_id` | BIGINT | FK → `semesters.id` ON DELETE CASCADE | Semester |
-| `created_at` | TIMESTAMP | NULLABLE | Created |
-| `updated_at` | TIMESTAMP | NULLABLE | Updated |
+| Column        | Type        | Constraints                                                              | Description |
+| ------------- | ----------- | ------------------------------------------------------------------------ | ----------- |
+| `id`          | BIGINT      | PK, AI                                                                   | Schedule ID |
+| `class_id`    | BIGINT      | FK → `classes.id` ON DELETE CASCADE                                      | Class       |
+| `subject_id`  | BIGINT      | FK → `subjects.id` ON DELETE CASCADE                                     | Subject     |
+| `teacher_id`  | BIGINT      | FK → `users.id` ON DELETE CASCADE                                        | Teacher     |
+| `day_of_week` | ENUM        | ('monday','tuesday','wednesday','thursday','friday','saturday') NOT NULL | Day         |
+| `start_time`  | TIME        | NOT NULL                                                                 | Start time  |
+| `end_time`    | TIME        | NOT NULL                                                                 | End time    |
+| `room`        | VARCHAR(50) | NULLABLE                                                                 | Classroom   |
+| `semester_id` | BIGINT      | FK → `semesters.id` ON DELETE CASCADE                                    | Semester    |
+| `created_at`  | TIMESTAMP   | NULLABLE                                                                 | Created     |
+| `updated_at`  | TIMESTAMP   | NULLABLE                                                                 | Updated     |
 
 ---
 
@@ -563,19 +595,19 @@ INSERT INTO system_configs (key, value, description) VALUES
 
 **Purpose:** Student attendance tracking
 
-| Column | Type | Constraints | Description |
-|--------|------|-------------|-------------|
-| `id` | BIGINT | PK, AI | Attendance ID |
-| `student_id` | BIGINT | FK → `users.id` ON DELETE CASCADE | Student |
-| `schedule_id` | BIGINT | FK → `schedules.id` ON DELETE CASCADE | Scheduled class |
-| `date` | DATE | NOT NULL | Attendance date |
-| `status` | ENUM | ('present','sick','leave','absent','late') NOT NULL | Status |
-| `time_in` | TIME | NULLABLE | Check-in |
-| `time_out` | TIME | NULLABLE | Check-out |
-| `notes` | TEXT | NULLABLE | Reason/notes |
-| `recorded_by` | BIGINT | FK → `users.id` | Recording teacher |
-| `created_at` | TIMESTAMP | NULLABLE | Created |
-| `updated_at` | TIMESTAMP | NULLABLE | Updated |
+| Column        | Type      | Constraints                                         | Description       |
+| ------------- | --------- | --------------------------------------------------- | ----------------- |
+| `id`          | BIGINT    | PK, AI                                              | Attendance ID     |
+| `student_id`  | BIGINT    | FK → `users.id` ON DELETE CASCADE                   | Student           |
+| `schedule_id` | BIGINT    | FK → `schedules.id` ON DELETE CASCADE               | Scheduled class   |
+| `date`        | DATE      | NOT NULL                                            | Attendance date   |
+| `status`      | ENUM      | ('present','sick','leave','absent','late') NOT NULL | Status            |
+| `time_in`     | TIME      | NULLABLE                                            | Check-in          |
+| `time_out`    | TIME      | NULLABLE                                            | Check-out         |
+| `notes`       | TEXT      | NULLABLE                                            | Reason/notes      |
+| `recorded_by` | BIGINT    | FK → `users.id`                                     | Recording teacher |
+| `created_at`  | TIMESTAMP | NULLABLE                                            | Created           |
+| `updated_at`  | TIMESTAMP | NULLABLE                                            | Updated           |
 
 **Unique:** `(student_id, schedule_id, date)`
 
@@ -636,7 +668,20 @@ src/lib/db/
 ## Data Type Reference (Drizzle)
 
 ```typescript
-import { mysqlTable, serial, bigint, varchar, text, boolean, integer, decimal, timestamp, date, time, json } from 'drizzle-orm/mysql-core';
+import {
+  mysqlTable,
+  serial,
+  bigint,
+  varchar,
+  text,
+  boolean,
+  integer,
+  decimal,
+  timestamp,
+  date,
+  time,
+  json,
+} from 'drizzle-orm/mysql-core';
 
 // Example:
 export const users = mysqlTable('users', {
@@ -680,8 +725,9 @@ bun drizzle-kit studio
 ```
 
 **Configure** `drizzle.config.ts`:
+
 ```ts
-import { defineConfig } from 'drizzle-kit'
+import { defineConfig } from 'drizzle-kit';
 
 export default defineConfig({
   schema: './src/lib/db/schema/**/*.ts',
@@ -690,7 +736,7 @@ export default defineConfig({
   dbCredentials: {
     url: process.env.DATABASE_URL!,
   },
-})
+});
 ```
 
 ---
@@ -716,6 +762,7 @@ export async function seed() {
 ```
 
 Add to `package.json`:
+
 ```json
 {
   "scripts": {
@@ -730,14 +777,14 @@ Run: `bun run db:seed`
 
 ## Summary Statistics
 
-| Category | Tables | Columns (approx) |
-|----------|--------|------------------|
-| Core Auth | 4 (users, roles, profiles, profile_assets) | ~70 |
-| Academic Structure | 4 (majors, classes, semesters, subjects) | ~25 |
-| Academic Operations | 2 (enrollments, grades) | ~18 |
-| Business | 3 (payments, payment_methods, system_configs) | ~25 |
-| Content | 2 (announcements, announcement_recipients) | ~12 |
-| **TOTAL** | **15 tables** | **~150 columns** |
+| Category            | Tables                                        | Columns (approx) |
+| ------------------- | --------------------------------------------- | ---------------- |
+| Core Auth           | 4 (users, roles, profiles, profile_assets)    | ~70              |
+| Academic Structure  | 4 (majors, classes, semesters, subjects)      | ~25              |
+| Academic Operations | 2 (enrollments, grades)                       | ~18              |
+| Business            | 3 (payments, payment_methods, system_configs) | ~25              |
+| Content             | 2 (announcements, announcement_recipients)    | ~12              |
+| **TOTAL**           | **15 tables**                                 | **~150 columns** |
 
 ---
 

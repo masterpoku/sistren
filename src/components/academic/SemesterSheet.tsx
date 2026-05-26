@@ -1,56 +1,79 @@
-'use client'
+'use client';
 
-import * as React from 'react'
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from '@/components/ui/sheet'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Checkbox } from '@/components/ui/checkbox'
+import * as React from 'react';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+} from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export interface SemesterSheetData {
-  name: string
-  academicYear: string
-  startDate?: string
-  endDate?: string
-  isActive?: boolean
+  name: string;
+  academicYear: string;
+  startDate?: string;
+  endDate?: string;
+  isActive?: boolean;
 }
 
 interface SemesterSheetProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onSubmit: (data: SemesterSheetData) => Promise<void>
-  initialData?: { id: number; name: string; academicYear: string; startDate?: string | Date | null; endDate?: string | Date | null; isActive: boolean | null }
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSubmit: (data: SemesterSheetData) => Promise<void>;
+  initialData?: {
+    id: number;
+    name: string;
+    academicYear: string;
+    startDate?: string | Date | null;
+    endDate?: string | Date | null;
+    isActive: boolean | null;
+  };
 }
 
-export function SemesterSheet({ open, onOpenChange, onSubmit, initialData }: SemesterSheetProps) {
+export function SemesterSheet({
+  open,
+  onOpenChange,
+  onSubmit,
+  initialData,
+}: SemesterSheetProps) {
   const toDateString = (val: string | Date | null | undefined) => {
-    if (!val) return ''
-    if (typeof val === 'string') return val.split('T')[0]
-    return val.toISOString().split('T')[0]
-  }
+    if (!val) return '';
+    if (typeof val === 'string') return val.split('T')[0];
+    return val.toISOString().split('T')[0];
+  };
 
-  const initialStart = toDateString(initialData?.startDate)
-  const initialEnd = toDateString(initialData?.endDate)
-  const [loading, setLoading] = React.useState(false)
-  const [name, setName] = React.useState(initialData?.name || '')
-  const [academicYear, setAcademicYear] = React.useState(initialData?.academicYear || '')
-  const [startDate, setStartDate] = React.useState(initialStart)
-  const [endDate, setEndDate] = React.useState(initialEnd)
-  const [isActive, setIsActive] = React.useState(initialData?.isActive || false)
+  const initialStart = toDateString(initialData?.startDate);
+  const initialEnd = toDateString(initialData?.endDate);
+  const [loading, setLoading] = React.useState(false);
+  const [name, setName] = React.useState(initialData?.name || '');
+  const [academicYear, setAcademicYear] = React.useState(
+    initialData?.academicYear || ''
+  );
+  const [startDate, setStartDate] = React.useState(initialStart);
+  const [endDate, setEndDate] = React.useState(initialEnd);
+  const [isActive, setIsActive] = React.useState(
+    initialData?.isActive || false
+  );
 
   React.useEffect(() => {
     if (open) {
-      setName(initialData?.name || '')
-      setAcademicYear(initialData?.academicYear || '')
-      setStartDate(toDateString(initialData?.startDate))
-      setEndDate(toDateString(initialData?.endDate))
-      setIsActive(initialData?.isActive || false)
+      setName(initialData?.name || '');
+      setAcademicYear(initialData?.academicYear || '');
+      setStartDate(toDateString(initialData?.startDate));
+      setEndDate(toDateString(initialData?.endDate));
+      setIsActive(initialData?.isActive || false);
     }
-  }, [open, initialData])
+  }, [open, initialData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
+    e.preventDefault();
+    setLoading(true);
     try {
       await onSubmit({
         name,
@@ -58,20 +81,24 @@ export function SemesterSheet({ open, onOpenChange, onSubmit, initialData }: Sem
         startDate: startDate || undefined,
         endDate: endDate || undefined,
         isActive,
-      })
+      });
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="w-full sm:max-w-md">
         <form onSubmit={handleSubmit} className="flex flex-col h-full">
           <SheetHeader className="pb-4">
-            <SheetTitle>{initialData ? 'Edit Semester' : 'Tambah Semester'}</SheetTitle>
+            <SheetTitle>
+              {initialData ? 'Edit Semester' : 'Tambah Semester'}
+            </SheetTitle>
             <SheetDescription>
-              {initialData ? 'Perbarui data semester.' : 'Tambah semester ajaran baru.'}
+              {initialData
+                ? 'Perbarui data semester.'
+                : 'Tambah semester ajaran baru.'}
             </SheetDescription>
           </SheetHeader>
 
@@ -127,7 +154,12 @@ export function SemesterSheet({ open, onOpenChange, onSubmit, initialData }: Sem
           </div>
 
           <SheetFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={loading}
+            >
               Batal
             </Button>
             <Button type="submit" disabled={loading}>
@@ -137,5 +169,5 @@ export function SemesterSheet({ open, onOpenChange, onSubmit, initialData }: Sem
         </form>
       </SheetContent>
     </Sheet>
-  )
+  );
 }
