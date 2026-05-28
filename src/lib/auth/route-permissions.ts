@@ -7,6 +7,10 @@
  */
 export const ROUTE_PERMISSIONS: Record<string, string> = {
   // Users Management
+  '/admin': 'users.manage',
+  '/admin/users': 'users.manage',
+  '/admin/approvals': 'users.manage',
+  '/permissions': 'system_configs.manage',
   '/users': 'users.read',
   '/users/create': 'users.create',
   '/users/:id/edit': 'users.update',
@@ -99,6 +103,9 @@ export const ROLE_LEVEL_REQUIREMENTS: Record<string, number> = {
   '/users': 80, // administrator minimum
   '/academic': 60, // guru minimum
   '/finance': 80, // administrator minimum
+  '/admin': 80, // administrator minimum
+  '/admin/users': 80, // administrator minimum
+  '/permissions': 100, // superadmin only
   '/settings': 100, // superadmin only
   '/system-configs': 100, // superadmin only
 };
