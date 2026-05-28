@@ -1,77 +1,34 @@
-import * as React from 'react';
-import { cn } from '@/lib/utils';
+import * as React from "react"
 
-interface AvatarProps extends React.HTMLAttributes<HTMLDivElement> {
-  size?: 'default' | 'sm' | 'lg';
-}
+import { cn } from "@/lib/utils"
 
-function Avatar({
-  className,
-  size = 'default',
-  children,
-  ...props
-}: AvatarProps) {
+function Avatar({ className, size = "default", ...props }: React.HTMLAttributes<HTMLDivElement> & { size?: "default" | "sm" | "lg" }) {
   return (
     <div
+      data-slot="avatar"
       data-size={size}
       className={cn(
-        'relative flex shrink-0 rounded-full select-none overflow-hidden',
-        size === 'default' && 'size-8',
-        size === 'sm' && 'size-6',
-        size === 'lg' && 'size-10',
-        className
-      )}
-      {...props}
-    >
-      {children}
-    </div>
-  );
-}
-
-function AvatarImage({
-  className,
-  ...props
-}: React.ImgHTMLAttributes<HTMLImageElement>) {
-  return (
-    <img
-      className={cn(
-        'aspect-square size-full object-cover rounded-full',
+        "group/avatar relative flex shrink-0 rounded-full select-none overflow-hidden bg-muted",
+        size === "lg" ? "size-10" : size === "sm" ? "size-6" : "size-8",
         className
       )}
       {...props}
     />
-  );
+  )
 }
 
-function AvatarFallback({
-  className,
-  children,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) {
-  const ref = React.useRef<HTMLDivElement>(null);
-  const [hidden, setHidden] = React.useState(false);
+function AvatarImage({ className, alt = "", ...props }: React.ImgHTMLAttributes<HTMLImageElement>) {
+  return <img data-slot="avatar-image" className={cn("aspect-square size-full rounded-full object-cover", className)} alt={alt} {...props} />
+}
 
-  React.useEffect(() => {
-    const avatar = ref.current?.closest('[data-size]');
-    const img = avatar?.querySelector('img');
-    if (img && img.getAttribute('src')) {
-      setHidden(true);
-    }
-  }, []);
-
+function AvatarFallback({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      ref={ref}
-      className={cn(
-        'flex size-full items-center justify-center rounded-full bg-muted text-sm text-muted-foreground',
-        hidden && 'hidden',
-        className
-      )}
+      data-slot="avatar-fallback"
+      className={cn("flex size-full items-center justify-center rounded-full bg-muted text-sm text-muted-foreground", className)}
       {...props}
-    >
-      {children}
-    </div>
-  );
+    />
+  )
 }
 
-export { Avatar, AvatarImage, AvatarFallback };
+export { Avatar, AvatarImage, AvatarFallback }

@@ -163,13 +163,13 @@ export function DataTable<TData, TValue>({
             className="hidden"
           />
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+            <DropdownMenuTrigger>
               <Button variant="outline" className="ml-auto">
                 <Export className="mr-2 h-4 w-4" />
                 Data <CaretDown className="ml-2 h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent>
               <DropdownMenuItem
                 onClick={exportToExcel}
                 className="cursor-pointer"
@@ -195,12 +195,12 @@ export function DataTable<TData, TValue>({
             </DropdownMenuContent>
           </DropdownMenu>
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+            <DropdownMenuTrigger>
               <Button variant="outline">
                 Kolom <CaretDown className="ml-2 h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent>
               {table
                 .getAllColumns()
                 .filter((column) => column.getCanHide())
