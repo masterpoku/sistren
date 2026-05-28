@@ -107,6 +107,38 @@ School data has regulatory retention requirements. Soft delete preserves audit h
 
 School operations often require atomicity: enrollment + payment creation, user delete + profile delete. Drizzle's `db.transaction(async (tx) => {...})` wraps these. Every multi-step write operation that touches multiple tables MUST be wrapped in a transaction. Single-table operations don't need transactions.
 
+### Enrollment State Machine
+
+Enrollment status follows a strict state machine — one-way, irreversible:
+
+```
+active → transferred (student leaves school)
+active → dropped (student drops out)
+active → graduated (student completed)
+transferred → dropped (after transfer, student also drops out)
+dropped ← TERMINAL (no further transitions)
+graduated ← TERMINAL (no further transitions)
+```
+
+**Implementation:** `updateEnrollmentStatus` action uses guard `WHERE id = ? AND status = 'active'` to enforce. Transition from 'transferred' to 'dropped' is allowed (school can mark as both transfer AND drop). Once 'dropped' or 'graduated', no further status changes.
+
+**Audit requirement:** Every status change logs to `audit_logs` table: actorId, enrollmentId, oldStatus, newStatus, timestamp. Especially critical for 'dropped' (student leaves school).
+
+### Bulk Enrollment Pattern
+
+Bulk enrollment (assign all students in a class to a semester) uses chunked transactions:
+- Chunk size: 50 students per transaction
+- Skip already-enrolled (studentId, semesterId) check via unique constraint
+- Fail-fast: if chunk fails, returns {inserted, skipped, failed: true, message}
+- Previous chunks stay committed, current chunk rolls back
+- User manually retries after resolving issue
+
+**No auto-retry** — cause of failure (constraint violation, connection loss) needs human resolution.
+
+### Student Enrollment Unique Constraint
+
+One student per (student, semester) — enforced at DB level via unique index on (studentId, semesterId). App-level dedup has race condition risk. Unique constraint is the enforcement layer.
+
 ### Why student self-registration collects Name, Email, Password, NISN?
 
 NISN (Nomor Induk Siswa Nasional) is the national student ID issued by Ministry of Education. It's verifiable, unique, and links to the national student database. Self-registration collects: name, email, password, NISN. Admin approval activates the account.
@@ -220,6 +252,13 @@ Producing UI components without referencing the shared design system. Each agent
 | 2026-05-22 | `createUser()` cannot set additional fields via `data` param                         | GitHub Issue #3602 confirmed. Must use Drizzle `update()` after `auth.api.createUser()` to set roleId and other additionalFields.                    |
 | 2026-05-22 | Permissions route `src/app/api/auth/permissions/route.ts` deleted                    | Not used by any client-side code. Stub code that imported non-existent `getUserPermissions`.                                                         |
 | 2026-05-22 | `emailVerified = false` is the pending approval state                                | No separate status field. Admin sets `emailVerified = true` as the approval action.                                                                  |
+| 2026-05-28 | Enrollment status state machine (active → transferred/dropped/graduated)          | One-way, irreversible. Guard in updateEnrollmentStatus: WHERE status='active' allows transition. transferred→dropped allowed, dropped is terminal. |
+| 2026-05-28 | Sidebar location `src/components/layout/sidebar.tsx`                              | Extracted from `src/features/layout/AppLayoutClient.tsx`. Mobile hamburger + role-based nav in separate component per spec location.                |
+| 2026-05-28 | Profile dropdown extracted to `src/components/layout/profile-dropdown.tsx`            | Avatar, name, role badge, "Profil Saya" + "Keluar" menu. Inline in AppLayoutClient → separate component.                                          |
+| 2026-05-28 | Route `[...better-auth]` → `[...all]`                                             | better-auth official recommendation. Non-standard route can cause 404 on API endpoints (GitHub Issue #6671).                                        |
+| 2026-05-28 | Unique constraint on enrollments (studentId, semesterId)                            | Race condition prevention. App-level dedup has concurrency risk — DB constraint is enforcement layer. Migration applied directly.               |
+| 2026-05-28 | Bulk enrollment chunk 50, fail-fast, no auto-retry                                 | Each chunk = separate transaction. If chunk fails, returns {inserted, skipped, failed, message}. User manually retry after resolving.           |
+| 2026-05-28 | Audit trail on enrollment status change                                            | Log actorId, enrollmentId, oldStatus, newStatus, timestamp. Especially active→dropped (student leaves school) is business-critical.         |
 
 ---
 

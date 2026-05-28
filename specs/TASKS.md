@@ -147,16 +147,27 @@ Pre-commit hooks deliberately NOT added — agent workflow handles quality via t
 
 **Opened:** 2026-05-21
 
-**Status:** not-started
+**Status:** completed
 
-**Depends-on:** Phase 4
+**Completed:** 2026-05-28
+
+**Completed sub-tasks (2026-05-28):**
+
+- [x] Enrollment CRUD per semester — getEnrollments(status?), createEnrollment, updateEnrollmentStatus, deleteEnrollment
+- [x] Admin assigns student to class for semester
+- [x] Bulk enrollment by class — chunk 50, fail-fast, skip already-enrolled
+- [x] Enrollment status state machine: active → transferred/dropped/graduated (one-way, terminal)
+- [x] Status column: mysqlEnum('active','transferred','dropped','graduated').default('active')
+- [x] getEnrollments filters: role < 60 sees own only (security fix), status filter param
+- [x] Audit trail on status change (actorId, oldStatus, newStatus, timestamp)
+- [x] Unique constraint on (studentId, semesterId) — migration applied
 
 **Definition of done:**
 
-- [ ] Enrollment CRUD per semester
-- [ ] Admin assigns student to class for semester
-- [ ] Bulk enrollment by class
-- [ ] Enrollment status (active, transferred, dropped)
+- [x] Enrollment CRUD per semester
+- [x] Admin assigns student to class for semester
+- [x] Bulk enrollment by class
+- [x] Enrollment status (active, transferred, dropped, graduated)
 
 ---
 
@@ -267,16 +278,26 @@ Pre-commit hooks deliberately NOT added — agent workflow handles quality via t
 
 **Opened:** 2026-05-21
 
-**Status:** not-started
+**Status:** completed
 
-**Depends-on:** Phase 3
+**Completed:** 2026-05-28
+
+**Completed sub-tasks (2026-05-28):**
+
+- [x] Role-based sidebar navigation at `src/components/layout/sidebar.tsx`
+- [x] Mobile hamburger + auto-close on route change (useEffect + usePathname)
+- [x] Profile dropdown extracted to `src/components/layout/profile-dropdown.tsx`
+- [x] AppLayoutClient = thin wrapper, sidebar + profile extracted
+- [x] Route rename `[...better-auth]` → `[...all]`
+- [x] Missing pages created: /admin, /finance, /users, /permissions with route guards
+- [x] Placeholder pages: /roles, /students, /teachers (previously 404)
 
 **Definition of done:**
 
-- [ ] Role-based sidebar navigation
-- [ ] Per-role dashboard
-- [ ] Quick stats widget
-- [ ] Profile dropdown
+- [x] Role-based sidebar navigation
+- [x] Per-role dashboard
+- [x] Quick stats widget
+- [x] Profile dropdown
 
 ---
 

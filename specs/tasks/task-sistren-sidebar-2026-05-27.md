@@ -4,14 +4,34 @@
 
 > **Status:** not-started
 > **Opened:** 2026-05-26
-> **Context:** All 23 todos from previous session complete. Next logical phase — app shell (sidebar) + enrollments/payments/announcements. Pre-commit hooks NOT added (per user decision, agent workflow handles quality).
+> **Updated:** 2026-05-28 — added route rename task, enrollment state machine, bulk enrollment pattern, Drizzle+MySQL notes from deepresearch
 > **Worker:** yanto-gercep
+
+---
+
+## RESEARCH FINDINGS (2026-05-28)
+
+### better-auth Route Naming
+- **Docs say:** recommended route is `/api/auth/[...all]` (not `[...better-auth]`)
+- **Risk:** Non-standard route name can cause 404 on API endpoints (GitHub Issue #6671)
+- **Action:** Task [A0b] added below — rename route folder
+
+### Enrollment Status — State Machine Pattern
+- **active** → **transferred** (one way, irreversible)
+- **active** → **dropped** (one way, irreversible)
+- **transferred** → **dropped**
+- NOT reversible. Status is business state, `deletedAt` is audit state — different things.
+
+### Bulk Enrollment Pattern (Drizzle + MySQL)
+- Use `db.transaction()` with conditional insert (skip already-enrolled)
+- MySQL: no `.returning()` — use `insertId` pattern after insert
+- Batch API available but not needed for school scale (~1000 students)
 
 ---
 
 ## PART A — App Shell: Sidebar Navigation
 
-### [A0] Quick Fix: Missing Pages (404 routes from QA)
+### [A0a] Quick Fix: Missing Pages (404 routes from QA)
 
 **Files:** Multiple (new pages)
 
@@ -26,6 +46,23 @@
 **Decision:** For MVP, create simple placeholder pages (table with "coming soon" or minimal list) rather than full CRUD, to avoid 404. Remove from sidebar if not ready.
 
 **Verify:** All sidebar links return 200, not 404.
+
+---
+
+### [A0b] Route Rename: `[...better-auth]` → `[...all]`
+
+**File:** `src/app/api/auth/[...better-auth]` → rename to `src/app/api/auth/[...all]`
+
+**Why:** better-auth official docs recommend `/api/auth/[...all]`. Non-standard route name can cause 404 on some API endpoints (GitHub Issue #6671 confirmed).
+
+**Steps:**
+1. Rename folder `src/app/api/auth/[...better-auth]` to `src/app/api/auth/[...all]`
+2. Verify all auth endpoints still work: login, logout, session
+3. Run `bun run typecheck && bun run build`
+
+**Note:** `next.config.ts` already has `serverActions.bodySizeLimit: 16 * 1024 * 1024` — verify this is still valid in Next.js 16 (config key may have changed).
+
+**Verify:** Login works, logout works, session persists. Build passes.
 
 ---
 
@@ -94,28 +131,38 @@
 
 ### [B1] Enrollments CRUD
 
-**Files:** `src/actions/enrollments.ts` (new) + `src/app/(app)/enrollments/page.tsx` (new)
+**Files:** `src/actions/enrollments.ts` (edit existing) + `src/app/(app)/enrollments/page.tsx` (edit existing)
 
 **Schema:** `enrollments` table exists (bigint PK, studentId varchar FK to users, semesterId FK, classId FK).
 
+**IMPORTANT — Enrollment Status State Machine:**
+```
+active → transferred (one way, cannot revert)
+active → dropped (one way, cannot revert)
+transferred → dropped
+```
+- Status field: `enum('active', 'transferred', 'dropped')` — default `'active'`
+- Transitions are directional — no reversibility
+- `deletedAt` is soft delete (audit) — different from `status` (business state)
+
 **Server actions:**
 
-- `getEnrollments(semesterId?)` — list all, join student name + class name
+- `getEnrollments(semesterId?, status?)` — list all, join student name + class name + semester name, filter by status
 - `getEnrollmentsByStudent(studentId)` — list enrollments for a student
-- `createEnrollment(formData)` → `db.insert(enrollments).values(...)`
-- `updateEnrollment(enrollmentId, formData)` → `db.update(enrollments).set(...).where(...)`
-- `deleteEnrollment(enrollmentId)` → soft-delete
+- `createEnrollment(formData)` → `db.insert(enrollments).values(...)` with `status: 'active'`
+- `updateEnrollmentStatus(enrollmentId, newStatus)` → validate transition (active→transferred/dropped only, transferred→dropped only), then `db.update(...)`
+- `deleteEnrollment(enrollmentId)` → soft-delete (NOT status change — different operation)
 
-**Page:** Table of enrollments (student name, class, semester, status). "Add Enrollment" form:
+**Drizzle + MySQL note:** No `.returning()` on insert. If you need the inserted ID, use `insertId` from the insert result in a transaction.
 
-- Select student (from users with role siswa)
-- Select semester
-- Select class
-- Default status: active
+**Page:** Table of enrollments (student name, class, semester, **status badge**). Status badges: green=active, yellow=transferred, red=dropped.
+
+- "Add Enrollment" form: select student, semester, class → status defaults to 'active'
+- Status change dropdown per row (admin/TU only): change to transferred/dropped
 
 **Permissions:** `enrollments.create` (admin/guru), `enrollments.read` (all authenticated)
 
-**Verify:** Admin can create enrollment → appears in list.
+**Verify:** Admin can create enrollment → appears in list with green "active" badge. Admin can change status to transferred/dropped (badge updates). Status change is one-way — cannot revert.
 
 ---
 
@@ -125,13 +172,45 @@
 
 **Feature:** Assign all students in a class to a semester in one action.
 
-**Server action:** `bulkEnroll(semesterId, classId)` — insert enrollment for each student in class who doesn't already have one for that semester.
+**IMPORTANT — Implementation Pattern:**
+```typescript
+// Use db.transaction() with conditional insert
+await db.transaction(async (tx) => {
+  // Fetch all students in class who don't already have enrollment for this semester
+  const existingEnrollments = await tx
+    .select({ studentId: enrollments.studentId })
+    .from(enrollments)
+    .where(and(
+      eq(enrollments.semesterId, semesterId),
+      eq(enrollments.classId, classId),
+      isNull(enrollments.deletedAt)
+    ));
+  
+  const existingStudentIds = new Set(existingEnrollments.map(e => e.studentId));
+  
+  // Insert only students not already enrolled
+  for (const student of studentsToEnroll) {
+    if (!existingStudentIds.has(student.id)) {
+      await tx.insert(enrollments).values({
+        studentId: student.id,
+        semesterId,
+        classId,
+        status: 'active'
+      });
+    }
+  }
+});
+```
 
-**Page:** Form: select semester, select class. Button: "Assign All Students". Show count of students assigned.
+**Drizzle + MySQL note:** No `.returning()` on insert. If you need the inserted enrollment IDs, run a select after the transaction. For bulk enrollment we only need count, not IDs.
+
+**Server action:** `bulkEnroll(semesterId, classId)` — fetch all students in class, insert enrollment for each student who doesn't already have one for that semester. Return count of inserted.
+
+**Page:** Form: select semester, select class. Button: "Assign All Students". Show count of students assigned + count skipped (already enrolled).
 
 **Permissions:** `enrollments.create` (admin only)
 
-**Verify:** Bulk assign → enrollments created for all students in class.
+**Verify:** Bulk assign → enrollments created for all students not already enrolled. Already-enrolled students are skipped (not duplicated).
 
 ---
 
