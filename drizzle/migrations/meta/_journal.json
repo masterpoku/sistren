@@ -36,6 +36,20 @@
       "when": 1779774198008,
       "tag": "0004_flippant_namora",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1779911928494,
+      "tag": "0005_lumpy_sister_grimm",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1779911981656,
+      "tag": "0006_public_gambit",
+      "breakpoints": true
     }
   ]
 }
