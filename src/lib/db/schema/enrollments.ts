@@ -1,4 +1,4 @@
-import { mysqlTable, bigint, varchar, timestamp } from 'drizzle-orm/mysql-core';
+import { mysqlTable, bigint, varchar, timestamp, mysqlEnum, unique } from 'drizzle-orm/mysql-core';
 import { relations } from 'drizzle-orm';
 import { users } from './users';
 import { classes } from './classes';
@@ -8,7 +8,9 @@ import { semesters } from './semesters';
  * Student course registration per semester (KRS).
  *
  * Tracks which student is enrolled in which class level for a given semester.
- * Unique constraint: one student can only have one enrollment per (student, semester, class).
+ * Unique constraint: one student per (student, semester) — enforced at DB level via unique index.
+ * Status: active (aktif), transferred (pindah keluar), dropped (dropout), graduated (lulus).
+ * Status transitions: active → transferred/dropped/graduated (one-way, irreversible).
  */
 export const enrollments = mysqlTable('enrollments', {
   id: bigint('id', { mode: 'number' }).primaryKey().autoincrement(),
@@ -21,10 +23,13 @@ export const enrollments = mysqlTable('enrollments', {
   classId: bigint('class_id', { mode: 'number' })
     .notNull()
     .references(() => classes.id, { onDelete: 'cascade' }),
+  status: mysqlEnum('status', ['active', 'transferred', 'dropped', 'graduated']).notNull().default('active'),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').onUpdateNow(),
   deletedAt: timestamp('deleted_at'),
-});
+}, (table) => ({
+  studentSemesterUnique: unique().on(table.studentId, table.semesterId),
+}));
 
 export const enrollmentsRelations = relations(enrollments, ({ one }) => ({
   student: one(users, {

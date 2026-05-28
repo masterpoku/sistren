@@ -1,21 +1,39 @@
 'use server'
 
 import { db } from '@/lib/db'
-import { enrollments, users, semesters, classes, roles } from '@/lib/db/schema'
+import { enrollments, users, semesters, classes, roles, auditLogs } from '@/lib/db/schema'
 import { eq, isNull, and, desc } from 'drizzle-orm'
 import { verifySession } from '@/lib/auth/verify-session'
 import { getAuthContext } from '@/lib/auth/permissions'
 
-export async function getEnrollments(semesterId?: string) {
-  await verifySession()
-  await getAuthContext((await verifySession()).userId)
+export async function getEnrollments(opts?: { semesterId?: string; status?: string }) {
+  const session = await verifySession()
+  const ctx = await getAuthContext(session.userId)
 
-  const base = db
+  if (!ctx) {
+    return []
+  }
+
+  const conditions = [isNull(enrollments.deletedAt)]
+
+  if (ctx.roleLevel < 60) {
+    conditions.push(eq(enrollments.studentId, session.userId))
+  }
+
+  if (opts?.semesterId) {
+    conditions.push(eq(enrollments.semesterId, Number(opts.semesterId)))
+  }
+  if (opts?.status) {
+    conditions.push(eq(enrollments.status, opts.status as 'active' | 'transferred' | 'dropped' | 'graduated'))
+  }
+
+  return db
     .select({
       id: enrollments.id,
       studentId: enrollments.studentId,
       semesterId: enrollments.semesterId,
       classId: enrollments.classId,
+      status: enrollments.status,
       studentName: users.name,
       studentEmail: users.email,
       className: classes.name,
@@ -26,34 +44,8 @@ export async function getEnrollments(semesterId?: string) {
     .innerJoin(users, eq(enrollments.studentId, users.id))
     .innerJoin(classes, eq(enrollments.classId, classes.id))
     .innerJoin(semesters, eq(enrollments.semesterId, semesters.id))
-    .where(isNull(enrollments.deletedAt))
+    .where(and(...conditions))
     .orderBy(desc(enrollments.createdAt))
-
-  if (semesterId) {
-    return db
-      .select({
-        id: enrollments.id,
-        studentId: enrollments.studentId,
-        semesterId: enrollments.semesterId,
-        classId: enrollments.classId,
-        studentName: users.name,
-        studentEmail: users.email,
-        className: classes.name,
-        semesterName: semesters.name,
-        academicYear: semesters.academicYear,
-      })
-      .from(enrollments)
-      .innerJoin(users, eq(enrollments.studentId, users.id))
-      .innerJoin(classes, eq(enrollments.classId, classes.id))
-      .innerJoin(semesters, eq(enrollments.semesterId, semesters.id))
-      .where(and(
-        eq(enrollments.semesterId, Number(semesterId)),
-        isNull(enrollments.deletedAt)
-      ))
-      .orderBy(desc(enrollments.createdAt))
-  }
-
-  return base
 }
 
 export async function getAvailableStudents() {
@@ -95,7 +87,6 @@ export async function createEnrollment(formData: FormData) {
     return { error: 'Semua field wajib diisi.' }
   }
 
-  // Verify student exists
   const [student] = await db
     .select({ id: users.id })
     .from(users)
@@ -106,26 +97,25 @@ export async function createEnrollment(formData: FormData) {
     return { error: 'Siswa tidak ditemukan.' }
   }
 
-  // Check duplicate
   const [existing] = await db
     .select({ id: enrollments.id })
     .from(enrollments)
     .where(and(
       eq(enrollments.studentId, studentId),
       eq(enrollments.semesterId, Number(semesterId)),
-      eq(enrollments.classId, Number(classId)),
       isNull(enrollments.deletedAt)
     ))
     .limit(1)
 
   if (existing) {
-    return { error: 'Siswa sudah terdaftar di kelas ini untuk semester ini.' }
+    return { error: 'Siswa sudah terdaftar untuk semester ini.' }
   }
 
   await db.insert(enrollments).values({
     studentId,
     semesterId: Number(semesterId),
     classId: Number(classId),
+    status: 'active',
   })
 
   return { success: true }
@@ -152,6 +142,128 @@ export async function deleteEnrollment(enrollmentId: string) {
   await db.update(enrollments)
     .set({ deletedAt: new Date() })
     .where(eq(enrollments.id, Number(enrollmentId)))
+
+  return { success: true }
+}
+
+export async function bulkCreateEnrollment(classId: string, semesterId: string) {
+  const session = await verifySession()
+  const ctx = await getAuthContext(session.userId)
+
+  if (!ctx || ctx.roleLevel < 80) {
+    return { error: 'Anda tidak memiliki izin.' }
+  }
+
+  if (!classId || !semesterId) {
+    return { error: 'Kelas dan semester wajib dipilih.' }
+  }
+
+  const targetClassId = Number(classId)
+  const targetSemesterId = Number(semesterId)
+
+  const studentsInClass = await db
+    .select({ id: users.id })
+    .from(users)
+    .innerJoin(roles, eq(users.roleId, roles.id))
+    .where(and(
+      eq(roles.level, 40),
+      isNull(users.deletedAt)
+    ))
+    .limit(200)
+
+  if (studentsInClass.length === 0) {
+    return { inserted: 0, skipped: 0, message: 'Tidak ada siswa di kelas ini.' }
+  }
+
+  const CHUNK_SIZE = 50
+  let inserted = 0
+  let skipped = 0
+
+  for (let i = 0; i < studentsInClass.length; i += CHUNK_SIZE) {
+    const chunk = studentsInClass.slice(i, i + CHUNK_SIZE)
+
+    try {
+      await db.transaction(async (tx) => {
+        for (const student of chunk) {
+          const [existing] = await tx
+            .select({ id: enrollments.id })
+            .from(enrollments)
+            .where(and(
+              eq(enrollments.studentId, student.id),
+              eq(enrollments.semesterId, targetSemesterId),
+              isNull(enrollments.deletedAt)
+            ))
+            .limit(1)
+
+          if (existing) {
+            skipped++
+            continue
+          }
+
+          await tx.insert(enrollments).values({
+            studentId: student.id,
+            semesterId: targetSemesterId,
+            classId: targetClassId,
+            status: 'active',
+          })
+          inserted++
+        }
+      })
+    } catch {
+      return {
+        inserted,
+        skipped,
+        failed: true,
+        message: `Batch gagal pada siswa ke-${i + 1}. Data sebelum batch ini sudah committed.`,
+      }
+    }
+  }
+
+  return { inserted, skipped, failed: false }
+}
+
+export async function updateEnrollmentStatus(enrollmentId: string, newStatus: 'active' | 'transferred' | 'dropped' | 'graduated') {
+  const session = await verifySession()
+  const ctx = await getAuthContext(session.userId)
+
+  if (!ctx || ctx.roleLevel < 80) {
+    return { error: 'Anda tidak memiliki izin.' }
+  }
+
+  const [existing] = await db
+    .select({ id: enrollments.id, status: enrollments.status })
+    .from(enrollments)
+    .where(and(eq(enrollments.id, Number(enrollmentId)), isNull(enrollments.deletedAt)))
+    .limit(1)
+
+  if (!existing) {
+    return { error: 'Pendaftaran tidak ditemukan.' }
+  }
+
+  if (existing.status === 'dropped') {
+    return { error: 'Status tidak dapat diubah lagi.' }
+  }
+
+  if (existing.status === 'transferred' && newStatus !== 'dropped') {
+    return { error: 'Hanya dapat mengubah ke dropout.' }
+  }
+
+  await db.update(enrollments)
+    .set({ status: newStatus })
+    .where(eq(enrollments.id, Number(enrollmentId)))
+
+  await db.insert(auditLogs).values({
+    userId: session.userId,
+    action: 'enrollment.status_change',
+    entityType: 'enrollment',
+    entityId: Number(enrollmentId),
+    metadata: {
+      changes: {
+        from: existing.status,
+        to: newStatus,
+      },
+    },
+  })
 
   return { success: true }
 }

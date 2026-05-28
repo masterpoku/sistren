@@ -1,12 +1,18 @@
+'use server'
+
 import { getEnrollments, getAvailableStudents, createEnrollment } from '@/actions/enrollments'
 import { getSemesters } from '@/actions/academic'
 import { getClasses } from '@/actions/academic'
 import { verifyRoleLevel } from '@/lib/auth/verify-session'
+import { EnrollmentStatusBadge } from './components/EnrollmentStatusBadge'
+import { BulkEnrollmentForm } from './components/BulkEnrollmentForm'
+import { StatusChangeForm } from './components/StatusChangeForm'
 import { Button } from '@/components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { revalidatePath } from 'next/cache'
 
 export default async function EnrollmentsPage() {
   await verifyRoleLevel(60)
@@ -25,6 +31,16 @@ export default async function EnrollmentsPage() {
         <p className="text-muted-foreground">Kelola pendaftaran siswa per semester.</p>
       </div>
 
+      {/* Bulk Enrollment Form */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Bulk Enrollment</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <BulkEnrollmentForm classList={classList} semesterList={semesterList} />
+        </CardContent>
+      </Card>
+
       {/* Create Form */}
       <Card>
         <CardHeader>
@@ -37,9 +53,10 @@ export default async function EnrollmentsPage() {
             if (result && 'error' in result) {
               throw new Error(result.error)
             }
+            revalidatePath('/enrollments')
           }} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="studentId">Siswa</Label>
+              <Label>Siswa</Label>
               <Select name="studentId" required>
                 <SelectTrigger>
                   <SelectValue placeholder="Pilih siswa" />
@@ -53,7 +70,7 @@ export default async function EnrollmentsPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="semesterId">Semester</Label>
+              <Label>Semester</Label>
               <Select name="semesterId" required>
                 <SelectTrigger>
                   <SelectValue placeholder="Pilih semester" />
@@ -67,7 +84,7 @@ export default async function EnrollmentsPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="classId">Kelas</Label>
+              <Label>Kelas</Label>
               <Select name="classId" required>
                 <SelectTrigger>
                   <SelectValue placeholder="Pilih kelas" />
@@ -98,24 +115,36 @@ export default async function EnrollmentsPage() {
               <TableHead>Email</TableHead>
               <TableHead>Kelas</TableHead>
               <TableHead>Semester</TableHead>
+              <TableHead>Status</TableHead>
               <TableHead>Aksi</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {enrollmentList.map((e: { id: number; studentName: string; studentEmail: string; className: string; semesterName: string; academicYear: string }) => (
+            {enrollmentList.map((e: { id: number; studentName: string; studentEmail: string; className: string; semesterName: string; academicYear: string; status: string }) => (
               <TableRow key={e.id}>
                 <TableCell className="font-medium">{e.studentName}</TableCell>
                 <TableCell className="text-muted-foreground">{e.studentEmail}</TableCell>
                 <TableCell>{e.className}</TableCell>
                 <TableCell>{e.semesterName} ({e.academicYear})</TableCell>
                 <TableCell>
-                  <form action={async () => {
-                    'use server'
-                    const { deleteEnrollment } = await import('@/actions/enrollments')
-                    await deleteEnrollment(String(e.id))
-                  }}>
-                    <Button size="sm" variant="destructive" type="submit">Hapus</Button>
-                  </form>
+                  <EnrollmentStatusBadge status={e.status} />
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    {e.status === 'active' ? (
+                      <StatusChangeForm enrollmentId={e.id} />
+                    ) : (
+                      <span className="text-xs text-muted-foreground">Tidak dapat diubah</span>
+                    )}
+                    <form action={async () => {
+                      'use server'
+                      const { deleteEnrollment } = await import('@/actions/enrollments')
+                      await deleteEnrollment(String(e.id))
+                      revalidatePath('/enrollments')
+                    }}>
+                      <Button size="sm" variant="destructive" type="submit">Hapus</Button>
+                    </form>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
