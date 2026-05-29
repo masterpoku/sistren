@@ -3,7 +3,7 @@ import {
   bigint,
   varchar,
   timestamp,
-  binary,
+  longtext,
 } from 'drizzle-orm/mysql-core';
 import { relations } from 'drizzle-orm';
 import { users } from './users';
@@ -16,7 +16,7 @@ export const attachments = mysqlTable('attachments', {
   fileName: varchar('file_name', { length: 255 }).notNull(),
   mimeType: varchar('mime_type', { length: 100 }).notNull(),
   size: bigint('size', { mode: 'number' }).notNull(),
-  data: binary('data', { length: 16777215 }).notNull(),
+  data: longtext('data').notNull(),
   uploadedBy: varchar('uploaded_by', { length: 36 })
     .notNull()
     .references(() => users.id),

@@ -47,10 +47,10 @@ export default async function AdminUsersPage() {
   const userList = await getUsers();
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6 p-4 md:p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Kelola Pengguna</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Kelola Pengguna</h1>
           <p className="text-muted-foreground">
             Buat dan kelola akun staff (guru, administrator).
           </p>

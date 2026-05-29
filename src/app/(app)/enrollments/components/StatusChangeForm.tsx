@@ -1,23 +1,32 @@
-'use client'
+'use client';
 
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { useTransition } from 'react'
-import { useRouter } from 'next/navigation'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { useTransition } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface StatusChangeFormProps {
-  enrollmentId: number
+  enrollmentId: number;
 }
 
 export function StatusChangeForm({ enrollmentId }: StatusChangeFormProps) {
-  const [isPending, startTransition] = useTransition()
-  const router = useRouter()
+  const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
   function handleValueChange(value: string) {
     startTransition(async () => {
-      const { updateEnrollmentStatus } = await import('@/actions/enrollments')
-      await updateEnrollmentStatus(String(enrollmentId), value as 'transferred' | 'dropped' | 'graduated')
-      router.refresh()
-    })
+      const { updateEnrollmentStatus } = await import('@/actions/enrollments');
+      await updateEnrollmentStatus(
+        String(enrollmentId),
+        value as 'transferred' | 'dropped' | 'graduated'
+      );
+      router.refresh();
+    });
   }
 
   return (
@@ -31,5 +40,5 @@ export function StatusChangeForm({ enrollmentId }: StatusChangeFormProps) {
         <SelectItem value="graduated">Lulus</SelectItem>
       </SelectContent>
     </Select>
-  )
+  );
 }

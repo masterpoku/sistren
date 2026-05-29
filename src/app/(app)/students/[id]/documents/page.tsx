@@ -61,9 +61,9 @@ export default async function StudentDocumentsPage({ params }: PageProps) {
     'documents' in docResult && docResult.documents ? docResult.documents : [];
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6 p-4 md:p-6">
       <div>
-        <h1 className="text-2xl font-bold">Dokumen Siswa</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Dokumen Siswa</h1>
         <p className="text-muted-foreground">Unggah dan lihat dokumen siswa.</p>
       </div>
 

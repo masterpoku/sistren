@@ -32,7 +32,7 @@ export const teacherClassSubjects = mysqlTable(
     deletedAt: timestamp('deleted_at'),
   },
   (table) => ({
-    uniqueAssignment: unique().on(
+    uniqueAssignment: unique('tcs_unique').on(
       table.teacherId,
       table.classId,
       table.subjectId,

@@ -206,3 +206,24 @@ export async function downloadDocument(
     },
   });
 }
+
+export async function deleteDocument(studentId: string, documentType: string) {
+  const session = await verifySession();
+  const ctx = await getAuthContext(session.userId);
+
+  if (!ctx || !ctx.permissions.has('profile.edit_any')) {
+    return { error: 'Anda tidak memiliki izin.' };
+  }
+
+  if (!isValidDocumentType(documentType)) {
+    return { error: 'Jenis dokumen tidak valid.' };
+  }
+
+  // Soft delete by setting the column to null
+  await db
+    .update(studentDocuments)
+    .set({ [documentType]: null, updatedAt: new Date() })
+    .where(eq(studentDocuments.studentId, studentId));
+
+  return { success: true };
+}

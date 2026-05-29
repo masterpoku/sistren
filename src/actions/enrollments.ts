@@ -1,30 +1,45 @@
-'use server'
+'use server';
 
-import { db } from '@/lib/db'
-import { enrollments, users, semesters, classes, roles, auditLogs } from '@/lib/db/schema'
-import { eq, isNull, and, desc } from 'drizzle-orm'
-import { verifySession } from '@/lib/auth/verify-session'
-import { getAuthContext } from '@/lib/auth/permissions'
+import { db } from '@/lib/db';
+import {
+  enrollments,
+  users,
+  semesters,
+  classes,
+  roles,
+  auditLogs,
+} from '@/lib/db/schema';
+import { eq, isNull, and, desc } from 'drizzle-orm';
+import { verifySession } from '@/lib/auth/verify-session';
+import { getAuthContext } from '@/lib/auth/permissions';
 
-export async function getEnrollments(opts?: { semesterId?: string; status?: string }) {
-  const session = await verifySession()
-  const ctx = await getAuthContext(session.userId)
+export async function getEnrollments(opts?: {
+  semesterId?: string;
+  status?: string;
+}) {
+  const session = await verifySession();
+  const ctx = await getAuthContext(session.userId);
 
   if (!ctx) {
-    return []
+    return [];
   }
 
-  const conditions = [isNull(enrollments.deletedAt)]
+  const conditions = [isNull(enrollments.deletedAt)];
 
   if (ctx.roleLevel < 60) {
-    conditions.push(eq(enrollments.studentId, session.userId))
+    conditions.push(eq(enrollments.studentId, session.userId));
   }
 
   if (opts?.semesterId) {
-    conditions.push(eq(enrollments.semesterId, Number(opts.semesterId)))
+    conditions.push(eq(enrollments.semesterId, Number(opts.semesterId)));
   }
   if (opts?.status) {
-    conditions.push(eq(enrollments.status, opts.status as 'active' | 'transferred' | 'dropped' | 'graduated'))
+    conditions.push(
+      eq(
+        enrollments.status,
+        opts.status as 'active' | 'transferred' | 'dropped' | 'graduated'
+      )
+    );
   }
 
   return db
@@ -45,15 +60,15 @@ export async function getEnrollments(opts?: { semesterId?: string; status?: stri
     .innerJoin(classes, eq(enrollments.classId, classes.id))
     .innerJoin(semesters, eq(enrollments.semesterId, semesters.id))
     .where(and(...conditions))
-    .orderBy(desc(enrollments.createdAt))
+    .orderBy(desc(enrollments.createdAt));
 }
 
 export async function getAvailableStudents() {
-  const session = await verifySession()
-  const ctx = await getAuthContext(session.userId)
+  const session = await verifySession();
+  const ctx = await getAuthContext(session.userId);
 
   if (!ctx || ctx.roleLevel < 80) {
-    return []
+    return [];
   }
 
   return db
@@ -64,51 +79,50 @@ export async function getAvailableStudents() {
     })
     .from(users)
     .innerJoin(roles, eq(users.roleId, roles.id))
-    .where(and(
-      eq(roles.level, 40),
-      isNull(users.deletedAt)
-    ))
-    .orderBy(users.name)
+    .where(and(eq(roles.level, 40), isNull(users.deletedAt)))
+    .orderBy(users.name);
 }
 
 export async function createEnrollment(formData: FormData) {
-  const session = await verifySession()
-  const ctx = await getAuthContext(session.userId)
+  const session = await verifySession();
+  const ctx = await getAuthContext(session.userId);
 
   if (!ctx || ctx.roleLevel < 80) {
-    return { error: 'Anda tidak memiliki izin.' }
+    return { error: 'Anda tidak memiliki izin.' };
   }
 
-  const studentId = formData.get('studentId') as string
-  const semesterId = formData.get('semesterId') as string
-  const classId = formData.get('classId') as string
+  const studentId = formData.get('studentId') as string;
+  const semesterId = formData.get('semesterId') as string;
+  const classId = formData.get('classId') as string;
 
   if (!studentId || !semesterId || !classId) {
-    return { error: 'Semua field wajib diisi.' }
+    return { error: 'Semua field wajib diisi.' };
   }
 
   const [student] = await db
     .select({ id: users.id })
     .from(users)
     .where(and(eq(users.id, studentId), isNull(users.deletedAt)))
-    .limit(1)
+    .limit(1);
 
   if (!student) {
-    return { error: 'Siswa tidak ditemukan.' }
+    return { error: 'Siswa tidak ditemukan.' };
   }
 
   const [existing] = await db
     .select({ id: enrollments.id })
     .from(enrollments)
-    .where(and(
-      eq(enrollments.studentId, studentId),
-      eq(enrollments.semesterId, Number(semesterId)),
-      isNull(enrollments.deletedAt)
-    ))
-    .limit(1)
+    .where(
+      and(
+        eq(enrollments.studentId, studentId),
+        eq(enrollments.semesterId, Number(semesterId)),
+        isNull(enrollments.deletedAt)
+      )
+    )
+    .limit(1);
 
   if (existing) {
-    return { error: 'Siswa sudah terdaftar untuk semester ini.' }
+    return { error: 'Siswa sudah terdaftar untuk semester ini.' };
   }
 
   await db.insert(enrollments).values({
@@ -116,71 +130,81 @@ export async function createEnrollment(formData: FormData) {
     semesterId: Number(semesterId),
     classId: Number(classId),
     status: 'active',
-  })
+  });
 
-  return { success: true }
+  return { success: true };
 }
 
 export async function deleteEnrollment(enrollmentId: string) {
-  const session = await verifySession()
-  const ctx = await getAuthContext(session.userId)
+  const session = await verifySession();
+  const ctx = await getAuthContext(session.userId);
 
   if (!ctx || ctx.roleLevel < 80) {
-    return { error: 'Anda tidak memiliki izin.' }
+    return { error: 'Anda tidak memiliki izin.' };
   }
 
   const [existing] = await db
     .select({ id: enrollments.id })
     .from(enrollments)
-    .where(and(eq(enrollments.id, Number(enrollmentId)), isNull(enrollments.deletedAt)))
-    .limit(1)
+    .where(
+      and(
+        eq(enrollments.id, Number(enrollmentId)),
+        isNull(enrollments.deletedAt)
+      )
+    )
+    .limit(1);
 
   if (!existing) {
-    return { error: 'Pendaftaran tidak ditemukan.' }
+    return { error: 'Pendaftaran tidak ditemukan.' };
   }
 
-  await db.update(enrollments)
+  await db
+    .update(enrollments)
     .set({ deletedAt: new Date() })
-    .where(eq(enrollments.id, Number(enrollmentId)))
+    .where(eq(enrollments.id, Number(enrollmentId)));
 
-  return { success: true }
+  return { success: true };
 }
 
-export async function bulkCreateEnrollment(classId: string, semesterId: string) {
-  const session = await verifySession()
-  const ctx = await getAuthContext(session.userId)
+export async function bulkCreateEnrollment(
+  classId: string,
+  semesterId: string
+) {
+  const session = await verifySession();
+  const ctx = await getAuthContext(session.userId);
 
   if (!ctx || ctx.roleLevel < 80) {
-    return { error: 'Anda tidak memiliki izin.' }
+    return { error: 'Anda tidak memiliki izin.' };
   }
 
   if (!classId || !semesterId) {
-    return { error: 'Kelas dan semester wajib dipilih.' }
+    return { error: 'Kelas dan semester wajib dipilih.' };
   }
 
-  const targetClassId = Number(classId)
-  const targetSemesterId = Number(semesterId)
+  const targetClassId = Number(classId);
+  const targetSemesterId = Number(semesterId);
 
   const studentsInClass = await db
     .select({ id: users.id })
     .from(users)
     .innerJoin(roles, eq(users.roleId, roles.id))
-    .where(and(
-      eq(roles.level, 40),
-      isNull(users.deletedAt)
-    ))
-    .limit(200)
+    .where(and(eq(roles.level, 40), isNull(users.deletedAt)))
+    .limit(200);
 
   if (studentsInClass.length === 0) {
-    return { inserted: 0, skipped: 0, message: 'Tidak ada siswa di kelas ini.' }
+    return {
+      inserted: 0,
+      skipped: 0,
+      message: 'Tidak ada siswa di kelas ini.',
+    };
   }
 
-  const CHUNK_SIZE = 50
-  let inserted = 0
-  let skipped = 0
+  const CHUNK_SIZE = 50;
+  let inserted = 0;
+  let skipped = 0;
 
   for (let i = 0; i < studentsInClass.length; i += CHUNK_SIZE) {
-    const chunk = studentsInClass.slice(i, i + CHUNK_SIZE)
+    const chunk = studentsInClass.slice(i, i + CHUNK_SIZE);
 
     try {
       await db.transaction(async (tx) => {
@@ -188,16 +212,18 @@ export async function bulkCreateEnrollment(classId: string, semesterId: string) 
           const [existing] = await tx
             .select({ id: enrollments.id })
             .from(enrollments)
-            .where(and(
-              eq(enrollments.studentId, student.id),
-              eq(enrollments.semesterId, targetSemesterId),
-              isNull(enrollments.deletedAt)
-            ))
-            .limit(1)
+            .where(
+              and(
+                eq(enrollments.studentId, student.id),
+                eq(enrollments.semesterId, targetSemesterId),
+                isNull(enrollments.deletedAt)
+              )
+            )
+            .limit(1);
 
           if (existing) {
-            skipped++
-            continue
+            skipped++;
+            continue;
           }
 
           await tx.insert(enrollments).values({
@@ -205,52 +231,61 @@ export async function bulkCreateEnrollment(classId: string, semesterId: string) 
             semesterId: targetSemesterId,
             classId: targetClassId,
             status: 'active',
-          })
-          inserted++
+          });
+          inserted++;
         }
-      })
+      });
     } catch {
       return {
         inserted,
         skipped,
         failed: true,
         message: `Batch gagal pada siswa ke-${i + 1}. Data sebelum batch ini sudah committed.`,
-      }
+      };
     }
   }
 
-  return { inserted, skipped, failed: false }
+  return { inserted, skipped, failed: false };
 }
 
-export async function updateEnrollmentStatus(enrollmentId: string, newStatus: 'active' | 'transferred' | 'dropped' | 'graduated') {
-  const session = await verifySession()
-  const ctx = await getAuthContext(session.userId)
+export async function updateEnrollmentStatus(
+  enrollmentId: string,
+  newStatus: 'active' | 'transferred' | 'dropped' | 'graduated'
+) {
+  const session = await verifySession();
+  const ctx = await getAuthContext(session.userId);
 
   if (!ctx || ctx.roleLevel < 80) {
-    return { error: 'Anda tidak memiliki izin.' }
+    return { error: 'Anda tidak memiliki izin.' };
   }
 
   const [existing] = await db
     .select({ id: enrollments.id, status: enrollments.status })
     .from(enrollments)
-    .where(and(eq(enrollments.id, Number(enrollmentId)), isNull(enrollments.deletedAt)))
-    .limit(1)
+    .where(
+      and(
+        eq(enrollments.id, Number(enrollmentId)),
+        isNull(enrollments.deletedAt)
+      )
+    )
+    .limit(1);
 
   if (!existing) {
-    return { error: 'Pendaftaran tidak ditemukan.' }
+    return { error: 'Pendaftaran tidak ditemukan.' };
   }
 
   if (existing.status === 'dropped') {
-    return { error: 'Status tidak dapat diubah lagi.' }
+    return { error: 'Status tidak dapat diubah lagi.' };
   }
 
   if (existing.status === 'transferred' && newStatus !== 'dropped') {
-    return { error: 'Hanya dapat mengubah ke dropout.' }
+    return { error: 'Hanya dapat mengubah ke dropout.' };
   }
 
-  await db.update(enrollments)
+  await db
+    .update(enrollments)
     .set({ status: newStatus })
-    .where(eq(enrollments.id, Number(enrollmentId)))
+    .where(eq(enrollments.id, Number(enrollmentId)));
 
   await db.insert(auditLogs).values({
     userId: session.userId,
@@ -263,7 +298,7 @@ export async function updateEnrollmentStatus(enrollmentId: string, newStatus: 'a
         to: newStatus,
       },
     },
-  })
+  });
 
-  return { success: true }
+  return { success: true };
 }
