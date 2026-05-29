@@ -3,19 +3,23 @@
 ## Context
 
 **Completed:**
+
 - Phase 5 (Enrollments) ✅
 - Phase 11 (Dashboard & navigation) ✅
 
 **Next up (from TASKS.md):**
+
 - Phase 6: Grade management (depends on Phase 5 ✅ — now unblocked)
 - Phase 7: Payments (depends on Phase 3)
 - Phase 8: Announcements (depends on Phase 3)
 
 **From task-sistren-sidebar-2026-05-27.md — remaining items:**
+
 - A6: Document upload page (student_documents table exists in schema)
 - Quick stats widget for dashboard
 
 **Technical debt (from pre-sprint review):**
+
 - Format regression: 121 files need `bun run format`
 - next.config.ts: `serverActions.bodySizeLimit` may be invalid in Next.js 16
 - Magic number `roleId === 1` in deleteStaffAccount → should use roleLevel >= 100
@@ -61,6 +65,7 @@ Target: things that can be done in one session, unblock next phases, no dependen
 **Schema:** `student_documents` table already in schema — has blob columns for ijasah, skhun, skl, akta_kelahiran, kk, ktp_ayah, ktp_ibu, kip, pass_foto, rapor.
 
 **What:** Build document upload page:
+
 - List existing documents with download links
 - Upload form per document type (FormData → server action)
 - AES-256-GCM encryption on upload (encryptBlob from crypto.ts)
@@ -68,6 +73,7 @@ Target: things that can be done in one session, unblock next phases, no dependen
 - Max file sizes per doc type (1-2MB)
 
 **Files to create/modify:**
+
 - `src/app/(app)/students/[id]/documents/page.tsx` — check if exists
 - `src/actions/documents.ts` — uploadDocument, downloadDocument, deleteDocument
 - `src/lib/crypto.ts` — already exists, verify encryptBlob/decryptBlob
@@ -85,6 +91,7 @@ Target: things that can be done in one session, unblock next phases, no dependen
 **Schema:** Grades table exists. No structured grade input in v1 (Rapor via blob). But action layer for grades is quick to scaffold.
 
 **What:**
+
 - `getGrades({ studentId?, semesterId? })` — list grades
 - `getGrade(studentId, subjectId, semesterId)` — single grade
 - `inputGrade` — admin only (role >= 80)
@@ -105,17 +112,20 @@ Target: things that can be done in one session, unblock next phases, no dependen
 **What:** Add quick stats cards to dashboard based on user role:
 
 For admin (role >= 80):
+
 - Total students (count users where roleLevel = 40, deletedAt IS NULL)
 - Total teachers (count users where roleLevel = 60)
 - Active enrollments this semester
 - Pending announcements
 
 For guru (role 60):
+
 - Classes assigned this semester
 - Subjects taught
 - Pending grade inputs
 
 For siswa (role 40):
+
 - Own enrollment status
 - Upcoming announcements
 
@@ -148,6 +158,7 @@ For siswa (role 40):
 **Schema:** Already has payments table + payment_methods table.
 
 **What:** Scaffold payment actions:
+
 - `getPaymentMethods()` — admin only
 - `createPaymentMethod` — admin only
 - `getPayments({ studentId?, status? })` — role-filtered (siswa sees own only)
@@ -184,11 +195,13 @@ For siswa (role 40):
 ## Verification
 
 After each task:
+
 ```bash
 bun run typecheck && bun run build
 ```
 
 After all tasks:
+
 ```bash
 bun run typecheck && bun run build && bun run lint
 ```

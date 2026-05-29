@@ -12,17 +12,20 @@
 ## RESEARCH FINDINGS (2026-05-28)
 
 ### better-auth Route Naming
+
 - **Docs say:** recommended route is `/api/auth/[...all]` (not `[...better-auth]`)
 - **Risk:** Non-standard route name can cause 404 on API endpoints (GitHub Issue #6671)
 - **Action:** Task [A0b] added below — rename route folder
 
 ### Enrollment Status — State Machine Pattern
+
 - **active** → **transferred** (one way, irreversible)
 - **active** → **dropped** (one way, irreversible)
 - **transferred** → **dropped**
 - NOT reversible. Status is business state, `deletedAt` is audit state — different things.
 
 ### Bulk Enrollment Pattern (Drizzle + MySQL)
+
 - Use `db.transaction()` with conditional insert (skip already-enrolled)
 - MySQL: no `.returning()` — use `insertId` pattern after insert
 - Batch API available but not needed for school scale (~1000 students)
@@ -56,6 +59,7 @@
 **Why:** better-auth official docs recommend `/api/auth/[...all]`. Non-standard route name can cause 404 on some API endpoints (GitHub Issue #6671 confirmed).
 
 **Steps:**
+
 1. Rename folder `src/app/api/auth/[...better-auth]` to `src/app/api/auth/[...all]`
 2. Verify all auth endpoints still work: login, logout, session
 3. Run `bun run typecheck && bun run build`
@@ -136,11 +140,13 @@
 **Schema:** `enrollments` table exists (bigint PK, studentId varchar FK to users, semesterId FK, classId FK).
 
 **IMPORTANT — Enrollment Status State Machine:**
+
 ```
 active → transferred (one way, cannot revert)
 active → dropped (one way, cannot revert)
 transferred → dropped
 ```
+
 - Status field: `enum('active', 'transferred', 'dropped')` — default `'active'`
 - Transitions are directional — no reversibility
 - `deletedAt` is soft delete (audit) — different from `status` (business state)
@@ -173,6 +179,7 @@ transferred → dropped
 **Feature:** Assign all students in a class to a semester in one action.
 
 **IMPORTANT — Implementation Pattern:**
+
 ```typescript
 // Use db.transaction() with conditional insert
 await db.transaction(async (tx) => {
@@ -180,14 +187,18 @@ await db.transaction(async (tx) => {
   const existingEnrollments = await tx
     .select({ studentId: enrollments.studentId })
     .from(enrollments)
-    .where(and(
-      eq(enrollments.semesterId, semesterId),
-      eq(enrollments.classId, classId),
-      isNull(enrollments.deletedAt)
-    ));
-  
-  const existingStudentIds = new Set(existingEnrollments.map(e => e.studentId));
-  
+    .where(
+      and(
+        eq(enrollments.semesterId, semesterId),
+        eq(enrollments.classId, classId),
+        isNull(enrollments.deletedAt)
+      )
+    );
+
+  const existingStudentIds = new Set(
+    existingEnrollments.map((e) => e.studentId)
+  );
+
   // Insert only students not already enrolled
   for (const student of studentsToEnroll) {
     if (!existingStudentIds.has(student.id)) {
@@ -195,7 +206,7 @@ await db.transaction(async (tx) => {
         studentId: student.id,
         semesterId,
         classId,
-        status: 'active'
+        status: 'active',
       });
     }
   }

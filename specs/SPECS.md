@@ -127,6 +127,7 @@ graduated ← TERMINAL (no further transitions)
 ### Bulk Enrollment Pattern
 
 Bulk enrollment (assign all students in a class to a semester) uses chunked transactions:
+
 - Chunk size: 50 students per transaction
 - Skip already-enrolled (studentId, semesterId) check via unique constraint
 - Fail-fast: if chunk fails, returns {inserted, skipped, failed: true, message}
@@ -145,7 +146,7 @@ NISN (Nomor Induk Siswa Nasional) is the national student ID issued by Ministry 
 
 ### Why documents stored as encrypted blob in MariaDB?
 
-All student documents (Ijazah, SKHUN, SKL, Akta Kelahiran, KTP orang tua, Kartu Keluarga, KIP, Pas Foto, Rapor) are stored as encrypted `MEDIUMBLOB` in MariaDB. Same rationale as Rapor: simple, DB-backed backup, no separate storage service. Documents contain sensitive personal data (KTP, KK) so encryption at rest is required.
+All student documents (Ijazah, SKHUN, SKL, Akta Kelahiran, KTP orang tua, Kartu Keluarga, KIP, Pas Foto, Rapor) are stored as encrypted `longtext` in MariaDB. Same rationale as Rapor: simple, DB-backed backup, no separate storage service. Documents contain sensitive personal data (KTP, KK) so encryption at rest is required.
 
 **Encryption:** AES-256-GCM via `DOCUMENT_ENCRYPTION_KEY` env var. Key must be 32 bytes (256-bit). All document blobs are encrypted before insert and decrypted on retrieval. Never store unencrypted blobs.
 
@@ -252,13 +253,17 @@ Producing UI components without referencing the shared design system. Each agent
 | 2026-05-22 | `createUser()` cannot set additional fields via `data` param                         | GitHub Issue #3602 confirmed. Must use Drizzle `update()` after `auth.api.createUser()` to set roleId and other additionalFields.                    |
 | 2026-05-22 | Permissions route `src/app/api/auth/permissions/route.ts` deleted                    | Not used by any client-side code. Stub code that imported non-existent `getUserPermissions`.                                                         |
 | 2026-05-22 | `emailVerified = false` is the pending approval state                                | No separate status field. Admin sets `emailVerified = true` as the approval action.                                                                  |
-| 2026-05-28 | Enrollment status state machine (active → transferred/dropped/graduated)          | One-way, irreversible. Guard in updateEnrollmentStatus: WHERE status='active' allows transition. transferred→dropped allowed, dropped is terminal. |
-| 2026-05-28 | Sidebar location `src/components/layout/sidebar.tsx`                              | Extracted from `src/features/layout/AppLayoutClient.tsx`. Mobile hamburger + role-based nav in separate component per spec location.                |
-| 2026-05-28 | Profile dropdown extracted to `src/components/layout/profile-dropdown.tsx`            | Avatar, name, role badge, "Profil Saya" + "Keluar" menu. Inline in AppLayoutClient → separate component.                                          |
-| 2026-05-28 | Route `[...better-auth]` → `[...all]`                                             | better-auth official recommendation. Non-standard route can cause 404 on API endpoints (GitHub Issue #6671).                                        |
-| 2026-05-28 | Unique constraint on enrollments (studentId, semesterId)                            | Race condition prevention. App-level dedup has concurrency risk — DB constraint is enforcement layer. Migration applied directly.               |
-| 2026-05-28 | Bulk enrollment chunk 50, fail-fast, no auto-retry                                 | Each chunk = separate transaction. If chunk fails, returns {inserted, skipped, failed, message}. User manually retry after resolving.           |
-| 2026-05-28 | Audit trail on enrollment status change                                            | Log actorId, enrollmentId, oldStatus, newStatus, timestamp. Especially active→dropped (student leaves school) is business-critical.         |
+| 2026-05-28 | Enrollment status state machine (active → transferred/dropped/graduated)             | One-way, irreversible. Guard in updateEnrollmentStatus: WHERE status='active' allows transition. transferred→dropped allowed, dropped is terminal.   |
+| 2026-05-28 | Sidebar location `src/components/layout/sidebar.tsx`                                 | Extracted from `src/features/layout/AppLayoutClient.tsx`. Mobile hamburger + role-based nav in separate component per spec location.                 |
+| 2026-05-28 | Profile dropdown extracted to `src/components/layout/profile-dropdown.tsx`           | Avatar, name, role badge, "Profil Saya" + "Keluar" menu. Inline in AppLayoutClient → separate component.                                             |
+| 2026-05-28 | Route `[...better-auth]` → `[...all]`                                                | better-auth official recommendation. Non-standard route can cause 404 on API endpoints (GitHub Issue #6671).                                         |
+| 2026-05-28 | Unique constraint on enrollments (studentId, semesterId)                             | Race condition prevention. App-level dedup has concurrency risk — DB constraint is enforcement layer. Migration applied directly.                    |
+| 2026-05-28 | Bulk enrollment chunk 50, fail-fast, no auto-retry                                   | Each chunk = separate transaction. If chunk fails, returns {inserted, skipped, failed, message}. User manually retry after resolving.                |
+| 2026-05-28 | Audit trail on enrollment status change                                              | Log actorId, enrollmentId, oldStatus, newStatus, timestamp. Especially active→dropped (student leaves school) is business-critical.                  |
+| 2026-05-30 | Blob columns: use `longtext` not `binary`/`mediumblob`                              | Drizzle has no `mediumblob()` — `binary(n)` capped at 255 bytes in MariaDB. `longtext` (~4GB) works for AES-256-GCM encrypted base64 strings.        |
+| 2026-05-30 | Breadcrumb: `<Link>` langsung, bukan `<BreadcrumbLink><Link>`                       | `BreadcrumbLink` render `<a>`, `Link` dari Next.js juga render `<a>` — nested `<a>` invalid HTML, trigger hydration error. Fix: hapus `BreadcrumbLink`, pake `Link` langsung dengan styling breadcrumb. |
+| 2026-05-30 | Unique constraint name too long in MariaDB                                           | `teacher_class_subjects.teacher_id_class_id_subject_id_semester_id_unique` exceeds 64-char limit. Use `unique('tcs_unique').on(...)` for short name.  |
+| 2026-05-30 | Phase 6 = document upload, not structured grade entry                                | Grades = Rapor PDF upload via `student_documents.rapor`. Structured grade input deferred to v2.                                                  |
 
 ---
 

@@ -31,6 +31,7 @@ Research conducted across official better-auth docs (v1.6.11), Drizzle docs, Git
   - Date: Dec 2025
 
 **Why `[...all]` is recommended:**
+
 - better-auth auto-generates multiple endpoint paths under `/api/auth/`
 - The catch-all parameter `[...all]` captures ALL auth sub-routes: `/sign-in`, `/sign-out`, `/session`, `/verification`, etc.
 - Using `[...better-auth]` works ONLY if you also configure `trustedOrigins` or adjust baseURL — but the default assumption is `[...all]`
@@ -45,25 +46,30 @@ Research conducted across official better-auth docs (v1.6.11), Drizzle docs, Git
 **Confidence: HIGH**
 
 #### nextCookies Plugin (Critical)
+
 - **Docs:** "When you call a function that needs to set cookies, like `signInEmail` or `signUpEmail` in a server action, cookies won't be set... Use the `nextCookies` plugin." (Grade: A)
 - **Current project:** ✅ Already implemented — `nextCookies()` is last in plugins array (per AGENTS.md memory)
 - **Verification needed:** Is `nextCookies` actually working? Login page uses `loginAction` Server Action — need to verify cookie is set.
 
 #### RSC + Server Action Cookie Behavior
+
 - **Docs:** "As RSCs cannot set cookies, the cookie cache will not be refreshed until the server is interacted with from the client via Server Actions or Route Handlers."
 - **Implication:** Dashboard page (Server Component) won't see updated session cookie immediately after login — need client interaction or page refresh. Login page uses client-side `authClient.getSession()` in useEffect — this handles the refresh.
 
 #### MySQL + Drizzle — No `.returning()` on insert
+
 - **Drizzle docs:** "Drizzle ORM doesn't support insert returning function for MySQL. You can use the insertId property."
 - **Source:** https://stackoverflow.com/questions/76737007/drizzle-orm-not-support-insert-returning (Grade: B)
 - **Current project impact:** All insert operations that need the inserted ID must do: insert → select to get ID. Transaction wrapping is already in use.
 
 #### Drizzle Batch API for Bulk Operations
+
 - **Drizzle docs:** "Batching sends multiple SQL statements inside a single call to the database. This can have a huge performance impact as it reduces latency from network round trips."
 - **Source:** https://orm.drizzle.team/docs/batch-api (Grade: A)
 - **Current project impact:** Bulk enrollment should use `db.batch()` instead of multiple `db.insert()` calls in a loop. Batch = single network round trip.
 
 #### Drizzle MySQL peer dependency
+
 - **GitHub Issue #6778:** "Many users report that better-auth works fine with newer drizzle-orm versions when forced, but this setup isn't officially supported"
 - **Source:** https://github.com/better-auth/better-auth/issues/6778 (Grade: B)
 - **Current project impact:** Package.json has `better-auth: ^1.6.11`. Check if drizzle version is compatible. Already on latest drizzle.
@@ -77,6 +83,7 @@ Research conducted across official better-auth docs (v1.6.11), Drizzle docs, Git
 #### Enrollment Status as State Machine
 
 Common pattern in academic systems:
+
 - **active** → initial state when enrolled
 - **transferred** → student moved to different class (not dropped — different meaning)
 - **dropped** → student removed from enrollment (can be re-activated)
@@ -88,12 +95,14 @@ transferred ──► dropped (student fully exits)
 ```
 
 **Key insight:** Status transition should be tracked with timestamps AND actor (who changed it, when, why). Soft delete and status are DIFFERENT:
+
 - `deletedAt` = record removed from all queries (audit trail)
 - `status` = business state (active/transfer/dropped — visible in UI)
 
 #### Bulk Enrollment Pattern
 
 Best practice from LMS/school systems research:
+
 1. Admin selects: class + semester
 2. System fetches all enrolled students in that class (or all students for new enrollment)
 3. Batch insert all enrollments
@@ -101,6 +110,7 @@ Best practice from LMS/school systems research:
 5. Return success count + skipped count
 
 **Database pattern:**
+
 ```sql
 -- Unique constraint prevents duplicates
 UNIQUE KEY unique_enrollment (student_id, semester_id, class_id)
@@ -116,6 +126,7 @@ ON DUPLICATE KEY UPDATE id = id  -- skip, don't update
 #### Retake Handling
 
 For students retaking a course:
+
 - One enrollment per (student, semester, class) — unique constraint
 - If student must repeat a class: new enrollment in next academic year/semester
 - Historical enrollments remain in database (soft delete when student graduates/transfers)
@@ -138,14 +149,14 @@ For students retaking a course:
 
 ## Key Sources
 
-| # | Source | Grade | Relevance |
-|---|--------|-------|-----------|
-| 1 | https://better-auth.com/docs/integrations/next | A | Route naming, nextCookies, server actions |
-| 2 | https://github.com/better-auth/better-auth/issues/6671 | B | 404 from non-standard route |
-| 3 | https://orm.drizzle.team/docs/batch-api | A | Batch insert for bulk operations |
-| 4 | https://orm.drizzle.team/docs/insert | A | MySQL returning limitation |
-| 5 | https://github.com/better-auth/better-auth/issues/6778 | B | Drizzle peer dep compatibility |
-| 6 | https://github.com/drizzle-team/drizzle-orm/discussions/4031 | B | Soft delete patterns |
+| #   | Source                                                       | Grade | Relevance                                 |
+| --- | ------------------------------------------------------------ | ----- | ----------------------------------------- |
+| 1   | https://better-auth.com/docs/integrations/next               | A     | Route naming, nextCookies, server actions |
+| 2   | https://github.com/better-auth/better-auth/issues/6671       | B     | 404 from non-standard route               |
+| 3   | https://orm.drizzle.team/docs/batch-api                      | A     | Batch insert for bulk operations          |
+| 4   | https://orm.drizzle.team/docs/insert                         | A     | MySQL returning limitation                |
+| 5   | https://github.com/better-auth/better-auth/issues/6778       | B     | Drizzle peer dep compatibility            |
+| 6   | https://github.com/drizzle-team/drizzle-orm/discussions/4031 | B     | Soft delete patterns                      |
 
 ---
 
