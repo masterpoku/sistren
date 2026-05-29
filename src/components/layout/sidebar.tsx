@@ -1,8 +1,8 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { usePathname } from 'next/navigation'
-import Link from 'next/link'
+import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
+import Link from 'next/link';
 import {
   House,
   GraduationCap,
@@ -15,14 +15,16 @@ import {
   X,
   Shield,
   Gear,
-} from 'phosphor-react'
-import { ProfileDropdown } from './profile-dropdown'
+  Scroll,
+} from 'phosphor-react';
+import { ProfileDropdown } from './profile-dropdown';
 
 interface NavItem {
-  title: string
-  href: string
-  icon: React.ElementType
-  minLevel?: number
+  title: string;
+  href: string;
+  icon: React.ElementType;
+  minLevel?: number;
+  maxLevel?: number;
 }
 
 const navItems: NavItem[] = [
@@ -33,26 +35,27 @@ const navItems: NavItem[] = [
   { title: 'Guru', href: '/teachers', icon: Users, minLevel: 60 },
   { title: 'Pengguna', href: '/users', icon: UserCircle, minLevel: 80 },
   { title: 'Pengumuman', href: '/announcements', icon: Bell },
+  { title: 'Transkrip', href: '/alumni/transcript', icon: Scroll, minLevel: 20, maxLevel: 40 },
   { title: 'Roles', href: '/roles', icon: Shield, minLevel: 100 },
   { title: 'Permissions', href: '/permissions', icon: Gear, minLevel: 100 },
-]
+];
 
 interface SidebarProps {
   user: {
-    name: string
-    role: string
-    roleLevel: number
-  }
-  onLogout: () => void
+    name: string;
+    role: string;
+    roleLevel: number;
+  };
+  onLogout: () => void;
 }
 
 export function Sidebar({ user, onLogout }: SidebarProps) {
-  const pathname = usePathname()
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const pathname = usePathname();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
-    setSidebarOpen(false)
-  }, [pathname])
+    setSidebarOpen(false);
+  }, [pathname]);
 
   return (
     <>
@@ -78,10 +81,14 @@ export function Sidebar({ user, onLogout }: SidebarProps) {
 
         <nav className="space-y-1 p-4">
           {navItems
-            .filter((item) => !item.minLevel || user.roleLevel >= item.minLevel)
+            .filter((item) => {
+              if (item.minLevel !== undefined && user.roleLevel < item.minLevel) return false;
+              if (item.maxLevel !== undefined && user.roleLevel > item.maxLevel) return false;
+              return true;
+            })
             .map((item) => {
-              const Icon = item.icon
-              const isActive = pathname === item.href
+              const Icon = item.icon;
+              const isActive = pathname === item.href;
               return (
                 <Link
                   key={item.href}
@@ -95,7 +102,7 @@ export function Sidebar({ user, onLogout }: SidebarProps) {
                   <Icon className="h-5 w-5" />
                   {item.title}
                 </Link>
-              )
+              );
             })}
         </nav>
 
@@ -117,5 +124,5 @@ export function Sidebar({ user, onLogout }: SidebarProps) {
         <List className="h-6 w-6" />
       </button>
     </>
-  )
+  );
 }

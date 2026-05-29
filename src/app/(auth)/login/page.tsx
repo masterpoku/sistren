@@ -18,6 +18,7 @@ import {
   GraduationCap,
   ShieldCheck,
   Student,
+  UserCircle,
   Warning,
 } from '@phosphor-icons/react';
 import { loginAction } from '@/actions/auth';
@@ -79,7 +80,11 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
-      <div className="w-full max-w-md space-y-8">
+      <style>{`@keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }`}</style>
+      <div
+        className="w-full max-w-md space-y-8"
+        style={{ animation: 'fadeUp 500ms ease' }}
+      >
         <div className="text-center space-y-2">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg">
             <GraduationCap className="h-7 w-7" />
@@ -118,7 +123,16 @@ export default function LoginPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">Password</Label>
+                  <button
+                    type="button"
+                    className="text-xs text-muted-foreground hover:text-primary transition-colors"
+                    onClick={() => alert('Hubungi administrator untuk reset password.')}
+                  >
+                    Lupa password?
+                  </button>
+                </div>
                 <Input id="password" name="password" type="password" required />
               </div>
             </CardContent>
@@ -184,6 +198,14 @@ export default function LoginPage() {
               onClick={() => quickLogin('siswa@sister.com')}
             >
               <Student className="mr-1 h-3 w-3" /> Siswa
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="text-[10px] h-8 col-span-2"
+              onClick={() => quickLogin('alumni@sister.com')}
+            >
+              <UserCircle className="mr-1 h-3 w-3" /> Alumni
             </Button>
           </div>
         </div>

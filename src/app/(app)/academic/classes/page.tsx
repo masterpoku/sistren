@@ -1,68 +1,51 @@
-import { getClasses, deleteClass } from '@/actions/academic';
-import { Button } from '@/components/ui/button';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { getClasses, createClassAction } from '@/actions/academic';
 import { verifyRoleLevel } from '@/lib/auth/verify-session';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { ClassesClient } from '@/features/academic/classes/ClassesClient';
 
 export default async function ClassesPage() {
   await verifyRoleLevel(60);
   const classList = await getClasses();
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6 p-4 md:p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Kelola Kelas</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Kelola Kelas</h1>
           <p className="text-muted-foreground">
             Tambah dan kelola kelas (X, XI, XII).
           </p>
         </div>
       </div>
 
-      {classList.length === 0 ? (
-        <p className="text-muted-foreground">Belum ada kelas.</p>
-      ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nama</TableHead>
-              <TableHead>Kode</TableHead>
-              <TableHead>Aksi</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {classList.map((kelas) => (
-              <TableRow key={kelas.id}>
-                <TableCell className="font-medium">{kelas.name}</TableCell>
-                <TableCell>
-                  <Badge variant="secondary">{kelas.code}</Badge>
-                </TableCell>
-                <TableCell>
-                  <div className="flex gap-2">
-                    <form
-                      action={async () => {
-                        'use server';
-                        await deleteClass(String(kelas.id));
-                      }}
-                    >
-                      <Button size="sm" variant="destructive" type="submit">
-                        Hapus
-                      </Button>
-                    </form>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      )}
+      <Card>
+        <CardHeader>
+          <CardTitle>Tambah Kelas</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form action={createClassAction} className="flex items-end gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Nama Kelas</Label>
+              <Input id="name" name="name" placeholder="Contoh: X, XI, XII" required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="code">Kode</Label>
+              <Input id="code" name="code" placeholder="Contoh: X-1, XI-2" required />
+            </div>
+            <Button type="submit">Tambah</Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      <ClassesClient data={classList} />
     </div>
   );
 }

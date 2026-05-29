@@ -6,6 +6,7 @@ import { updateProfile } from '@/actions/profile';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   Card,
   CardContent,
@@ -28,13 +29,40 @@ export default async function ProfilePage() {
   const profile = await getProfile(session.userId);
 
   return (
-    <div className="max-w-2xl space-y-6">
+    <div className="max-w-2xl flex flex-col gap-6 p-4 md:p-6">
       <div>
-        <h1 className="text-2xl font-bold">Profil Saya</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Profil Saya</h1>
         <p className="text-muted-foreground">
           Kelola data diri dan informasi orang tua.
         </p>
       </div>
+
+      {/* Avatar Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Foto Profil</CardTitle>
+          <CardDescription>
+            Foto profil Anda akan muncul di pojok kanan atas.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-6">
+            <Avatar className="h-20 w-20 border-2 border-primary/10">
+              <AvatarFallback className="text-lg font-semibold">
+                {session.name.substring(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div className="space-y-1">
+              <p className="text-sm font-medium">{session.name}</p>
+              <p className="text-xs text-muted-foreground">{session.email}</p>
+              <Button variant="outline" size="sm" className="mt-2" disabled>
+                Ubah Foto Profil
+              </Button>
+              <p className="text-[10px] text-muted-foreground">Fitur upload belum tersedia.</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

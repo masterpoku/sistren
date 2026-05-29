@@ -1,21 +1,30 @@
-import { getPaymentMethods, createPaymentMethod } from '@/actions/payments'
-import { verifyRoleLevel } from '@/lib/auth/verify-session'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { getPaymentMethods, createPaymentMethod } from '@/actions/payments';
+import { verifyRoleLevel } from '@/lib/auth/verify-session';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default async function PaymentMethodsPage() {
-  await verifyRoleLevel(80)
+  await verifyRoleLevel(80);
 
-  const methodList = await getPaymentMethods()
+  const methodList = await getPaymentMethods();
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6 p-4 md:p-6">
       <div>
-        <h1 className="text-2xl font-bold">Metode Pembayaran</h1>
-        <p className="text-muted-foreground">Kelola metode pembayaran (transfer, cash, e-wallet).</p>
+        <h1 className="text-3xl font-bold tracking-tight">Metode Pembayaran</h1>
+        <p className="text-muted-foreground">
+          Kelola metode pembayaran (transfer, cash, e-wallet).
+        </p>
       </div>
 
       {/* Create Form */}
@@ -24,31 +33,44 @@ export default async function PaymentMethodsPage() {
           <CardTitle>Tambah Metode</CardTitle>
         </CardHeader>
         <CardContent>
-          <form action={async (formData: FormData) => {
-            'use server'
-            const result = await createPaymentMethod(formData)
-            if (result && 'error' in result) {
-              throw new Error(result.error)
-            }
-          }} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          <form
+            action={async (formData: FormData) => {
+              'use server';
+              const result = await createPaymentMethod(formData);
+              if (result && 'error' in result) {
+                throw new Error(result.error);
+              }
+            }}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4"
+          >
             <div className="space-y-2">
               <Label htmlFor="name">Nama Metode</Label>
               <Input id="name" name="name" placeholder="Bank BCA" required />
             </div>
             <div className="space-y-2">
               <Label htmlFor="accountNumber">Nomor Rekening</Label>
-              <Input id="accountNumber" name="accountNumber" placeholder="1234567890" />
+              <Input
+                id="accountNumber"
+                name="accountNumber"
+                placeholder="1234567890"
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="accountName">Nama Pemilik</Label>
-              <Input id="accountName" name="accountName" placeholder="SMK Terpadu" />
+              <Input
+                id="accountName"
+                name="accountName"
+                placeholder="SMK Terpadu"
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="provider">Provider</Label>
               <Input id="provider" name="provider" placeholder="Bank BCA" />
             </div>
             <div className="flex items-end">
-              <Button type="submit" className="w-full">Tambah</Button>
+              <Button type="submit" className="w-full">
+                Tambah
+              </Button>
             </div>
           </form>
         </CardContent>
@@ -69,26 +91,39 @@ export default async function PaymentMethodsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {methodList.map((m: { id: number; name: string; provider: string | null; accountNumber: string | null; accountName: string | null }) => (
-              <TableRow key={m.id}>
-                <TableCell className="font-medium">{m.name}</TableCell>
-                <TableCell>{m.provider ?? '-'}</TableCell>
-                <TableCell>{m.accountNumber ?? '-'}</TableCell>
-                <TableCell>{m.accountName ?? '-'}</TableCell>
-                <TableCell>
-                  <form action={async () => {
-                    'use server'
-                    const { deletePaymentMethod } = await import('@/actions/payments')
-                    await deletePaymentMethod(String(m.id))
-                  }}>
-                    <Button size="sm" variant="destructive" type="submit">Hapus</Button>
-                  </form>
-                </TableCell>
-              </TableRow>
-            ))}
+            {methodList.map(
+              (m: {
+                id: number;
+                name: string;
+                provider: string | null;
+                accountNumber: string | null;
+                accountName: string | null;
+              }) => (
+                <TableRow key={m.id}>
+                  <TableCell className="font-medium">{m.name}</TableCell>
+                  <TableCell>{m.provider ?? '-'}</TableCell>
+                  <TableCell>{m.accountNumber ?? '-'}</TableCell>
+                  <TableCell>{m.accountName ?? '-'}</TableCell>
+                  <TableCell>
+                    <form
+                      action={async () => {
+                        'use server';
+                        const { deletePaymentMethod } =
+                          await import('@/actions/payments');
+                        await deletePaymentMethod(String(m.id));
+                      }}
+                    >
+                      <Button size="sm" variant="destructive" type="submit">
+                        Hapus
+                      </Button>
+                    </form>
+                  </TableCell>
+                </TableRow>
+              )
+            )}
           </TableBody>
         </Table>
       )}
     </div>
-  )
+  );
 }

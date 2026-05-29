@@ -1,13 +1,13 @@
-'use client'
+'use client';
 
-import { SignOut } from 'phosphor-react'
+import { SignOut } from 'phosphor-react';
 
 interface ProfileDropdownProps {
   user: {
-    name: string
-    role: string
-  }
-  onLogout: () => void
+    name: string;
+    role: string;
+  };
+  onLogout: () => void;
 }
 
 export function ProfileDropdown({ user, onLogout }: ProfileDropdownProps) {
@@ -34,5 +34,5 @@ export function ProfileDropdown({ user, onLogout }: ProfileDropdownProps) {
         </button>
       </div>
     </div>
-  )
+  );
 }

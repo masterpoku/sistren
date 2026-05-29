@@ -464,3 +464,21 @@ export async function removeAssignment(assignmentId: string) {
 
   return { success: true };
 }
+
+// Form-action-safe wrappers (return void for <form action={...}>)
+
+export async function createClassAction(formData: FormData) {
+  await createClass(formData);
+}
+
+export async function createMajorAction(formData: FormData) {
+  await createMajor(formData);
+}
+
+export async function createSubjectAction(formData: FormData) {
+  await createSubject(formData);
+}
+
+export async function createSemesterAction(formData: FormData) {
+  await createSemester(formData);
+}
