@@ -170,7 +170,7 @@ All student documents (Ijazah, SKHUN, SKL, Akta Kelahiran, KTP orang tua, Kartu 
 
 ### Why payment records + payment methods?
 
-Schools track who paid what, when, and via which account. Admin records payment entries manually (cash, bank transfer). Payment methods (bank account numbers, virtual accounts) are managed separately. Later phases can add auto-payment integration.
+Schools track who paid what, when, and via which account. Admin records payment entries manually (cash, bank transfer). Payment methods (bank account numbers, virtual accounts) are managed separately. Payment items are catalogued as reusable templates (SPP Bulanan, Uang Gedung, dll.) via `payment_items` table. When recording a payment, admin selects an optional catalog item — this pre-fills description and standard price, but `payments.price` is **always editable per invoice**. Catalog price is a default, never enforced (Odoo sale-order-line pattern). Later phases can add auto-payment integration.
 
 ### Why audit logging for auth and payments?
 
@@ -264,6 +264,7 @@ Producing UI components without referencing the shared design system. Each agent
 | 2026-05-30 | Breadcrumb: `<Link>` langsung, bukan `<BreadcrumbLink><Link>`                       | `BreadcrumbLink` render `<a>`, `Link` dari Next.js juga render `<a>` — nested `<a>` invalid HTML, trigger hydration error. Fix: hapus `BreadcrumbLink`, pake `Link` langsung dengan styling breadcrumb. |
 | 2026-05-30 | Unique constraint name too long in MariaDB                                           | `teacher_class_subjects.teacher_id_class_id_subject_id_semester_id_unique` exceeds 64-char limit. Use `unique('tcs_unique').on(...)` for short name.  |
 | 2026-05-30 | Phase 6 = document upload, not structured grade entry                                | Grades = Rapor PDF upload via `student_documents.rapor`. Structured grade input deferred to v2.                                                  |
+| 2026-05-30 | Payment items catalog: Odoo-style product + invoice line pattern                   | `payment_items` = product template (code, name, description, standardPrice). `recordPayment` accepts optional `paymentItemId` — pre-fills from catalog but `payments.price` always editable per invoice. Catalog price is default, never enforced. Adds `paymentItemId` FK to `payments` table. Seed: SPP Bulanan, Uang Gedung, Daftar Ulang, SPP Tengah Semester. |
 
 ---
 
