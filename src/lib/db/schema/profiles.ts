@@ -11,6 +11,7 @@ import {
 import { relations } from 'drizzle-orm';
 import { users } from './users';
 import { majors } from './majors';
+import { religions } from './religions';
 
 /**
  * Extended user profiles for students (siswa) and teachers (guru).
@@ -45,7 +46,7 @@ export const profiles = mysqlTable('profiles', {
   weightKg: int('weight_kg'),
   heightCm: int('height_cm'),
   phone: varchar('phone', { length: 20 }),
-  religion: varchar('religion', { length: 50 }),
+  religionId: bigint('religion_id', { mode: 'number' }).references(() => religions.id),
   diplomaNumber: varchar('diploma_number', { length: 255 }),
   skhuNumber: varchar('skhu_number', { length: 255 }),
   majorId: bigint('major_id', { mode: 'number' }).references(() => majors.id),

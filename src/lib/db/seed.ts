@@ -11,10 +11,38 @@
  */
 import { db } from './index';
 import { auth } from '@/lib/auth';
-import { roles, permissions, rolePermissions, users } from './schema';
+import { roles, permissions, rolePermissions, users, religions } from './schema';
 import { eq, isNull, and } from 'drizzle-orm';
 
-// ==================== ROLES ====================
+// ==================== REFERENCE DATA ====================
+
+const religionNames = [
+  'Islam',
+  'Kristen',
+  'Katolik',
+  'Hindu',
+  'Budha',
+  'Konghucu',
+];
+
+async function seedReligions() {
+  console.log('\n--- Seeding religions ---');
+  for (const name of religionNames) {
+    const [existing] = await db
+      .select({ id: religions.id })
+      .from(religions)
+      .where(and(eq(religions.name, name), isNull(religions.deletedAt)))
+      .limit(1);
+
+    if (existing) {
+      console.log(`⏭️  Religion '${name}' already exists`);
+      continue;
+    }
+
+    await db.insert(religions).values({ name });
+    console.log(`✅ Seeded religion: ${name}`);
+  }
+}
 const roleEntries = [
   { name: 'superadmin', description: 'Full system access', level: 100 },
   { name: 'administrator', description: 'Admin staff (TU)', level: 80 },
@@ -373,6 +401,9 @@ const rolePermAssignments: Record<string, string[]> = {
 async function seed() {
   console.log('🌱 Starting main seed...');
 
+  // ==================== RELIGIONS ====================
+  await seedReligions();
+
   // ==================== ROLES ====================
   console.log('\n--- Seeding roles ---');
   const roleMap: Record<string, number> = {};
@@ -602,4 +633,9 @@ async function seed() {
 }
 
 // Only run if executed directly (not imported)
-seed().catch(console.error);
+seed()
+  .then(() => process.exit(0))
+  .catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
