@@ -110,6 +110,12 @@ export function AcademicOverviewClient({
             <span>Kelola Semester</span>
           </Button>
         </Link>
+        <Link href="/academic/grades">
+          <Button variant="outline" className="w-full h-auto py-4 flex flex-col gap-2">
+            <GraduationCap className="h-6 w-6" />
+            <span>Input Nilai</span>
+          </Button>
+        </Link>
       </div>
     </div>
   );

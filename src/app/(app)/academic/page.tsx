@@ -17,7 +17,7 @@ export default async function AcademicOverviewPage() {
 
   // Siswa (level 40) — student academic view
   if (roleLevel === 40) {
-    return <StudentAcademicClient />;
+    return <StudentAcademicClient userId={session.userId} />;
   }
 
   // Guru/Admin (level >= 60) — admin overview
