@@ -7,17 +7,42 @@
 
 ## Active Goals
 
-### Phase 6: Grade management — deferred to v2
+### Phase 6: Grade management — superseded by Phase 16
 
-**Status:** deferred-to-v2
+**Status:** superseded
 
 **Depends-on:** Phase 5
 
-**Notes:** Grades = Rapor PDF upload via `student_documents.rapor`. Structured grade entry not needed for v1 launch. `grades` table stays in schema but unused.
+**Notes:** Originally deferred to v2. Now superseded by Phase 16 which implements structured grade input + KHS view + Rapor PDF integration.
 
 ---
 
 ## Archived Goals
+
+### Phase 15: Server Action Reliability
+
+**Completed:** 2026-05-30
+
+---
+
+### Phase 16: Grade Management
+
+**Completed:** 2026-05-30
+
+**Summary:**
+- ✅ Religions table (schema, export, migration, seed)
+- ✅ Grades table redesain (type enum + sub-score + unique constraint)
+- ✅ Profiles religion → religionId FK
+- ✅ Grades Server Actions (CRUD + bulkUpsert with revalidatePath)
+- ✅ Teacher grade input UI at `/academic/grades`
+- ✅ Student KHS real data (replaces mock data)
+- ✅ Academic overview link to `/academic/grades`
+- ✅ Teacher subject filter (via `teacher_class_subjects`)
+- ⏳ Toast integration + useActionState refactor (deferred to proper library)
+- ⏳ Jadwal pelajaran real data (still mock)
+- ⏳ Rapor PDF download link on KHS page
+
+---
 
 ### Phase 12: VPS Deployment
 
