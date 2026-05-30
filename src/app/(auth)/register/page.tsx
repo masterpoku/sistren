@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, use } from 'react';
 import {
   Card,
   CardContent,
@@ -10,6 +10,9 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { getReligions } from '@/actions/religions';
+
+const religionsPromise = getReligions();
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { GraduationCap, Warning } from '@phosphor-icons/react';
@@ -18,6 +21,7 @@ import { registerAction } from '@/actions/register';
 export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const religions = use(religionsPromise);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -137,8 +141,19 @@ export default function RegisterPage() {
                     </select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="religion">Agama</Label>
-                    <Input id="religion" name="religion" placeholder="Islam" />
+                    <Label htmlFor="religionId">Agama</Label>
+                    <select
+                      id="religionId"
+                      name="religionId"
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <option value="">Pilih agama...</option>
+                      {religions.map((r) => (
+                        <option key={r.id} value={r.id}>
+                          {r.name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="address">Alamat</Label>

@@ -51,7 +51,7 @@ export async function registerAction(formData: FormData) {
     birthPlace?: string;
     birthDate?: Date;
     gender?: 'male' | 'female';
-    religion?: string;
+    religionId?: number;
     address?: string;
     fatherName?: string;
     motherName?: string;
@@ -78,8 +78,11 @@ export async function registerAction(formData: FormData) {
 
   if (gender) profileValues.gender = gender as 'male' | 'female';
 
-  const religion = formData.get('religion') as string;
-  if (religion?.trim()) profileValues.religion = religion;
+  const religionId = formData.get('religionId') as string;
+  if (religionId?.trim()) {
+    const parsed = parseInt(religionId, 10);
+    if (!isNaN(parsed)) profileValues.religionId = parsed;
+  }
 
   const address = formData.get('address') as string;
   if (address?.trim()) profileValues.address = address;
@@ -110,7 +113,7 @@ export async function registerAction(formData: FormData) {
         birthPlace: profileValues.birthPlace,
         birthDate: profileValues.birthDate,
         gender: profileValues.gender,
-        religion: profileValues.religion,
+        religionId: profileValues.religionId,
         address: profileValues.address,
         fatherName: profileValues.fatherName,
         motherName: profileValues.motherName,

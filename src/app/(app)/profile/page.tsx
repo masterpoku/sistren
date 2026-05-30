@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
-import { profiles } from '@/lib/db/schema';
+import { profiles, religions } from '@/lib/db/schema';
 import { eq, isNull, and } from 'drizzle-orm';
 import { verifySession } from '@/lib/auth/verify-session';
 import { updateProfile } from '@/actions/profile';
@@ -16,12 +16,39 @@ import {
 } from '@/components/ui/card';
 
 async function getProfile(userId: string) {
-  const [profile] = await db
-    .select()
+  const [result] = await db
+    .select({
+      id: profiles.id,
+      userId: profiles.userId,
+      type: profiles.type,
+      previousSchool: profiles.previousSchool,
+      nik: profiles.nik,
+      nisn: profiles.nisn,
+      birthPlace: profiles.birthPlace,
+      birthDate: profiles.birthDate,
+      gender: profiles.gender,
+      address: profiles.address,
+      birthOrder: profiles.birthOrder,
+      siblingsCount: profiles.siblingsCount,
+      weightKg: profiles.weightKg,
+      heightCm: profiles.heightCm,
+      phone: profiles.phone,
+      religionId: profiles.religionId,
+      religionName: religions.name,
+      diplomaNumber: profiles.diplomaNumber,
+      skhuNumber: profiles.skhuNumber,
+      majorId: profiles.majorId,
+      uniformSize: profiles.uniformSize,
+      section: profiles.section,
+      enrolledAt: profiles.enrolledAt,
+      fatherName: profiles.fatherName,
+      motherName: profiles.motherName,
+    })
     .from(profiles)
+    .leftJoin(religions, eq(profiles.religionId, religions.id))
     .where(and(eq(profiles.userId, userId), isNull(profiles.deletedAt)))
     .limit(1);
-  return profile;
+  return result;
 }
 
 export default async function ProfilePage() {
@@ -159,7 +186,7 @@ export default async function ProfilePage() {
             </div>
             <div>
               <p className="text-muted-foreground">Agama</p>
-              <p className="font-medium">{profile?.religion ?? '-'}</p>
+              <p className="font-medium">{profile?.religionName ?? '-'}</p>
             </div>
           </div>
         </CardContent>
