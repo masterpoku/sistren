@@ -1,5 +1,6 @@
 'use server';
 
+import { revalidatePath } from 'next/cache';
 import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { users, roles } from '@/lib/db/schema';
@@ -50,6 +51,7 @@ export async function rejectStudent(userId: string) {
     .set({ deletedAt: new Date() })
     .where(eq(users.id, userId));
 
+  revalidatePath('/admin/approvals');
   return { success: true };
 }
 
@@ -136,5 +138,6 @@ export async function deleteStaffAccount(userId: string) {
     .set({ deletedAt: new Date() })
     .where(eq(users.id, userId));
 
+  revalidatePath('/admin/users');
   return { success: true };
 }

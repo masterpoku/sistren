@@ -1,5 +1,6 @@
 'use server';
 
+import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import {
   enrollments,
@@ -132,6 +133,7 @@ export async function createEnrollment(formData: FormData) {
     status: 'active',
   });
 
+  revalidatePath('/enrollments');
   return { success: true };
 }
 
@@ -163,6 +165,7 @@ export async function deleteEnrollment(enrollmentId: string) {
     .set({ deletedAt: new Date() })
     .where(eq(enrollments.id, Number(enrollmentId)));
 
+  revalidatePath('/enrollments');
   return { success: true };
 }
 
@@ -300,5 +303,6 @@ export async function updateEnrollmentStatus(
     },
   });
 
+  revalidatePath('/enrollments');
   return { success: true };
 }

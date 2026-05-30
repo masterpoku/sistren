@@ -1,5 +1,6 @@
 'use server';
 
+import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import {
   classes,
@@ -50,6 +51,7 @@ export async function createClass(formData: FormData) {
     code: code.trim(),
   });
 
+  revalidatePath('/academic/classes');
   return { success: true };
 }
 
@@ -79,6 +81,7 @@ export async function updateClass(classId: string, formData: FormData) {
     .set({ name: name.trim(), code: code.trim() })
     .where(eq(classes.id, Number(classId)));
 
+  revalidatePath('/academic/classes');
   return { success: true };
 }
 
@@ -101,6 +104,7 @@ export async function deleteClass(classId: string) {
     .set({ deletedAt: new Date() })
     .where(eq(classes.id, Number(classId)));
 
+  revalidatePath('/academic/classes');
   return { success: true };
 }
 
@@ -140,6 +144,7 @@ export async function createMajor(formData: FormData) {
     description: description?.trim() || undefined,
   });
 
+  revalidatePath('/academic/majors');
   return { success: true };
 }
 
@@ -168,6 +173,7 @@ export async function updateMajor(majorId: string, formData: FormData) {
     .set({ name: name.trim(), description: description?.trim() || undefined })
     .where(eq(majors.id, Number(majorId)));
 
+  revalidatePath('/academic/majors');
   return { success: true };
 }
 
@@ -189,6 +195,7 @@ export async function deleteMajor(majorId: string) {
     .set({ deletedAt: new Date() })
     .where(eq(majors.id, Number(majorId)));
 
+  revalidatePath('/academic/majors');
   return { success: true };
 }
 
@@ -245,6 +252,7 @@ export async function createSubject(formData: FormData) {
     credits: creditsStr ? Number(creditsStr) : 0,
   });
 
+  revalidatePath('/academic/subjects');
   return { success: true };
 }
 
@@ -266,6 +274,7 @@ export async function deleteSubject(subjectId: string) {
     .set({ deletedAt: new Date() })
     .where(eq(subjects.id, Number(subjectId)));
 
+  revalidatePath('/academic/subjects');
   return { success: true };
 }
 
@@ -307,6 +316,7 @@ export async function createSemester(formData: FormData) {
     isActive,
   });
 
+  revalidatePath('/academic/semesters');
   return { success: true };
 }
 
@@ -326,6 +336,7 @@ export async function setActiveSemester(semesterId: string) {
       .where(eq(semesters.id, Number(semesterId)));
   });
 
+  revalidatePath('/academic/semesters');
   return { success: true };
 }
 
@@ -349,6 +360,7 @@ export async function deleteSemester(semesterId: string) {
     .set({ deletedAt: new Date() })
     .where(eq(semesters.id, Number(semesterId)));
 
+  revalidatePath('/academic/semesters');
   return { success: true };
 }
 
@@ -451,6 +463,7 @@ export async function assignTeacher(formData: FormData) {
     semesterId: Number(semesterId),
   });
 
+  revalidatePath('/academic/assignments');
   return { success: true };
 }
 
@@ -462,10 +475,13 @@ export async function removeAssignment(assignmentId: string) {
     .set({ deletedAt: new Date() })
     .where(eq(teacherClassSubjects.id, Number(assignmentId)));
 
+  revalidatePath('/academic/assignments');
   return { success: true };
 }
 
-// Form-action-safe wrappers (return void for <form action={...}>)
+// Simplified form-action wrappers.
+// TODO: Refactor ke useActionState untuk error handling + toast.
+// TypeScript form action type mangkir return value selain void.
 
 export async function createClassAction(formData: FormData) {
   await createClass(formData);

@@ -1,5 +1,6 @@
 'use server';
 
+import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { studentDocuments } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
@@ -136,6 +137,7 @@ export async function uploadDocument(formData: FormData) {
     });
   }
 
+  revalidatePath(`/students/${studentId}/documents`);
   return { success: true };
 }
 
@@ -225,5 +227,6 @@ export async function deleteDocument(studentId: string, documentType: string) {
     .set({ [documentType]: null, updatedAt: new Date() })
     .where(eq(studentDocuments.studentId, studentId));
 
+  revalidatePath(`/students/${studentId}/documents`);
   return { success: true };
 }

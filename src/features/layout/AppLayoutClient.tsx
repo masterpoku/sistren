@@ -3,7 +3,6 @@
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppHeader } from "@/components/layout/header";
-import { ToastProvider } from "@/hooks/use-toast";
 
 interface User {
   id: string;
@@ -42,7 +41,7 @@ export function AppLayoutClient({
             }}
           />
           <main className="flex-1 overflow-auto">
-            <ToastProvider>{children}</ToastProvider>
+            {children}
           </main>
         </SidebarInset>
       </div>

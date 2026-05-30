@@ -1,5 +1,7 @@
 'use server';
 
+import { revalidatePath } from 'next/cache';
+
 import { db } from '@/lib/db';
 import { announcements, users, announcementRecipients } from '@/lib/db/schema';
 import { eq, isNull, and, desc, isNotNull } from 'drizzle-orm';
@@ -70,6 +72,8 @@ export async function createAnnouncement(formData: FormData) {
     publishedAt: new Date(),
   });
 
+  revalidatePath('/announcements');
+
   return { success: true };
 }
 
@@ -101,6 +105,8 @@ export async function deleteAnnouncement(announcementId: string) {
     .update(announcements)
     .set({ deletedAt: new Date() })
     .where(eq(announcements.id, Number(announcementId)));
+
+  revalidatePath('/announcements');
 
   return { success: true };
 }
@@ -145,6 +151,8 @@ export async function updateAnnouncement(announcementId: string, formData: FormD
     })
     .where(eq(announcements.id, Number(announcementId)));
 
+  revalidatePath('/announcements');
+
   return { success: true };
 }
 
@@ -166,6 +174,8 @@ export async function publishAnnouncement(announcementId: string) {
     .set({ publishedAt: new Date() })
     .where(eq(announcements.id, Number(announcementId)));
 
+  revalidatePath('/announcements');
+
   return { success: true };
 }
 
@@ -186,6 +196,8 @@ export async function unpublishAnnouncement(announcementId: string) {
     .update(announcements)
     .set({ publishedAt: null })
     .where(eq(announcements.id, Number(announcementId)));
+
+  revalidatePath('/announcements');
 
   return { success: true };
 }

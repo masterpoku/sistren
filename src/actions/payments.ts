@@ -1,5 +1,6 @@
 'use server';
 
+import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { paymentMethods, payments, users } from '@/lib/db/schema';
 import { eq, isNull, and, desc } from 'drizzle-orm';
@@ -52,6 +53,7 @@ export async function createPaymentMethod(formData: FormData) {
     instructions: instructions?.trim() || null,
   });
 
+  revalidatePath('/payments/methods');
   return { success: true };
 }
 
@@ -97,6 +99,7 @@ export async function updatePaymentMethod(
     })
     .where(eq(paymentMethods.id, Number(methodId)));
 
+  revalidatePath('/payments/methods');
   return { success: true };
 }
 
@@ -123,6 +126,7 @@ export async function deletePaymentMethod(methodId: string) {
     .set({ deletedAt: new Date() })
     .where(eq(paymentMethods.id, Number(methodId)));
 
+  revalidatePath('/payments/methods');
   return { success: true };
 }
 
@@ -203,6 +207,7 @@ export async function recordPayment(formData: FormData) {
     status: 'pending',
   });
 
+  revalidatePath('/finance');
   return { success: true };
 }
 
@@ -224,6 +229,7 @@ export async function confirmPayment(paymentId: string) {
     .set({ status: 'paid', paidAt: new Date() })
     .where(eq(payments.id, Number(paymentId)));
 
+  revalidatePath('/finance');
   return { success: true };
 }
 
@@ -245,5 +251,6 @@ export async function cancelPayment(paymentId: string) {
     .set({ status: 'cancelled' })
     .where(eq(payments.id, Number(paymentId)));
 
+  revalidatePath('/finance');
   return { success: true };
 }

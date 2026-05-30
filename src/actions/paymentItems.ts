@@ -1,5 +1,6 @@
 'use server';
 
+import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { paymentItems, semesters } from '@/lib/db/schema';
 import { eq, isNull, and, like, or, ne } from 'drizzle-orm';
@@ -96,6 +97,7 @@ export async function createPaymentItem(formData: FormData) {
     isActive,
   });
 
+  revalidatePath('/admin/payment-items');
   return { success: true };
 }
 
@@ -161,6 +163,7 @@ export async function updatePaymentItem(itemId: string, formData: FormData) {
     })
     .where(eq(paymentItems.id, Number(itemId)));
 
+  revalidatePath('/admin/payment-items');
   return { success: true };
 }
 
@@ -182,5 +185,6 @@ export async function deletePaymentItem(itemId: string) {
     .set({ deletedAt: new Date() })
     .where(eq(paymentItems.id, Number(itemId)));
 
+  revalidatePath('/admin/payment-items');
   return { success: true };
 }

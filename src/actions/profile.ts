@@ -1,5 +1,6 @@
 'use server';
 
+import { revalidatePath } from 'next/cache';
 import { db } from '@/lib/db';
 import { profiles } from '@/lib/db/schema';
 import { eq, and, isNull } from 'drizzle-orm';
@@ -39,5 +40,6 @@ export async function updateProfile(formData: FormData) {
     .set(updateValues)
     .where(eq(profiles.userId, session.userId));
 
+  revalidatePath('/profile');
   return { success: true };
 }
