@@ -1,11 +1,8 @@
-import { getPayments, recordPayment } from '@/actions/payments';
+import { getPayments, confirmPayment, recordPayment } from '@/actions/payments';
 import { verifyRoleLevel } from '@/lib/auth/verify-session';
 import { db } from '@/lib/db';
-import { users, roles } from '@/lib/db/schema';
+import { users, roles, paymentItems } from '@/lib/db/schema';
 import { eq, isNull, and } from 'drizzle-orm';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   Table,
   TableBody,
@@ -16,6 +13,8 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { RecordPaymentForm } from './record-payment-form';
 
 const STATUS_LABELS: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
   draft: { label: 'Draft', variant: 'secondary' },
@@ -27,13 +26,24 @@ const STATUS_LABELS: Record<string, { label: string; variant: 'default' | 'secon
 export default async function FinancePage() {
   await verifyRoleLevel(80);
 
-  const [paymentList, studentRows] = await Promise.all([
+  const [paymentList, studentRows, catalogItems] = await Promise.all([
     getPayments(),
     db
       .select({ id: users.id, name: users.name, email: users.email })
       .from(users)
       .innerJoin(roles, eq(users.roleId, roles.id))
       .where(and(eq(roles.level, 40), isNull(users.deletedAt))),
+    db
+      .select({
+        id: paymentItems.id,
+        code: paymentItems.code,
+        name: paymentItems.name,
+        description: paymentItems.description,
+        standardPrice: paymentItems.standardPrice,
+      })
+      .from(paymentItems)
+      .where(isNull(paymentItems.deletedAt))
+      .orderBy(paymentItems.code),
   ]);
 
   return (
@@ -49,48 +59,11 @@ export default async function FinancePage() {
           <CardTitle>Catat Pembayaran</CardTitle>
         </CardHeader>
         <CardContent>
-          <form
-            action={async (formData: FormData) => {
-              'use server';
-              const result = await recordPayment(formData);
-              if (result && 'error' in result) {
-                throw new Error(result.error);
-              }
-            }}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
-          >
-            <div className="space-y-2">
-              <Label htmlFor="studentId">Siswa</Label>
-              <select
-                id="studentId"
-                name="studentId"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                required
-              >
-                <option value="">Pilih siswa</option>
-                {studentRows.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name} ({s.email})
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="description">Deskripsi</Label>
-              <Input id="description" name="description" placeholder="SPP Bulan Juli 2025" required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="price">Jumlah (Rp)</Label>
-              <Input id="price" name="price" type="number" step="1000" placeholder="150000" required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="quantity">Jumlah Bulan</Label>
-              <Input id="quantity" name="quantity" type="number" defaultValue="1" min="1" />
-            </div>
-            <div className="lg:col-span-4 flex items-end">
-              <Button type="submit" className="w-full sm:w-auto">Catat Pembayaran</Button>
-            </div>
-          </form>
+          <RecordPaymentForm
+            students={studentRows}
+            paymentItems={catalogItems}
+            recordAction={recordPayment}
+          />
         </CardContent>
       </Card>
 
@@ -137,7 +110,6 @@ export default async function FinancePage() {
                           <form
                             action={async () => {
                               'use server';
-                              const { confirmPayment } = await import('@/actions/payments');
                               await confirmPayment(String(p.id));
                             }}
                           >

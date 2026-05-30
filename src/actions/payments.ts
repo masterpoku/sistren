@@ -152,7 +152,10 @@ export async function getPayments(opts?: { studentId?: string; status?: string }
       studentId: payments.studentId,
       studentName: users.name,
       code: payments.code,
+      paymentItemId: payments.paymentItemId,
       description: payments.description,
+      price: payments.price,
+      quantity: payments.quantity,
       total: payments.total,
       status: payments.status,
       paidAt: payments.paidAt,
@@ -168,6 +171,7 @@ export async function recordPayment(formData: FormData) {
   await verifyRoleLevel(80);
 
   const studentId = formData.get('studentId') as string;
+  const paymentItemIdStr = formData.get('paymentItemId') as string;
   const description = formData.get('description') as string;
   const priceStr = formData.get('price') as string;
   const quantityStr = formData.get('quantity') as string;
@@ -175,6 +179,9 @@ export async function recordPayment(formData: FormData) {
   if (!studentId || !description || !priceStr) {
     return { error: 'Student, deskripsi, dan jumlah wajib diisi.' };
   }
+
+  // Optional catalog item — pre-fills description/standardPrice but never enforces
+  const paymentItemId = paymentItemIdStr ? parseInt(paymentItemIdStr, 10) : null;
 
   const price = parseFloat(priceStr);
   const quantity = parseInt(quantityStr || '1', 10);
@@ -188,6 +195,7 @@ export async function recordPayment(formData: FormData) {
   await db.insert(payments).values({
     studentId,
     code,
+    paymentItemId: paymentItemId && !isNaN(paymentItemId) ? paymentItemId : null,
     description: description.trim(),
     price: String(price),
     quantity,
