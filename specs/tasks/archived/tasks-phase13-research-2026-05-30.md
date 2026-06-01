@@ -1,9 +1,11 @@
 # Phase 13 — UI/UX Alignment: Research Brief
 
 ## Situation
+
 Sistren has 30 routes built with Next.js 16, Tailwind CSS v4, shadcn/ui, @phosphor-icons/react, recharts, and @tanstack/react-table. Build passes clean. Core functionality (auth, enrollments, payments, announcements, documents, alumni) all complete. But UI diverges from the design reference (Vite SPA prototype in `docs/references/`).
 
 ## Complication
+
 15 gaps documented in `specs/ui-gaps.md`. Critical: no page padding, no desktop header, sidebar not collapsible, heading size mismatch. High: DataTable not integrated (exists but unused), dashboard has no charts, student academic/finance views missing. All 23 page.tsx files in `src/app/(app)/` need updates.
 
 ## Research Findings
@@ -15,23 +17,27 @@ Sistren has 30 routes built with Next.js 16, Tailwind CSS v4, shadcn/ui, @phosph
 **Reference state:** shadcn/ui `<Sidebar>` with `collapsible="icon"`, `SidebarProvider`, `SidebarInset`, `SidebarTrigger`, role-based nav via `SidebarMenu`, alumni theme via className prop.
 
 **Required packages:** `@radix-ui/react-separator` already installed. Sidebar package needs install via:
+
 ```bash
 bunx shadcn@latest add sidebar
 ```
+
 This adds: SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarTrigger, SidebarRail.
 
 **SidebarProvider requires `cookies()` from 'next/headers'** for state persistence:
+
 ```tsx
-import { cookies } from "next/headers";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { cookies } from 'next/headers';
+import { SidebarProvider } from '@/components/ui/sidebar';
 
 export default function ProtectedLayout({ children }) {
   const cookieStore = cookies();
-  const state = cookieStore.get("sidebar:state")?.value === "collapsed" ? "collapsed" : "expanded";
+  const state =
+    cookieStore.get('sidebar:state')?.value === 'collapsed'
+      ? 'collapsed'
+      : 'expanded';
 
-  return (
-    <SidebarProvider defaultState={state} />
-  );
+  return <SidebarProvider defaultState={state} />;
 }
 ```
 
@@ -54,15 +60,29 @@ Reference has: breadcrumb (SISTREN / currentTab), search input `w-[300px]`, bell
 **Existing code:** `src/components/ui/chart.tsx` has `ChartContainer`, `ChartTooltipContent`, `ChartLegendContent` — already integrated with recharts. `ChartContainer` takes `config` prop for color theming.
 
 **Usage pattern:**
+
 ```tsx
-<ChartContainer config={{ /* key: { label, color } */ }} className="h-[300px] w-full">
+<ChartContainer
+  config={
+    {
+      /* key: { label, color } */
+    }
+  }
+  className="h-[300px] w-full"
+>
   <ResponsiveContainer>
     <AreaChart data={data}>
       <CartesianGrid strokeDasharray="3 3" vertical={false} />
       <XAxis dataKey="semester" />
       <YAxis domain={[0, 100]} />
       <ChartTooltipContent />
-      <Area type="monotone" dataKey="gpa" name="Nilai" stroke="#0f172a" fill="url(#colorGpa)" />
+      <Area
+        type="monotone"
+        dataKey="gpa"
+        name="Nilai"
+        stroke="#0f172a"
+        fill="url(#colorGpa)"
+      />
     </AreaChart>
   </ResponsiveContainer>
 </ChartContainer>
@@ -81,6 +101,7 @@ Reference has: breadcrumb (SISTREN / currentTab), search input `w-[300px]`, bell
 ### 5. Page Padding + Heading Normalization
 
 All 23 pages need:
+
 - Wrapper change: `space-y-6` → `flex flex-col gap-6 p-4 md:p-6`
 - Heading: `text-2xl font-bold` → `text-3xl font-bold tracking-tight`
 
@@ -115,6 +136,7 @@ Reference doesn't have a consistent EmptyState — but implementation pages have
 ## Dependency Analysis
 
 ### Package Dependencies
+
 - `@radix-ui/react-separator` — ✅ already installed
 - `lucide-react` — in reference, but **KEEP phosphor-icons** per user request
 - `recharts` — ✅ already installed (`^3.8.1`)
@@ -123,9 +145,11 @@ Reference doesn't have a consistent EmptyState — but implementation pages have
 - `@radix-ui/react-tooltip` — ✅ already installed
 
 ### New shadcn components needed:
+
 ```bash
 bunx shadcn@latest add sidebar
 ```
+
 Adds ~13 new components. This is the main dependency.
 
 ---
@@ -135,17 +159,20 @@ Adds ~13 new components. This is the main dependency.
 **Phase 13 tasks split into 3 layers:**
 
 ### Layer 1: Foundation (must do first)
+
 - Install shadcn sidebar package (unblocks AppLayoutClient rewrite)
 - Update AppLayoutClient with SidebarProvider + SidebarInset
 - Create AppHeader component (header.tsx)
 - Migrate sidebar to shadcn collapsible
 
 ### Layer 2: Visual Consistency (depends on Layer 1)
+
 - Page padding + heading normalization (23 files)
 - Card stat pattern normalization
 - EmptyState component
 
 ### Layer 3: Feature Completion (independent, can parallelize)
+
 - Dashboard charts + alumni banner
 - DataTable integration across pages
 - Student academic page (KRS/KHS/Transkrip)
@@ -173,6 +200,7 @@ Adds ~13 new components. This is the main dependency.
 ## Next Steps
 
 Before planning execution, confirm:
+
 1. Run `bunx shadcn@latest add sidebar` — what components get installed? (verify dependencies)
 2. Check if `attendance` table should be created in this phase or deferred
 3. Confirm student academic page uses real data or mock (enrollments + rapor PDF only in v1)
