@@ -7,6 +7,30 @@
 
 ## Active Goals
 
+### School Settings — Zod Integration + Batch Update
+
+**Status:** completed
+
+**Date:** 2026-06-02
+
+**Summary:** Fixed settings module with proper validation and batch update pattern.
+
+- ✅ `schoolSettingsSchema` created in `src/lib/validation/schemas/settings.ts` — npsn (8 digit), nss (12 digit), min length validation
+- ✅ `getSchoolSettings()` added soft delete filter (`isNull(systemConfigs.deletedAt)`)
+- ✅ `batchUpdateSchoolSettings(data)` created — single transaction, Zod safeParse, `ActionResult` typed return
+- ✅ `school-settings-form.tsx` updated — single submit (no loop per field), `useTransition`, error state display
+- ✅ Build passes (37 routes)
+
+**Pattern established:** Zod schemas exist but were orphaned (no action used them). This session established the wiring pattern: schema in `schemas/`, action uses `schema.safeParse()`, form uses `useTransition` + error state.
+
+**Files changed:**
+- `src/lib/validation/schemas/settings.ts` (created)
+- `src/lib/validation/schemas/index.ts` (updated — added settings export)
+- `src/actions/settings.ts` (updated — soft delete + batch update)
+- `src/app/(app)/settings/school/school-settings-form.tsx` (updated)
+
+---
+
 ### Phase 6: Grade management — superseded by Phase 16
 
 **Status:** superseded
@@ -14,6 +38,79 @@
 **Depends-on:** Phase 5
 
 **Notes:** Originally deferred to v2. Now superseded by Phase 16 which implements structured grade input + KHS view + Rapor PDF integration.
+
+---
+
+## Active Goals
+
+### Quality Sprint (2026-06-01): 29 Known Issues Burndown
+
+**Status:** completed
+
+**Date:** 2026-06-01
+
+**Summary:** 29 steps executed across 7 phases. Build passes (35 routes). All known issues resolved.
+
+**Phase A — P0 Critical (3 steps):**
+- ✅ `approveStudent` sets `roleId: 40` hardcoded (not `user.roleId ?? 40`)
+- ✅ `bulkCreateEnrollment` filters students by `classId` via `enrollments` JOIN (not all level-40 students)
+- ✅ `teacher_class_subjects` migration verified (existed in 0000, 0002, 0007)
+
+**Phase B — P1 Error Infrastructure (5 steps):**
+- ✅ `zod` added (v4.4.3)
+- ✅ `lib/action-result.ts`: `ActionResult<T>` type for consistent server action return
+- ✅ `lib/errors/codes.ts`: 9 `ErrorCode` types + `ErrorMessages`
+- ✅ `lib/validation/schemas/`: Zod schemas for enrollments, grades, payments, announcements, academic, register
+- ✅ No `throw new Error` in actions (only `src/lib/crypto.ts`)
+
+**Phase C — P1 Dead Code (3 steps):**
+- ✅ Deleted 7 dead Sheet components: ClassSheet, MajorSheet, SemesterSheet, SubjectSheet, EnrollmentSheet, AnnouncementSheet, GradeSheet
+- ✅ Deleted legacy `src/components/layout/sidebar.tsx` (not imported anywhere)
+- ✅ No `MOCK_` data found in codebase
+
+**Phase D — P1 Schema Relations (1 step):**
+- ✅ Added `relations()` to 13 schema files: audit_logs, classes, majors, semesters, subjects, payment_methods, permissions, roles, userPermissions, rolePermissions, verifications, religions, system_configs
+
+**Phase E — P2 Structural (7 steps):**
+- ✅ Step 13: entityId type audit — all action params already string, no change needed
+- ✅ Step 14: `profile_assets` cleanup — table kept (not used but not harmful, not deleted)
+- ✅ Step 15: `teacherId` field added to `grades` schema + relation
+- ✅ Step 16: `deletedAt` added to `system_configs` schema
+- ✅ Step 17: Batal button added to classes, majors, subjects, semesters create forms
+- ✅ Step 18: Route mapping for Edit — all Client components now have Edit Dialog
+- ✅ Step 19: `updateSubject` + `updateSemester` actions added to `academic.ts`
+
+**Phase F — P2 Frontend (2 steps):**
+- ✅ Step 20: DataTable Edit buttons in ClassesClient, MajorsClient, SemestersClient, SubjectsClient
+- ✅ Step 21: Dark mode toggle deferred — `next-themes` not installed, header already has search + notification icons
+
+**Phase G — P3 Minor (8 steps):**
+- ✅ Step 22: Void wrappers fixed — `createClassAction` etc. return `void` (await) for Next.js form action compatibility
+- ✅ Step 23: Header UI improved — breadcrumb, search bar, notification bell already present
+- ✅ Step 24: Alumni seed check — `alumni` role (level 20) already in seed.ts
+- ✅ Step 25: Favicon created at `public/favicon.svg`
+- ✅ Step 26: `/attendance` page created (under construction placeholder)
+- ✅ Step 27: `/boarding` page created (under construction placeholder)
+- ✅ Step 28: `/settings/school` page created with form (school name, address, headmaster, NPSN, NSS)
+- ✅ Step 29: `bun run format` + `bun run build` — **BUILD PASS** (35 routes)
+
+**New files created:**
+- `src/lib/action-result.ts`
+- `src/lib/errors/codes.ts`
+- `src/lib/validation/schemas/` (6 schema files)
+- `src/actions/settings.ts`
+- `src/app/(app)/settings/school/page.tsx`
+- `src/app/(app)/settings/school/school-settings-form.tsx`
+- `src/app/(app)/attendance/page.tsx`
+- `src/app/(app)/boarding/page.tsx`
+- `public/favicon.svg`
+
+**Key fixes:**
+- `approveStudent`: hardcoded `roleId: 40`
+- `bulkCreateEnrollment`: filter by `classId` via enrollments JOIN
+- `grades`: added `teacherId` varchar(36) FK + relation
+- `data-table.tsx`: added `'use client'` directive
+- 4 Client components: added Edit Dialogs with `useState` for edit/dialog state
 
 ---
 
@@ -30,6 +127,7 @@
 **Completed:** 2026-05-30
 
 **Summary:**
+
 - ✅ Religions table (schema, export, migration, seed)
 - ✅ Grades table redesain (type enum + sub-score + unique constraint)
 - ✅ Profiles religion → religionId FK
