@@ -27,7 +27,7 @@ export async function approveStudent(userId: string) {
 
   await db
     .update(users)
-    .set({ emailVerified: true })
+    .set({ emailVerified: true, roleId: 40 })
     .where(eq(users.id, userId));
 
   return { success: true };

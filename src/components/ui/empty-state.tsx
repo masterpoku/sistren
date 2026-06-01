@@ -1,6 +1,12 @@
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { MagnifyingGlass, Tray, FolderOpen, Bell, FileText } from '@phosphor-icons/react';
+import {
+  MagnifyingGlass,
+  Tray,
+  FolderOpen,
+  Bell,
+  FileText,
+} from '@phosphor-icons/react';
 
 type EmptyIcon = 'search' | 'inbox' | 'folder' | 'bell' | 'file';
 
@@ -47,7 +53,12 @@ export function EmptyState({
         <p className="text-xs text-muted-foreground max-w-xs">{description}</p>
       )}
       {action && (
-        <Button variant="outline" size="sm" className="mt-4" onClick={action.onClick}>
+        <Button
+          variant="outline"
+          size="sm"
+          className="mt-4"
+          onClick={action.onClick}
+        >
           {action.label}
         </Button>
       )}

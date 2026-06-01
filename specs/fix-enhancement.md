@@ -15,6 +15,7 @@
 **Root cause:** `register.ts` creates user via `signUpEmail` but **never sets roleId**. `approveStudent()` only sets `emailVerified: true`, also **never sets roleId**. Therefore `getAuthContext()` returns `null` (because `user.roleId === null` at `permissions.ts` lines 38-40).
 
 **Scope:**
+
 - `src/actions/admin.ts` — `approveStudent()` must also set `roleId: 40`
 - Alternatively: `register.ts` sets roleId via Drizzle update inside the transaction
 
@@ -25,10 +26,12 @@
 ### P0-2: `bulkCreateEnrollment` enrolls ALL students into the selected class
 
 **Root cause:** Query in `enrollments.ts` doesn't filter by `classId`:
+
 ```
 const studentsInClass = await db.select(...)
   .where(and(eq(roles.level, 40), isNull(users.deletedAt)))
 ```
+
 This fetches **every** level-40 student (X, XI, XII combined) — not students actually in that class.
 
 **Fix:** Filter by `majorId` from `profiles`, or add student selection per class.
@@ -45,21 +48,28 @@ This fetches **every** level-40 student (X, XI, XII combined) — not students a
 
 ```ts
 // Pattern A: inline union
-async function createClass(formData: FormData): Promise<{ error: string } | { success: boolean }>
+async function createClass(
+  formData: FormData
+): Promise<{ error: string } | { success: boolean }>;
 
 // Pattern B: no return type (void wrappers)
-async function createClassAction(formData: FormData) { await createClass(formData); }
+async function createClassAction(formData: FormData) {
+  await createClass(formData);
+}
 
 // Pattern C: mixed — throws vs returns
-async function verifySession(): Promise<{userId: string}> { if (!session) redirect('/login'); }
+async function verifySession(): Promise<{ userId: string }> {
+  if (!session) redirect('/login');
+}
 
 // Pattern D: returns bare Response
-async function downloadDocument(): Promise<{ error: string } | Response>
+async function downloadDocument(): Promise<{ error: string } | Response>;
 ```
 
 ~50 `return { error: '...' }` spread across 10 action files — all string literals, no reusable error codes, no typed payloads.
 
 **Also: zero validation library.** Form validation is manual string checks:
+
 ```ts
 if (!name?.trim() || !classId) {
   return { error: 'Nama dan kelas wajib diisi.' };
@@ -76,6 +86,7 @@ No zod, no valibot, no yup — nothing.
    - Reusable error messages (Indonesian, user-facing)
 
 2. **Create shared type** — `src/lib/actions.ts`:
+
    ```ts
    import { z } from 'zod';
 
@@ -110,11 +121,16 @@ No zod, no valibot, no yup — nothing.
    ```tsx
    const result = await action(formData);
    if (!result.success) {
-     toast({ title: 'Gagal', description: result.error, variant: 'destructive' });
+     toast({
+       title: 'Gagal',
+       description: result.error,
+       variant: 'destructive',
+     });
    }
    ```
 
 **Verification:**
+
 - `ActionResult<T>` used uniformly across all actions (not inline unions)
 - `result.success` is the discriminator, not `'error' in result`
 - No `throw new Error(result.error)` in any page/client component
@@ -129,27 +145,30 @@ No zod, no valibot, no yup — nothing.
 
 **Dead components (archive or delete):**
 
-| File | Lines | Status |
-|---|---|---|
-| `src/components/academic/ClassSheet.tsx` | ~120 | Never imported |
-| `src/components/academic/MajorSheet.tsx` | ~115 | Never imported |
-| `src/components/academic/SubjectSheet.tsx` | ~200 | Never imported |
-| `src/components/academic/SemesterSheet.tsx` | ~170 | Never imported |
-| `src/components/enrollments/EnrollmentSheet.tsx` | ~150 | Never imported |
-| `src/components/grades/GradeSheet.tsx` | ~200 | Never imported |
-| `src/components/announcements/AnnouncementSheet.tsx` | ~190 | Never imported |
-| `src/components/finance/PaymentForm.tsx` | ~130 | Never imported |
-| `src/components/students/StudentForm.tsx` | ~200 | Never imported |
-| `src/components/teachers/TeacherForm.tsx` | ~180 | Never imported |
+| File                                                 | Lines | Status         |
+| ---------------------------------------------------- | ----- | -------------- |
+| `src/components/academic/ClassSheet.tsx`             | ~120  | Never imported |
+| `src/components/academic/MajorSheet.tsx`             | ~115  | Never imported |
+| `src/components/academic/SubjectSheet.tsx`           | ~200  | Never imported |
+| `src/components/academic/SemesterSheet.tsx`          | ~170  | Never imported |
+| `src/components/enrollments/EnrollmentSheet.tsx`     | ~150  | Never imported |
+| `src/components/grades/GradeSheet.tsx`               | ~200  | Never imported |
+| `src/components/announcements/AnnouncementSheet.tsx` | ~190  | Never imported |
+| `src/components/finance/PaymentForm.tsx`             | ~130  | Never imported |
+| `src/components/students/StudentForm.tsx`            | ~200  | Never imported |
+| `src/components/teachers/TeacherForm.tsx`            | ~180  | Never imported |
 
 **Action:**
+
 1. Check if salvageable (they have `onSubmit` props, just need wiring)
 2. If no wiring planned → move to `specs/archive/components/` or delete
 
 **Verification:**
+
 ```
 grep -r "ClassSheet\|MajorSheet\|SubjectSheet\|SemesterSheet\|EnrollmentSheet\|GradeSheet\|AnnouncementSheet\|PaymentForm\|StudentForm\|TeacherForm" src/ --include='*.tsx' --include='*.ts'
 ```
+
 Returns zero results outside their own definitions.
 
 ---
@@ -157,6 +176,7 @@ Returns zero results outside their own definitions.
 ### P1-2: `src/components/layout/sidebar.tsx` — legacy sidebar duplicate
 
 Two sidebar files exist:
+
 - `app-sidebar.tsx` — actively used (`AppLayoutClient.tsx` imports this)
 - `sidebar.tsx` — **unused** (legacy, non-shadcn, has its own mobile hamburger)
 
@@ -175,6 +195,7 @@ All KHS, KRS, Jadwal tabs use `MOCK_COURSES` and `MOCK_SCHEDULE` hardcoded array
 **Fix:** Wire to `getStudentGrades()` (needs Phase 16 grades actions) or fallback to empty state.
 
 **Quick fix (now):**
+
 - Replace mock with `<EmptyState>` + "Data nilai belum tersedia."
 - Or show a readonly table from `getEnrollments(session.userId)`
 
@@ -189,6 +210,7 @@ File `src/hooks/use-permissions.ts` calls `fetch('/api/auth/permissions')` — t
 **Root cause:** No `src/app/api/auth/permissions/route.ts` file.
 
 **Fix:**
+
 1. Create `src/app/api/auth/permissions/route.ts` — returns `{ permissions: string[], roleLevel, roleName }`
 2. Or replace the hook with render-time props from Server Component
 
@@ -200,17 +222,17 @@ File `src/hooks/use-permissions.ts` calls `fetch('/api/auth/permissions')` — t
 
 ### P1-5: 9 schema files without `relations()` export
 
-| File | Required Relations |
-|---|---|
-| `permissions.ts` | role_permissions, user_permissions |
-| `role_permissions.ts` | roles, permissions |
-| `user_permissions.ts` | users, permissions |
-| `majors.ts` | profiles, subjects |
-| `classes.ts` | enrollments, subjects, teacherClassSubjects |
-| `semesters.ts` | enrollments, grades, paymentItems |
-| `subjects.ts` | grades, teacherClassSubjects |
-| `payment_methods.ts` | payments |
-| `system_configs.ts` | — (orphan, optional) |
+| File                  | Required Relations                          |
+| --------------------- | ------------------------------------------- |
+| `permissions.ts`      | role_permissions, user_permissions          |
+| `role_permissions.ts` | roles, permissions                          |
+| `user_permissions.ts` | users, permissions                          |
+| `majors.ts`           | profiles, subjects                          |
+| `classes.ts`          | enrollments, subjects, teacherClassSubjects |
+| `semesters.ts`        | enrollments, grades, paymentItems           |
+| `subjects.ts`         | grades, teacherClassSubjects                |
+| `payment_methods.ts`  | payments                                    |
+| `system_configs.ts`   | — (orphan, optional)                        |
 
 **Verification:** `db.query.xxx.findMany({ with: { ... } })` works for the tables above.
 
@@ -236,6 +258,7 @@ Impossible to log audit entries for users, sessions, or accounts.
 Both cover ijasah, skhun, skl, kk, ktpAyah, ktpIbu, kip. But `profile_assets` is **never referenced** from any action or page.
 
 **Action:**
+
 1. Remove `profile_assets` from `schema/index.ts` (keep the file for reference)
 2. Or add explicit documentation that `studentDocuments` is the active table
 
@@ -271,12 +294,12 @@ Enrollment only tracks `classId` (X/XI/XII) without major (TKJ/RPL/Automotive). 
 
 ### P2-6: DataTable CRUD — delete only, no edit
 
-| DataTable | Has delete? | Has edit? | Backend edit action exists? |
-|---|---|---|---|
-| ClassesClient | ✅ | ❌ | ✅ `updateClass()` |
-| MajorsClient | ✅ | ❌ | ✅ `updateMajor()` |
-| SubjectsClient | ✅ | ❌ | ❌ (no `updateSubject`) |
-| SemestersClient | ✅ | ❌ | ❌ (no `updateSemester`) |
+| DataTable       | Has delete? | Has edit? | Backend edit action exists? |
+| --------------- | ----------- | --------- | --------------------------- |
+| ClassesClient   | ✅          | ❌        | ✅ `updateClass()`          |
+| MajorsClient    | ✅          | ❌        | ✅ `updateMajor()`          |
+| SubjectsClient  | ✅          | ❌        | ❌ (no `updateSubject`)     |
+| SemestersClient | ✅          | ❌        | ❌ (no `updateSemester`)    |
 
 **Fix:** Add "Edit" column to each DataTable, calling the server action or a dialog.
 
@@ -293,8 +316,11 @@ Route exists in permissions reference (`grades.read_any`, `grades.input`, etc.) 
 ### P2-8: `PaymentItemDialog.tsx` — "Batal" button doesn't close the dialog
 
 ```tsx
-<Button type="button" variant="outline">Batal</Button>
+<Button type="button" variant="outline">
+  Batal
+</Button>
 ```
+
 No `onClick` handler. Dialog can't be dismissed via this button.
 
 **Fix:** Add `onClick` calling `onOpenChange(false)`.
@@ -308,6 +334,7 @@ No `onClick` handler. Dialog can't be dismissed via this button.
 ```
 '/permissions': 'system_configs.manage'
 ```
+
 Should map to its own permission, e.g. `permissions.manage`.
 
 **Fix:** Update permission in `route-permissions.ts` and seed data.
@@ -321,6 +348,7 @@ await db.execute(
   `INSERT INTO role_permissions ... SELECT ${roleMap[roleName].id}, ...`
 );
 ```
+
 SQL injection risk.
 
 **Fix:** Replace with `db.insert(rolePermissions).values(...)` pattern like `seed.ts`.

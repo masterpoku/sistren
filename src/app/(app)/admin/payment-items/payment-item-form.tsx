@@ -98,7 +98,10 @@ export function PaymentItemForm({ item, semesters }: Props) {
         </div>
         <div className="space-y-2">
           <Label htmlFor="semesterId">Semester (opsional)</Label>
-          <Select name="semesterId" defaultValue={item?.semesterId ? String(item.semesterId) : 'none'}>
+          <Select
+            name="semesterId"
+            defaultValue={item?.semesterId ? String(item.semesterId) : 'none'}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Semua semester" />
             </SelectTrigger>

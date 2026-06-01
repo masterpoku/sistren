@@ -30,14 +30,27 @@ type Props = {
   mode: 'create' | 'edit';
   item?: PaymentItem;
   semesters: Semester[];
-  createAction: (formData: FormData) => Promise<{ error?: string } | { success: boolean }>;
-  updateAction: (itemId: string, formData: FormData) => Promise<{ error?: string } | { success: boolean }>;
+  createAction: (
+    formData: FormData
+  ) => Promise<{ error?: string } | { success: boolean }>;
+  updateAction: (
+    itemId: string,
+    formData: FormData
+  ) => Promise<{ error?: string } | { success: boolean }>;
   trigger: ReactNode;
   children: ReactNode;
 };
 
-export function PaymentItemDialog({ mode, item, createAction, updateAction, trigger, children }: Props) {
-  const action = mode === 'create' ? 'Tambah Item Pembayaran' : `Edit: ${item?.name}`;
+export function PaymentItemDialog({
+  mode,
+  item,
+  createAction,
+  updateAction,
+  trigger,
+  children,
+}: Props) {
+  const action =
+    mode === 'create' ? 'Tambah Item Pembayaran' : `Edit: ${item?.name}`;
   const isEdit = mode === 'edit';
 
   async function handleSubmit(formData: FormData) {
@@ -61,15 +74,10 @@ export function PaymentItemDialog({ mode, item, createAction, updateAction, trig
         <DialogHeader>
           <DialogTitle>{action}</DialogTitle>
         </DialogHeader>
-        <form
-          action={handleSubmit}
-        >
+        <form action={handleSubmit}>
           {children}
           <div className="flex justify-end gap-2 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-            >
+            <Button type="button" variant="outline">
               Batal
             </Button>
             <Button type="submit">{isEdit ? 'Simpan' : 'Tambah'}</Button>

@@ -111,7 +111,10 @@ export async function deleteAnnouncement(announcementId: string) {
   return { success: true };
 }
 
-export async function updateAnnouncement(announcementId: string, formData: FormData) {
+export async function updateAnnouncement(
+  announcementId: string,
+  formData: FormData
+) {
   const session = await verifySession();
   if (!session) return { error: 'Tidak ada sesi.' };
 
@@ -123,7 +126,12 @@ export async function updateAnnouncement(announcementId: string, formData: FormD
   const [existing] = await db
     .select({ id: announcements.id })
     .from(announcements)
-    .where(and(eq(announcements.id, Number(announcementId)), isNull(announcements.deletedAt)))
+    .where(
+      and(
+        eq(announcements.id, Number(announcementId)),
+        isNull(announcements.deletedAt)
+      )
+    )
     .limit(1);
 
   if (!existing) {
@@ -147,7 +155,9 @@ export async function updateAnnouncement(announcementId: string, formData: FormD
       content: content.trim(),
       description: description?.trim() || null,
       category: category?.trim() || null,
-      priority: (['normal', 'important', 'urgent'].includes(priority) ? priority : 'normal') as 'normal' | 'important' | 'urgent',
+      priority: (['normal', 'important', 'urgent'].includes(priority)
+        ? priority
+        : 'normal') as 'normal' | 'important' | 'urgent',
     })
     .where(eq(announcements.id, Number(announcementId)));
 
@@ -162,7 +172,12 @@ export async function publishAnnouncement(announcementId: string) {
   const [existing] = await db
     .select({ id: announcements.id })
     .from(announcements)
-    .where(and(eq(announcements.id, Number(announcementId)), isNull(announcements.deletedAt)))
+    .where(
+      and(
+        eq(announcements.id, Number(announcementId)),
+        isNull(announcements.deletedAt)
+      )
+    )
     .limit(1);
 
   if (!existing) {
@@ -185,7 +200,12 @@ export async function unpublishAnnouncement(announcementId: string) {
   const [existing] = await db
     .select({ id: announcements.id })
     .from(announcements)
-    .where(and(eq(announcements.id, Number(announcementId)), isNull(announcements.deletedAt)))
+    .where(
+      and(
+        eq(announcements.id, Number(announcementId)),
+        isNull(announcements.deletedAt)
+      )
+    )
     .limit(1);
 
   if (!existing) {

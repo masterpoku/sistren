@@ -132,7 +132,10 @@ export async function deletePaymentMethod(methodId: string) {
 
 // ─── Student Payment Records ────────────────────────────────────
 
-export async function getPayments(opts?: { studentId?: string; status?: string }) {
+export async function getPayments(opts?: {
+  studentId?: string;
+  status?: string;
+}) {
   const session = await verifySession();
   const ctx = await getAuthContext(session.userId);
   if (!ctx) return [];
@@ -147,7 +150,12 @@ export async function getPayments(opts?: { studentId?: string; status?: string }
   }
 
   if (opts?.status) {
-    conditions.push(eq(payments.status, opts.status as 'draft' | 'pending' | 'paid' | 'cancelled'));
+    conditions.push(
+      eq(
+        payments.status,
+        opts.status as 'draft' | 'pending' | 'paid' | 'cancelled'
+      )
+    );
   }
 
   return db
@@ -185,7 +193,9 @@ export async function recordPayment(formData: FormData) {
   }
 
   // Optional catalog item — pre-fills description/standardPrice but never enforces
-  const paymentItemId = paymentItemIdStr ? parseInt(paymentItemIdStr, 10) : null;
+  const paymentItemId = paymentItemIdStr
+    ? parseInt(paymentItemIdStr, 10)
+    : null;
 
   const price = parseFloat(priceStr);
   const quantity = parseInt(quantityStr || '1', 10);
@@ -199,7 +209,8 @@ export async function recordPayment(formData: FormData) {
   await db.insert(payments).values({
     studentId,
     code,
-    paymentItemId: paymentItemId && !isNaN(paymentItemId) ? paymentItemId : null,
+    paymentItemId:
+      paymentItemId && !isNaN(paymentItemId) ? paymentItemId : null,
     description: description.trim(),
     price: String(price),
     quantity,

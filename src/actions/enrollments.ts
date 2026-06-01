@@ -187,11 +187,23 @@ export async function bulkCreateEnrollment(
   const targetClassId = Number(classId);
   const targetSemesterId = Number(semesterId);
 
+  // Only get students from the specified class (via enrollments)
   const studentsInClass = await db
     .select({ id: users.id })
     .from(users)
+    .innerJoin(enrollments, eq(enrollments.studentId, users.id))
     .innerJoin(roles, eq(users.roleId, roles.id))
-    .where(and(eq(roles.level, 40), isNull(users.deletedAt)))
+    .where(
+      and(
+        eq(roles.level, 40),
+        eq(enrollments.classId, targetClassId),
+        eq(enrollments.semesterId, targetSemesterId),
+        eq(enrollments.status, 'active'),
+        isNull(enrollments.deletedAt),
+        isNull(users.deletedAt)
+      )
+    )
+    .groupBy(users.id)
     .limit(200);
 
   if (studentsInClass.length === 0) {

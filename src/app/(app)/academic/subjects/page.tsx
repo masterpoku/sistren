@@ -1,14 +1,13 @@
-import { getSubjects, createSubjectAction, getClasses } from '@/actions/academic';
+import {
+  getSubjects,
+  createSubjectAction,
+  getClasses,
+} from '@/actions/academic';
 import { verifyRoleLevel } from '@/lib/auth/verify-session';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { SubjectsClient } from '@/features/academic/subjects/SubjectsClient';
 
 export default async function SubjectsPage() {
@@ -22,7 +21,9 @@ export default async function SubjectsPage() {
     <div className="flex flex-col gap-6 p-4 md:p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Kelola Mata Pelajaran</h1>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Kelola Mata Pelajaran
+          </h1>
           <p className="text-muted-foreground">
             Tambah dan kelola mata pelajaran per kelas.
           </p>
@@ -34,10 +35,18 @@ export default async function SubjectsPage() {
           <CardTitle>Tambah Mata Pelajaran</CardTitle>
         </CardHeader>
         <CardContent>
-          <form action={createSubjectAction} className="flex flex-wrap items-end gap-4">
+          <form
+            action={createSubjectAction}
+            className="flex flex-wrap items-end gap-4"
+          >
             <div className="space-y-2">
               <Label htmlFor="name">Nama Mapel</Label>
-              <Input id="name" name="name" placeholder="Nama mata pelajaran" required />
+              <Input
+                id="name"
+                name="name"
+                placeholder="Nama mata pelajaran"
+                required
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="code">Kode</Label>
@@ -53,20 +62,37 @@ export default async function SubjectsPage() {
               >
                 <option value="">Pilih kelas...</option>
                 {classList.map((cls) => (
-                  <option key={cls.id} value={cls.id}>{cls.name} ({cls.code})</option>
+                  <option key={cls.id} value={cls.id}>
+                    {cls.name} ({cls.code})
+                  </option>
                 ))}
               </select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="credits">SKS</Label>
-              <Input id="credits" name="credits" type="number" min="0" defaultValue="0" className="w-20" />
+              <Input
+                id="credits"
+                name="credits"
+                type="number"
+                min="0"
+                defaultValue="0"
+                className="w-20"
+              />
             </div>
+            <a
+              href="/academic/subjects"
+              className="inline-flex h-9 px-4 items-center justify-center rounded-md border border-input bg-background text-sm font-medium hover:bg-muted"
+            >
+              Batal
+            </a>
             <Button type="submit">Tambah</Button>
           </form>
         </CardContent>
       </Card>
 
-      <SubjectsClient data={subjectList} />
+      <div className="rounded-md border bg-card">
+        <SubjectsClient data={subjectList} />
+      </div>
     </div>
   );
 }

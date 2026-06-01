@@ -12,6 +12,7 @@ import {
 import { relations } from 'drizzle-orm';
 import { enrollments } from './enrollments';
 import { subjects } from './subjects';
+import { users } from './users';
 
 /**
  * Student grades per subject per semester.
@@ -22,6 +23,7 @@ import { subjects } from './subjects';
  * finalExam for 'knowledge'; practical, project, portfolio for 'skill').
  *
  * score is the final computed or entered grade value.
+ * teacherId tracks which teacher entered the grade.
  * Unique: one grade row per (enrollment, subject, type).
  */
 export const grades = mysqlTable(
@@ -54,6 +56,11 @@ export const grades = mysqlTable(
     project: decimal('project', { precision: 5, scale: 2 }),
     portfolio: decimal('portfolio', { precision: 5, scale: 2 }),
 
+    // Teacher who entered the grade
+    teacherId: varchar('teacher_id', { length: 36 })
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+
     // Results
     score: decimal('score', { precision: 5, scale: 2 }),
     grade: char('grade', { length: 2 }),
@@ -81,5 +88,9 @@ export const gradesRelations = relations(grades, ({ one }) => ({
   subject: one(subjects, {
     fields: [grades.subjectId],
     references: [subjects.id],
+  }),
+  teacher: one(users, {
+    fields: [grades.teacherId],
+    references: [users.id],
   }),
 }));

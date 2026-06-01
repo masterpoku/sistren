@@ -1,19 +1,16 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import Link from 'next/link';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import {
-  ChartContainer,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
+} from '@/components/ui/card';
+import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
 import {
   User,
   Wallet,
@@ -24,7 +21,7 @@ import {
   TrendUp,
   BookOpen,
   CalendarCheck,
-} from "@phosphor-icons/react";
+} from '@phosphor-icons/react';
 import {
   AreaChart,
   Area,
@@ -34,7 +31,7 @@ import {
   XAxis,
   YAxis,
   ResponsiveContainer,
-} from "recharts";
+} from 'recharts';
 
 interface DashboardClientProps {
   name: string;
@@ -51,18 +48,18 @@ interface DashboardClientProps {
 }
 
 const mockAcademicRecords = [
-  { semester: "Sem 1", gpa: 3.85 },
-  { semester: "Sem 2", gpa: 3.92 },
-  { semester: "Sem 3", gpa: 3.78 },
-  { semester: "Sem 4", gpa: 3.95 },
-  { semester: "Sem 5", gpa: 3.88 },
+  { semester: 'Sem 1', gpa: 3.85 },
+  { semester: 'Sem 2', gpa: 3.92 },
+  { semester: 'Sem 3', gpa: 3.78 },
+  { semester: 'Sem 4', gpa: 3.95 },
+  { semester: 'Sem 5', gpa: 3.88 },
 ];
 
 const mockRegistrationData = [
-  { name: "Jan", total: 40 },
-  { name: "Feb", total: 65 },
-  { name: "Mar", total: 120 },
-  { name: "Apr", total: 180 },
+  { name: 'Jan', total: 40 },
+  { name: 'Feb', total: 65 },
+  { name: 'Mar', total: 120 },
+  { name: 'Apr', total: 180 },
 ];
 
 function StatCard({
@@ -109,8 +106,8 @@ export function DashboardClient({
               Selamat Datang di Portal Alumni!
             </h2>
             <p className="text-xs text-yellow-800/80">
-              Ini adalah dashboard khusus alumni SMK TERPADU. Anda dapat
-              melihat riwayat akademik dan status administrasi terakhir Anda.
+              Ini adalah dashboard khusus alumni SMK TERPADU. Anda dapat melihat
+              riwayat akademik dan status administrasi terakhir Anda.
             </p>
           </div>
         </div>
@@ -118,12 +115,12 @@ export function DashboardClient({
 
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold tracking-tight">
-          {isAlumni ? "Dashboard Alumni" : `Selamat Datang, ${name}`}
+          {isAlumni ? 'Dashboard Alumni' : `Selamat Datang, ${name}`}
         </h1>
         <p className="text-muted-foreground">
           {isAlumni
-            ? "Berikut adalah ringkasan riwayat Anda selama di SMK TERPADU."
-            : "Berikut adalah ringkasan aktivitas akademik Anda hari ini."}
+            ? 'Berikut adalah ringkasan riwayat Anda selama di SMK TERPADU.'
+            : 'Berikut adalah ringkasan aktivitas akademik Anda hari ini.'}
         </p>
       </div>
 
@@ -144,7 +141,7 @@ export function DashboardClient({
                 <div className="h-[300px] w-full">
                   <ChartContainer
                     config={{
-                      gpa: { label: "Nilai", color: "#0f172a" },
+                      gpa: { label: 'Nilai', color: '#0f172a' },
                     }}
                     className="h-[300px] w-full"
                   >
@@ -170,10 +167,7 @@ export function DashboardClient({
                             />
                           </linearGradient>
                         </defs>
-                        <CartesianGrid
-                          strokeDasharray="3 3"
-                          vertical={false}
-                        />
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
                         <XAxis dataKey="semester" />
                         <YAxis domain={[0, 100]} />
                         <ChartTooltipContent />
@@ -202,22 +196,22 @@ export function DashboardClient({
                 <div className="space-y-6">
                   {[
                     {
-                      time: "07:30 - 10:00",
-                      subject: "Sistem Terdistribusi",
-                      room: "Lab. Komputer 1",
-                      type: "Teori",
+                      time: '07:30 - 10:00',
+                      subject: 'Sistem Terdistribusi',
+                      room: 'Lab. Komputer 1',
+                      type: 'Teori',
                     },
                     {
-                      time: "10:30 - 13:00",
-                      subject: "Kecerdasan Buatan",
-                      room: "Ruang Kelas X-TKJ",
-                      type: "Teori",
+                      time: '10:30 - 13:00',
+                      subject: 'Kecerdasan Buatan',
+                      room: 'Ruang Kelas X-TKJ',
+                      type: 'Teori',
                     },
                     {
-                      time: "14:00 - 16:30",
-                      subject: "Praktikum Jaringan Komputer",
-                      room: "Lab. Jaringan",
-                      type: "Praktikum",
+                      time: '14:00 - 16:30',
+                      subject: 'Praktikum Jaringan Komputer',
+                      room: 'Lab. Jaringan',
+                      type: 'Praktikum',
                     },
                   ].map((item, i) => (
                     <div key={i} className="flex items-start gap-4">
@@ -231,7 +225,10 @@ export function DashboardClient({
                           <span className="mx-1">•</span>
                           <span>{item.room}</span>
                         </div>
-                        <Badge variant="secondary" className="mt-1 text-[10px] py-0">
+                        <Badge
+                          variant="secondary"
+                          className="mt-1 text-[10px] py-0"
+                        >
                           {item.type}
                         </Badge>
                       </div>
@@ -286,16 +283,13 @@ export function DashboardClient({
                 <div className="h-[300px] w-full">
                   <ChartContainer
                     config={{
-                      total: { label: "Pendaftaran", color: "#0f172a" },
+                      total: { label: 'Pendaftaran', color: '#0f172a' },
                     }}
                     className="h-[300px] w-full"
                   >
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={mockRegistrationData}>
-                        <CartesianGrid
-                          strokeDasharray="3 3"
-                          vertical={false}
-                        />
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
                         <XAxis dataKey="name" />
                         <YAxis />
                         <ChartTooltipContent />
@@ -360,7 +354,11 @@ export function DashboardClient({
                 icon={BookOpen}
               />
             )}
-            <StatCard title="Jadwal Hari Ini" value="4 Sesi" icon={CalendarCheck} />
+            <StatCard
+              title="Jadwal Hari Ini"
+              value="4 Sesi"
+              icon={CalendarCheck}
+            />
             <StatCard title="Tugas Belum Dinilai" value="18" icon={TrendUp} />
           </div>
 
@@ -373,16 +371,13 @@ export function DashboardClient({
                 <div className="h-[300px] w-full">
                   <ChartContainer
                     config={{
-                      gpa: { label: "IP", color: "#0f172a" },
+                      gpa: { label: 'IP', color: '#0f172a' },
                     }}
                     className="h-[300px] w-full"
                   >
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={mockAcademicRecords}>
-                        <CartesianGrid
-                          strokeDasharray="3 3"
-                          vertical={false}
-                        />
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} />
                         <XAxis dataKey="semester" />
                         <YAxis domain={[0, 100]} />
                         <ChartTooltipContent />

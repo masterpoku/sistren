@@ -4,8 +4,8 @@ import {
   timestamp,
   primaryKey,
 } from 'drizzle-orm/mysql-core';
-import { roles } from './roles';
-import { permissions } from './permissions';
+import { relations } from 'drizzle-orm';
+import { roles, permissions } from './index';
 
 /**
  * Role-permission pivot table — assigns permissions to roles.
@@ -27,5 +27,19 @@ export const rolePermissions = mysqlTable(
   },
   (table) => ({
     pk: primaryKey({ columns: [table.roleId, table.permissionId] }),
+  })
+);
+
+export const rolePermissionsRelations = relations(
+  rolePermissions,
+  ({ one }) => ({
+    role: one(roles, {
+      fields: [rolePermissions.roleId],
+      references: [roles.id],
+    }),
+    permission: one(permissions, {
+      fields: [rolePermissions.permissionId],
+      references: [permissions.id],
+    }),
   })
 );

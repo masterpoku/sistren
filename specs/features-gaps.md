@@ -37,10 +37,10 @@ The `system_configs` table exists with seed data (school name, address, phone, a
 
 ## Summary
 
-| Gap | Old Status | Priority |
-|-----|-----------|----------|
-| Payment Items Catalog | Fully working CRUD | **High** |
-| Auth Boarding Page | Working route + view | Low |
-| School Settings UI | Route existed, view was empty | Low (both incomplete) |
+| Gap                   | Old Status                    | Priority              |
+| --------------------- | ----------------------------- | --------------------- |
+| Payment Items Catalog | Fully working CRUD            | **High**              |
+| Auth Boarding Page    | Working route + view          | Low                   |
+| School Settings UI    | Route existed, view was empty | Low (both incomplete) |
 
 **Recommendation:** Only the **payment items catalog** is a real gap worth addressing. The boarding page is nice-to-have; school settings UI is low effort since the table already exists.

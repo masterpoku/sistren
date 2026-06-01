@@ -19,7 +19,9 @@ export default async function SemestersPage() {
       </div>
 
       <SemesterFormCard />
-      <SemestersClient data={semesterList} />
+      <div className="rounded-md border bg-card">
+        <SemestersClient data={semesterList} />
+      </div>
     </div>
   );
 }

@@ -3,13 +3,9 @@ import { verifyRoleLevel } from '@/lib/auth/verify-session';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { ClassesClient } from '@/features/academic/classes/ClassesClient';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { columns } from '@/features/academic/classes/ClassesClient';
+import { DataTable } from '@/components/ui/data-table';
 
 export default async function ClassesPage() {
   await verifyRoleLevel(60);
@@ -34,18 +30,41 @@ export default async function ClassesPage() {
           <form action={createClassAction} className="flex items-end gap-4">
             <div className="space-y-2">
               <Label htmlFor="name">Nama Kelas</Label>
-              <Input id="name" name="name" placeholder="Contoh: X, XI, XII" required />
+              <Input
+                id="name"
+                name="name"
+                placeholder="Contoh: X, XI, XII"
+                required
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="code">Kode</Label>
-              <Input id="code" name="code" placeholder="Contoh: X-1, XI-2" required />
+              <Input
+                id="code"
+                name="code"
+                placeholder="Contoh: X-1, XI-2"
+                required
+              />
             </div>
+            <a
+              href="/academic/classes"
+              className="inline-flex h-9 px-4 items-center justify-center rounded-md border border-input bg-background text-sm font-medium hover:bg-muted"
+            >
+              Batal
+            </a>
             <Button type="submit">Tambah</Button>
           </form>
         </CardContent>
       </Card>
 
-      <ClassesClient data={classList} />
+      <div className="rounded-md border bg-card">
+        <DataTable
+          columns={columns}
+          data={classList}
+          searchKey="name"
+          exportFilename="kelas"
+        />
+      </div>
     </div>
   );
 }

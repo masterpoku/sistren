@@ -1,7 +1,6 @@
 'use client';
 
 import { ColumnDef } from '@tanstack/react-table';
-import { DataTable } from '@/components/ui/data-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Trash } from '@phosphor-icons/react';
@@ -20,7 +19,9 @@ export const columns: ColumnDef<ClassItem>[] = [
   {
     accessorKey: 'code',
     header: 'Kode',
-    cell: ({ row }) => <Badge variant="secondary">{row.getValue('code')}</Badge>,
+    cell: ({ row }) => (
+      <Badge variant="secondary">{row.getValue('code')}</Badge>
+    ),
   },
   {
     id: 'actions',
@@ -43,18 +44,3 @@ export const columns: ColumnDef<ClassItem>[] = [
     },
   },
 ];
-
-interface ClassesClientProps {
-  data: ClassItem[];
-}
-
-export function ClassesClient({ data }: ClassesClientProps) {
-  return (
-    <DataTable
-      columns={columns}
-      data={data}
-      searchKey="name"
-      exportFilename="kelas"
-    />
-  );
-}

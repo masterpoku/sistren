@@ -72,10 +72,7 @@ export async function getGrades(
   return rows;
 }
 
-export async function getStudentGrades(
-  studentId: string,
-  semesterId?: number
-) {
+export async function getStudentGrades(studentId: string, semesterId?: number) {
   const session = await verifySession();
   const ctx = await getAuthContext(session.userId);
 
@@ -154,8 +151,15 @@ export async function upsertGrade(formData: FormData) {
 
   // Sub-score fields
   const subScoreFields = [
-    'dailyTest1', 'dailyTest2', 'dailyTest3', 'dailyTest4',
-    'midterm', 'finalExam', 'practical', 'project', 'portfolio',
+    'dailyTest1',
+    'dailyTest2',
+    'dailyTest3',
+    'dailyTest4',
+    'midterm',
+    'finalExam',
+    'practical',
+    'project',
+    'portfolio',
   ] as const;
 
   for (const field of subScoreFields) {
@@ -199,7 +203,9 @@ export async function bulkUpsertGrades(formData: FormData) {
   // Validate all rows
   for (const row of rows) {
     if (!row.enrollmentId || !row.subjectId || !row.type) {
-      return { error: 'Semua baris harus memiliki enrollmentId, subjectId, dan type.' };
+      return {
+        error: 'Semua baris harus memiliki enrollmentId, subjectId, dan type.',
+      };
     }
     if (!isValidGradeType(row.type)) {
       return { error: `Tipe nilai "${row.type}" tidak valid.` };
@@ -219,8 +225,15 @@ export async function bulkUpsertGrades(formData: FormData) {
     if (row.description?.trim()) v.description = row.description;
 
     const subScoreFields = [
-      'dailyTest1', 'dailyTest2', 'dailyTest3', 'dailyTest4',
-      'midterm', 'finalExam', 'practical', 'project', 'portfolio',
+      'dailyTest1',
+      'dailyTest2',
+      'dailyTest3',
+      'dailyTest4',
+      'midterm',
+      'finalExam',
+      'practical',
+      'project',
+      'portfolio',
     ];
     for (const field of subScoreFields) {
       if (row[field]?.trim()) v[field] = row[field];
@@ -253,7 +266,8 @@ export async function bulkUpsertGrades(formData: FormData) {
     revalidatePath('/academic/grades');
     return { success: true, count: values.length };
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : 'Gagal menyimpan nilai';
+    const message =
+      err instanceof Error ? err.message : 'Gagal menyimpan nilai';
     return { error: message };
   }
 }

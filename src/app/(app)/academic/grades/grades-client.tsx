@@ -19,12 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 
 type ClassItem = { id: number; name: string; code: string };
@@ -131,11 +126,7 @@ export function GradesPageClient({
       .finally(() => setLoading(false));
   }, [classId, subjectId, semesterId, gradeType]);
 
-  function updateRow(
-    index: number,
-    field: keyof GradeRow,
-    value: string
-  ) {
+  function updateRow(index: number, field: keyof GradeRow, value: string) {
     setRows((prev) => {
       const next = [...prev];
       next[index] = { ...next[index], [field]: value };
@@ -285,8 +276,7 @@ export function GradesPageClient({
                 <SelectContent>
                   {semesters.map((s) => (
                     <SelectItem key={s.id} value={String(s.id)}>
-                      {s.name} ({s.academicYear})
-                      {s.isActive ? ' — Aktif' : ''}
+                      {s.name} ({s.academicYear}){s.isActive ? ' — Aktif' : ''}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -372,19 +362,15 @@ export function GradesPageClient({
       )}
 
       {/* Empty state */}
-      {!loading &&
-        classId &&
-        subjectId &&
-        semesterId &&
-        rows.length === 0 && (
-          <Card>
-            <CardContent className="py-8">
-              <p className="text-center text-muted-foreground">
-                Belum ada nilai untuk kelas ini. Isi nilai lalu klik Simpan.
-              </p>
-            </CardContent>
-          </Card>
-        )}
+      {!loading && classId && subjectId && semesterId && rows.length === 0 && (
+        <Card>
+          <CardContent className="py-8">
+            <p className="text-center text-muted-foreground">
+              Belum ada nilai untuk kelas ini. Isi nilai lalu klik Simpan.
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* No selectors */}
       {!classId && !subjectId && !semesterId && (

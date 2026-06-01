@@ -2,7 +2,14 @@ import { redirect } from 'next/navigation';
 import { verifySession } from '@/lib/auth/verify-session';
 import { getAuthContext } from '@/lib/auth/permissions';
 import { db } from '@/lib/db';
-import { users, roles, enrollments, semesters, teacherClassSubjects, announcements } from '@/lib/db/schema';
+import {
+  users,
+  roles,
+  enrollments,
+  semesters,
+  teacherClassSubjects,
+  announcements,
+} from '@/lib/db/schema';
 import { eq, isNull, and, sql } from 'drizzle-orm';
 import { DashboardClient } from './components';
 
@@ -38,7 +45,12 @@ export default async function DashboardPage() {
     const [activeRow] = await db
       .select({ count: sql<bigint>`count(*)` })
       .from(enrollments)
-      .where(and(eq(enrollments.status, 'active' as const), isNull(enrollments.deletedAt)))
+      .where(
+        and(
+          eq(enrollments.status, 'active' as const),
+          isNull(enrollments.deletedAt)
+        )
+      )
       .limit(1);
     const [announcementRow] = await db
       .select({ count: sql<number>`count(*)` })
@@ -64,11 +76,23 @@ export default async function DashboardPage() {
       const classRows = await db
         .select({ count: sql<number>`count(distinct class_id)` })
         .from(teacherClassSubjects)
-        .where(and(eq(teacherClassSubjects.teacherId, session.userId), eq(teacherClassSubjects.semesterId, semesterId), isNull(teacherClassSubjects.deletedAt)));
+        .where(
+          and(
+            eq(teacherClassSubjects.teacherId, session.userId),
+            eq(teacherClassSubjects.semesterId, semesterId),
+            isNull(teacherClassSubjects.deletedAt)
+          )
+        );
       const subjectRows = await db
         .select({ count: sql<number>`count(distinct subject_id)` })
         .from(teacherClassSubjects)
-        .where(and(eq(teacherClassSubjects.teacherId, session.userId), eq(teacherClassSubjects.semesterId, semesterId), isNull(teacherClassSubjects.deletedAt)));
+        .where(
+          and(
+            eq(teacherClassSubjects.teacherId, session.userId),
+            eq(teacherClassSubjects.semesterId, semesterId),
+            isNull(teacherClassSubjects.deletedAt)
+          )
+        );
 
       stats = {
         assignedClasses: Number(classRows[0]?.count ?? 0),
@@ -80,7 +104,12 @@ export default async function DashboardPage() {
     const [enrollmentRow] = await db
       .select({ status: enrollments.status })
       .from(enrollments)
-      .where(and(eq(enrollments.studentId, session.userId), isNull(enrollments.deletedAt)))
+      .where(
+        and(
+          eq(enrollments.studentId, session.userId),
+          isNull(enrollments.deletedAt)
+        )
+      )
       .limit(1);
 
     if (enrollmentRow) {

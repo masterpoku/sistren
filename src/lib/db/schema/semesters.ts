@@ -6,6 +6,8 @@ import {
   boolean,
   timestamp,
 } from 'drizzle-orm/mysql-core';
+import { relations } from 'drizzle-orm';
+import { enrollments } from './enrollments';
 
 /**
  * Academic semesters with academic year.
@@ -22,3 +24,7 @@ export const semesters = mysqlTable('semesters', {
   updatedAt: timestamp('updated_at').onUpdateNow(),
   deletedAt: timestamp('deleted_at'),
 });
+
+export const semestersRelations = relations(semesters, ({ many }) => ({
+  enrollments: many(enrollments),
+}));

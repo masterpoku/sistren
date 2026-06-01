@@ -21,15 +21,23 @@ type PaymentItem = {
 type Props = {
   students: Student[];
   paymentItems: PaymentItem[];
-  recordAction: (formData: FormData) => Promise<{ error?: string } | { success: boolean }>;
+  recordAction: (
+    formData: FormData
+  ) => Promise<{ error?: string } | { success: boolean }>;
 };
 
-export function RecordPaymentForm({ students, paymentItems, recordAction }: Props) {
+export function RecordPaymentForm({
+  students,
+  paymentItems,
+  recordAction,
+}: Props) {
   function handleItemChange(itemId: string) {
     if (!itemId) return;
     const item = paymentItems.find((i) => i.id === Number(itemId));
     if (!item) return;
-    const descInput = document.getElementById('description') as HTMLInputElement;
+    const descInput = document.getElementById(
+      'description'
+    ) as HTMLInputElement;
     const priceInput = document.getElementById('price') as HTMLInputElement;
     if (descInput) descInput.value = item.description ?? item.name;
     if (priceInput) priceInput.value = item.standardPrice;

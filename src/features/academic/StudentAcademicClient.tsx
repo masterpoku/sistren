@@ -4,12 +4,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   BookOpen,
   CalendarCheck,
@@ -22,14 +17,54 @@ import {
 import { getStudentGrades } from '@/actions/grades';
 
 const MOCK_SCHEDULE = [
-  { day: 'Senin', time: '07:30-10:00', subject: 'Sistem Terdistribusi', room: 'Lab. Komputer 1' },
-  { day: 'Senin', time: '10:30-13:00', subject: 'Kecerdasan Buatan', room: 'Ruang XII-TKJ' },
-  { day: 'Selasa', time: '07:30-10:00', subject: 'Jaringan Komputer', room: 'Lab. Jaringan' },
-  { day: 'Selasa', time: '10:30-13:00', subject: 'Basis Data', room: 'Ruang XII-TKJ' },
-  { day: 'Rabu', time: '07:30-10:00', subject: 'Praktikum Jaringan', room: 'Lab. Komputer 2' },
-  { day: 'Rabu', time: '10:30-13:00', subject: 'Pemrograman Web', room: 'Lab. Komputer 1' },
-  { day: 'Kamis', time: '07:30-10:00', subject: 'Sistem Terdistribusi', room: 'Ruang XII-TKJ' },
-  { day: "Jum'at", time: '07:30-09:00', subject: 'Bimbingan Karir', room: 'Aula' },
+  {
+    day: 'Senin',
+    time: '07:30-10:00',
+    subject: 'Sistem Terdistribusi',
+    room: 'Lab. Komputer 1',
+  },
+  {
+    day: 'Senin',
+    time: '10:30-13:00',
+    subject: 'Kecerdasan Buatan',
+    room: 'Ruang XII-TKJ',
+  },
+  {
+    day: 'Selasa',
+    time: '07:30-10:00',
+    subject: 'Jaringan Komputer',
+    room: 'Lab. Jaringan',
+  },
+  {
+    day: 'Selasa',
+    time: '10:30-13:00',
+    subject: 'Basis Data',
+    room: 'Ruang XII-TKJ',
+  },
+  {
+    day: 'Rabu',
+    time: '07:30-10:00',
+    subject: 'Praktikum Jaringan',
+    room: 'Lab. Komputer 2',
+  },
+  {
+    day: 'Rabu',
+    time: '10:30-13:00',
+    subject: 'Pemrograman Web',
+    room: 'Lab. Komputer 1',
+  },
+  {
+    day: 'Kamis',
+    time: '07:30-10:00',
+    subject: 'Sistem Terdistribusi',
+    room: 'Ruang XII-TKJ',
+  },
+  {
+    day: "Jum'at",
+    time: '07:30-09:00',
+    subject: 'Bimbingan Karir',
+    room: 'Aula',
+  },
 ];
 
 interface GradeItem {
@@ -64,7 +99,10 @@ export function StudentAcademicClient({ userId }: Props) {
       // Extract unique semesters for the picker
       const semesters = Array.from(
         new Map(
-          data.map((g: GradeItem) => [g.semesterId, { id: g.semesterId, label: `Semester ${g.semesterId}` }])
+          data.map((g: GradeItem) => [
+            g.semesterId,
+            { id: g.semesterId, label: `Semester ${g.semesterId}` },
+          ])
         ).values()
       );
       setSemesterOptions(semesters);
@@ -100,10 +138,12 @@ export function StudentAcademicClient({ userId }: Props) {
     const score = parseFloat(g.score ?? '0');
     const credits = g.subjectCredits ?? 0;
     // Convert score to IP scale (0-4)
-    const ip = score >= 86 ? 4 : score >= 76 ? 3 : score >= 66 ? 2 : score >= 56 ? 1 : 0;
+    const ip =
+      score >= 86 ? 4 : score >= 76 ? 3 : score >= 66 ? 2 : score >= 56 ? 1 : 0;
     return sum + ip * credits;
   }, 0);
-  const ipSemester = totalCredits > 0 ? (totalWeighted / totalCredits).toFixed(2) : '0.00';
+  const ipSemester =
+    totalCredits > 0 ? (totalWeighted / totalCredits).toFixed(2) : '0.00';
 
   // Current semester label
   const selectedSemesterLabel =
@@ -228,9 +268,7 @@ export function StudentAcademicClient({ userId }: Props) {
                                 <td className="px-4 py-3 font-mono text-xs">
                                   {g.subjectCode ?? '-'}
                                 </td>
-                                <td className="px-4 py-3">
-                                  {g.subjectName}
-                                </td>
+                                <td className="px-4 py-3">{g.subjectName}</td>
                                 <td className="px-4 py-3 text-center">
                                   {g.subjectCredits ?? '-'}
                                 </td>
@@ -244,8 +282,8 @@ export function StudentAcademicClient({ userId }: Props) {
                                         g.grade.startsWith('A')
                                           ? 'default'
                                           : g.grade.startsWith('B')
-                                          ? 'secondary'
-                                          : 'outline'
+                                            ? 'secondary'
+                                            : 'outline'
                                       }
                                     >
                                       {g.grade}
@@ -319,9 +357,7 @@ export function StudentAcademicClient({ userId }: Props) {
                                 <td className="px-4 py-3 font-mono text-xs">
                                   {g.subjectCode ?? '-'}
                                 </td>
-                                <td className="px-4 py-3">
-                                  {g.subjectName}
-                                </td>
+                                <td className="px-4 py-3">{g.subjectName}</td>
                                 <td className="px-4 py-3 text-center font-medium">
                                   {g.score ?? '-'}
                                 </td>
@@ -332,8 +368,8 @@ export function StudentAcademicClient({ userId }: Props) {
                                         g.grade.startsWith('A')
                                           ? 'default'
                                           : g.grade.startsWith('B')
-                                          ? 'secondary'
-                                          : 'outline'
+                                            ? 'secondary'
+                                            : 'outline'
                                       }
                                     >
                                       {g.grade}
@@ -378,9 +414,7 @@ export function StudentAcademicClient({ userId }: Props) {
                                 key={`attitude-${g.subjectCode}-${i}`}
                                 className="border-b border-border/50 hover:bg-muted/30 transition-colors"
                               >
-                                <td className="px-4 py-3">
-                                  {g.subjectName}
-                                </td>
+                                <td className="px-4 py-3">{g.subjectName}</td>
                                 <td className="px-4 py-3 text-center font-medium">
                                   {g.predicate ?? g.score ?? '-'}
                                 </td>
@@ -399,9 +433,7 @@ export function StudentAcademicClient({ userId }: Props) {
           <TabsContent value="krs" className="space-y-4 mt-4">
             <Card>
               <CardHeader>
-                <CardTitle>
-                  Rencana Studi — {selectedSemesterLabel}
-                </CardTitle>
+                <CardTitle>Rencana Studi — {selectedSemesterLabel}</CardTitle>
               </CardHeader>
               <CardContent>
                 {knowledgeGrades.length === 0 ? (

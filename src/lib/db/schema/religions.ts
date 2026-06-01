@@ -1,9 +1,6 @@
-import {
-  mysqlTable,
-  bigint,
-  varchar,
-  timestamp,
-} from 'drizzle-orm/mysql-core';
+import { mysqlTable, bigint, varchar, timestamp } from 'drizzle-orm/mysql-core';
+import { relations } from 'drizzle-orm';
+import { profiles } from './index';
 
 /**
  * Religions reference table.
@@ -18,3 +15,7 @@ export const religions = mysqlTable('religions', {
   updatedAt: timestamp('updated_at').onUpdateNow(),
   deletedAt: timestamp('deleted_at'),
 });
+
+export const religionsRelations = relations(religions, ({ many }) => ({
+  profiles: many(profiles),
+}));

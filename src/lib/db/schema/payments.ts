@@ -30,8 +30,9 @@ export const payments = mysqlTable('payments', {
     .references(() => users.id, { onDelete: 'cascade' }),
   code: varchar('code', { length: 100 }).unique().notNull(),
   /** Optional FK to payment_items catalog. Pre-fills description/price; never enforced. */
-  paymentItemId: bigint('payment_item_id', { mode: 'number' })
-    .references(() => paymentItems.id),
+  paymentItemId: bigint('payment_item_id', { mode: 'number' }).references(
+    () => paymentItems.id
+  ),
   description: varchar('description', { length: 255 }).notNull(),
   price: decimal('price', { precision: 10, scale: 2 }).notNull(),
   quantity: int('quantity').default(1),

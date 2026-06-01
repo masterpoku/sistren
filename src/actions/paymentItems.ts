@@ -16,7 +16,9 @@ export async function getPaymentItems(opts?: {
   const conditions = [isNull(paymentItems.deletedAt)];
 
   if (opts?.type) {
-    conditions.push(eq(paymentItems.type, opts.type as 'recurring' | 'one_time' | 'variable'));
+    conditions.push(
+      eq(paymentItems.type, opts.type as 'recurring' | 'one_time' | 'variable')
+    );
   }
 
   if (opts?.isActive !== undefined) {
@@ -124,7 +126,9 @@ export async function updatePaymentItem(itemId: string, formData: FormData) {
   const [existing] = await db
     .select({ id: paymentItems.id })
     .from(paymentItems)
-    .where(and(eq(paymentItems.id, Number(itemId)), isNull(paymentItems.deletedAt)))
+    .where(
+      and(eq(paymentItems.id, Number(itemId)), isNull(paymentItems.deletedAt))
+    )
     .limit(1);
 
   if (!existing) {
@@ -173,7 +177,9 @@ export async function deletePaymentItem(itemId: string) {
   const [existing] = await db
     .select({ id: paymentItems.id })
     .from(paymentItems)
-    .where(and(eq(paymentItems.id, Number(itemId)), isNull(paymentItems.deletedAt)))
+    .where(
+      and(eq(paymentItems.id, Number(itemId)), isNull(paymentItems.deletedAt))
+    )
     .limit(1);
 
   if (!existing) {

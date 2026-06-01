@@ -1,4 +1,9 @@
-import { getPaymentItems, createPaymentItem, updatePaymentItem, deletePaymentItem } from '@/actions/paymentItems';
+import {
+  getPaymentItems,
+  createPaymentItem,
+  updatePaymentItem,
+  deletePaymentItem,
+} from '@/actions/paymentItems';
 import { getSemesters } from '@/actions/academic';
 import { verifyRoleLevel } from '@/lib/auth/verify-session';
 import { Button } from '@/components/ui/button';
@@ -78,7 +83,9 @@ export default async function AdminPaymentItemsPage() {
               <TableBody>
                 {items.map((item) => (
                   <TableRow key={item.id}>
-                    <TableCell className="font-mono text-sm">{item.code}</TableCell>
+                    <TableCell className="font-mono text-sm">
+                      {item.code}
+                    </TableCell>
                     <TableCell className="font-medium">{item.name}</TableCell>
                     <TableCell className="text-muted-foreground max-w-[200px] truncate">
                       {item.description ?? '—'}
@@ -87,14 +94,14 @@ export default async function AdminPaymentItemsPage() {
                       Rp {Number(item.standardPrice).toLocaleString('id-ID')}
                     </TableCell>
                     <TableCell>
-                      <Badge variant="secondary">
-                        {typeLabel(item.type)}
-                      </Badge>
+                      <Badge variant="secondary">{typeLabel(item.type)}</Badge>
                     </TableCell>
                     <TableCell>{item.semesterName ?? 'Semua'}</TableCell>
                     <TableCell>
                       {item.isActive ? (
-                        <Badge variant="default" className="bg-green-500">Aktif</Badge>
+                        <Badge variant="default" className="bg-green-500">
+                          Aktif
+                        </Badge>
                       ) : (
                         <Badge variant="outline">Nonaktif</Badge>
                       )}
@@ -107,7 +114,11 @@ export default async function AdminPaymentItemsPage() {
                           semesters={semesters}
                           createAction={createPaymentItem}
                           updateAction={updatePaymentItem}
-                          trigger={<Button size="sm" variant="outline">Edit</Button>}
+                          trigger={
+                            <Button size="sm" variant="outline">
+                              Edit
+                            </Button>
+                          }
                         >
                           <PaymentItemForm item={item} semesters={semesters} />
                         </PaymentItemDialog>
@@ -117,11 +128,7 @@ export default async function AdminPaymentItemsPage() {
                             await deletePaymentItem(String(item.id));
                           }}
                         >
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            type="submit"
-                          >
+                          <Button size="sm" variant="destructive" type="submit">
                             Hapus
                           </Button>
                         </form>

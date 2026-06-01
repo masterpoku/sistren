@@ -6,7 +6,9 @@ import {
   text,
   timestamp,
 } from 'drizzle-orm/mysql-core';
+import { relations } from 'drizzle-orm';
 import { classes, majors } from './index';
+import { teacherClassSubjects } from './teacherClassSubjects';
 
 /**
  * Subjects/courses catalog.
@@ -28,3 +30,15 @@ export const subjects = mysqlTable('subjects', {
   updatedAt: timestamp('updated_at').onUpdateNow(),
   deletedAt: timestamp('deleted_at'),
 });
+
+export const subjectsRelations = relations(subjects, ({ one, many }) => ({
+  class: one(classes, {
+    fields: [subjects.classId],
+    references: [classes.id],
+  }),
+  major: one(majors, {
+    fields: [subjects.majorId],
+    references: [majors.id],
+  }),
+  teacherAssignments: many(teacherClassSubjects),
+}));

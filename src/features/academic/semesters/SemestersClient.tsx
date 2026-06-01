@@ -1,10 +1,20 @@
 'use client';
 
+import { useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { DataTable } from '@/components/ui/data-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Trash, Play } from '@phosphor-icons/react';
+import { Trash, Play, Pencil } from '@phosphor-icons/react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 type SemesterItem = {
   id: number;
@@ -35,39 +45,96 @@ export const columns: ColumnDef<SemesterItem>[] = [
   {
     id: 'actions',
     header: 'Aksi',
-    cell: ({ row }) => {
-      const semester = row.original;
-      return (
-        <div className="flex gap-2">
-          {!semester.isActive && (
-            <form
-              action={async () => {
-                const { setActiveSemester } = await import('@/actions/academic');
-                await setActiveSemester(String(semester.id));
-              }}
-            >
-              <Button size="sm" variant="outline" type="submit">
-                <Play className="h-4 w-4 mr-1" />
-                Aktifkan
-              </Button>
-            </form>
-          )}
-          <form
-            action={async () => {
-              const { deleteSemester } = await import('@/actions/academic');
-              await deleteSemester(String(semester.id));
-            }}
-          >
-            <Button size="sm" variant="destructive" type="submit">
-              <Trash className="h-4 w-4 mr-1" />
-              Hapus
-            </Button>
-          </form>
-        </div>
-      );
-    },
+    cell: ({ row }) => (
+      <SemesterActions
+        id={row.original.id}
+        name={row.original.name}
+        academicYear={row.original.academicYear}
+        isActive={row.original.isActive}
+      />
+    ),
   },
 ];
+
+function SemesterActions({ id, name, academicYear, isActive }: SemesterItem) {
+  const [editOpen, setEditOpen] = useState(false);
+
+  async function handleEdit(formData: FormData) {
+    const { updateSemester } = await import('@/actions/academic');
+    await updateSemester(String(id), formData);
+    setEditOpen(false);
+  }
+
+  async function handleDelete() {
+    if (!confirm('Yakin hapus semester ini?')) return;
+    const { deleteSemester } = await import('@/actions/academic');
+    await deleteSemester(String(id));
+  }
+
+  async function handleActivate() {
+    const { setActiveSemester } = await import('@/actions/academic');
+    await setActiveSemester(String(id));
+  }
+
+  return (
+    <>
+      <div className="flex gap-2">
+        <Button size="sm" variant="outline" onClick={() => setEditOpen(true)}>
+          <Pencil className="h-4 w-4 mr-1" />
+          Edit
+        </Button>
+        {!isActive && (
+          <Button size="sm" variant="outline" onClick={handleActivate}>
+            <Play className="h-4 w-4 mr-1" />
+            Aktifkan
+          </Button>
+        )}
+        <Button size="sm" variant="destructive" onClick={handleDelete}>
+          <Trash className="h-4 w-4 mr-1" />
+          Hapus
+        </Button>
+      </div>
+
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Semester</DialogTitle>
+          </DialogHeader>
+          <form action={handleEdit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor={`sem-name-${id}`}>Nama Semester</Label>
+              <Input
+                id={`sem-name-${id}`}
+                name="name"
+                defaultValue={name}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor={`sem-year-${id}`}>Tahun Ajaran</Label>
+              <Input
+                id={`sem-year-${id}`}
+                name="academicYear"
+                defaultValue={academicYear ?? ''}
+                required
+              />
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setEditOpen(false)}
+              >
+                Batal
+              </Button>
+              <Button type="submit">Simpan</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
 
 interface SemestersClientProps {
   data: SemesterItem[];

@@ -11,7 +11,13 @@
  */
 import { db } from './index';
 import { auth } from '@/lib/auth';
-import { roles, permissions, rolePermissions, users, religions } from './schema';
+import {
+  roles,
+  permissions,
+  rolePermissions,
+  users,
+  religions,
+} from './schema';
 import { eq, isNull, and } from 'drizzle-orm';
 
 // ==================== REFERENCE DATA ====================

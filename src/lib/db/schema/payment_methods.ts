@@ -6,6 +6,8 @@ import {
   boolean,
   timestamp,
 } from 'drizzle-orm/mysql-core';
+import { relations } from 'drizzle-orm';
+import { payments } from './payments';
 
 /**
  * Available payment methods (bank transfer, cash, e-wallet).
@@ -22,3 +24,10 @@ export const paymentMethods = mysqlTable('payment_methods', {
   updatedAt: timestamp('updated_at').onUpdateNow(),
   deletedAt: timestamp('deleted_at'),
 });
+
+export const paymentMethodsRelations = relations(
+  paymentMethods,
+  ({ many }) => ({
+    payments: many(payments),
+  })
+);

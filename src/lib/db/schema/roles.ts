@@ -6,6 +6,8 @@ import {
   int,
   boolean,
 } from 'drizzle-orm/mysql-core';
+import { relations } from 'drizzle-orm';
+import { users, rolePermissions } from './index';
 
 /**
  * Roles table — stores user role definitions for RBAC.
@@ -25,3 +27,8 @@ export const roles = mysqlTable('roles', {
   updatedAt: timestamp('updated_at').onUpdateNow(),
   deletedAt: timestamp('deleted_at'),
 });
+
+export const rolesRelations = relations(roles, ({ many }) => ({
+  users: many(users),
+  rolePermissions: many(rolePermissions),
+}));

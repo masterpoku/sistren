@@ -256,6 +256,45 @@ export async function createSubject(formData: FormData) {
   return { success: true };
 }
 
+export async function updateSubject(subjectId: string, formData: FormData) {
+  await verifyRoleLevel(60);
+
+  const name = formData.get('name') as string;
+  const code = formData.get('code') as string;
+  const classId = formData.get('classId') as string;
+  const majorId = formData.get('majorId') as string;
+  const creditsStr = formData.get('credits') as string;
+
+  if (!name?.trim() || !classId) {
+    return { error: 'Nama dan kelas wajib diisi.' };
+  }
+
+  if (code?.trim()) {
+    const [existing] = await db
+      .select({ id: subjects.id })
+      .from(subjects)
+      .where(and(eq(subjects.code, code.trim()), isNull(subjects.deletedAt)))
+      .limit(1);
+    if (existing && existing.id !== Number(subjectId)) {
+      return { error: 'Kode mapel sudah digunakan mapel lain.' };
+    }
+  }
+
+  await db
+    .update(subjects)
+    .set({
+      name: name.trim(),
+      code: code?.trim() || null,
+      classId: Number(classId),
+      majorId: majorId ? Number(majorId) : null,
+      credits: creditsStr ? Number(creditsStr) : 0,
+    })
+    .where(eq(subjects.id, Number(subjectId)));
+
+  revalidatePath('/academic/subjects');
+  return { success: true };
+}
+
 export async function deleteSubject(subjectId: string) {
   await verifyRoleLevel(60);
 
@@ -335,6 +374,40 @@ export async function setActiveSemester(semesterId: string) {
       .set({ isActive: true })
       .where(eq(semesters.id, Number(semesterId)));
   });
+
+  revalidatePath('/academic/semesters');
+  return { success: true };
+}
+
+export async function updateSemester(semesterId: string, formData: FormData) {
+  await verifyRoleLevel(60);
+
+  const name = formData.get('name') as string;
+  const academicYear = formData.get('academicYear') as string;
+  const isActiveStr = formData.get('isActive') as string;
+
+  if (!name?.trim() || !academicYear?.trim()) {
+    return { error: 'Nama dan tahun ajaran wajib diisi.' };
+  }
+
+  const isActive = isActiveStr === 'true';
+
+  // If setting as active, deactivate all others first
+  if (isActive) {
+    await db
+      .update(semesters)
+      .set({ isActive: false })
+      .where(isNull(semesters.deletedAt));
+  }
+
+  await db
+    .update(semesters)
+    .set({
+      name: name.trim(),
+      academicYear: academicYear.trim(),
+      isActive,
+    })
+    .where(eq(semesters.id, Number(semesterId)));
 
   revalidatePath('/academic/semesters');
   return { success: true };
@@ -479,9 +552,8 @@ export async function removeAssignment(assignmentId: string) {
   return { success: true };
 }
 
-// Simplified form-action wrappers.
-// TODO: Refactor ke useActionState untuk error handling + toast.
-// TypeScript form action type mangkir return value selain void.
+// Form action wrappers — return void for Next.js form action compatibility.
+// TODO: Refactor to useActionState for proper error feedback + toast.
 
 export async function createClassAction(formData: FormData) {
   await createClass(formData);

@@ -2,7 +2,13 @@ import { loginAction } from '@/actions/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import Link from 'next/link';
 
 export default async function AlumniLoginPage() {
@@ -14,9 +20,7 @@ export default async function AlumniLoginPage() {
             <span className="text-2xl font-bold">S</span>
           </div>
           <CardTitle className="text-2xl">Login Alumni</CardTitle>
-          <CardDescription>
-            Akses transkrip nilai海外 graduate
-          </CardDescription>
+          <CardDescription>Akses transkrip nilai海外 graduate</CardDescription>
         </CardHeader>
         <CardContent>
           <form

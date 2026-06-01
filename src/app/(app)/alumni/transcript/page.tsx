@@ -44,8 +44,12 @@ export default async function AlumniTranscriptPage() {
           <span className="text-lg">🎓</span>
         </div>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Transkrip Alumni</h1>
-          <p className="text-muted-foreground">Unduh dokumen nilai dan ijazah.</p>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Transkrip Alumni
+          </h1>
+          <p className="text-muted-foreground">
+            Unduh dokumen nilai dan ijazah.
+          </p>
         </div>
       </div>
 
@@ -75,9 +79,13 @@ export default async function AlumniTranscriptPage() {
                       <TableCell className="font-medium">{dt.label}</TableCell>
                       <TableCell>
                         {hasDoc ? (
-                          <span className="text-sm text-green-600">✓ Tersedia</span>
+                          <span className="text-sm text-green-600">
+                            ✓ Tersedia
+                          </span>
                         ) : (
-                          <span className="text-sm text-muted-foreground">—</span>
+                          <span className="text-sm text-muted-foreground">
+                            —
+                          </span>
                         )}
                       </TableCell>
                       <TableCell>

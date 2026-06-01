@@ -128,7 +128,9 @@ export default function LoginPage() {
                   <button
                     type="button"
                     className="text-xs text-muted-foreground hover:text-primary transition-colors"
-                    onClick={() => alert('Hubungi administrator untuk reset password.')}
+                    onClick={() =>
+                      alert('Hubungi administrator untuk reset password.')
+                    }
                   >
                     Lupa password?
                   </button>

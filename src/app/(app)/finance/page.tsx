@@ -16,7 +16,13 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { RecordPaymentForm } from './record-payment-form';
 
-const STATUS_LABELS: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
+const STATUS_LABELS: Record<
+  string,
+  {
+    label: string;
+    variant: 'default' | 'secondary' | 'destructive' | 'outline';
+  }
+> = {
   draft: { label: 'Draft', variant: 'secondary' },
   pending: { label: 'Menunggu', variant: 'outline' },
   paid: { label: 'Lunas', variant: 'default' },
@@ -71,7 +77,9 @@ export default async function FinancePage() {
       {paymentList.length === 0 ? (
         <Card>
           <CardContent className="py-8">
-            <p className="text-center text-muted-foreground">Belum ada data pembayaran.</p>
+            <p className="text-center text-muted-foreground">
+              Belum ada data pembayaran.
+            </p>
           </CardContent>
         </Card>
       ) : (
@@ -93,19 +101,26 @@ export default async function FinancePage() {
               </TableHeader>
               <TableBody>
                 {paymentList.map((p) => {
-                  const statusInfo = STATUS_LABELS[p.status ?? 'draft'] ?? STATUS_LABELS.draft;
+                  const statusInfo =
+                    STATUS_LABELS[p.status ?? 'draft'] ?? STATUS_LABELS.draft;
                   return (
                     <TableRow key={p.id}>
-                      <TableCell className="font-medium">{p.studentName ?? p.studentId}</TableCell>
-                      <TableCell className="font-mono text-sm">{p.code}</TableCell>
+                      <TableCell className="font-medium">
+                        {p.studentName ?? p.studentId}
+                      </TableCell>
+                      <TableCell className="font-mono text-sm">
+                        {p.code}
+                      </TableCell>
                       <TableCell>{p.description}</TableCell>
                       <TableCell className="font-medium">
                         Rp {Number(p.total).toLocaleString('id-ID')}
                       </TableCell>
                       <TableCell>
-                        <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
+                        <Badge variant={statusInfo.variant}>
+                          {statusInfo.label}
+                        </Badge>
                       </TableCell>
-                    <TableCell>
+                      <TableCell>
                         {p.status === 'pending' && (
                           <form
                             action={async () => {
@@ -113,7 +128,9 @@ export default async function FinancePage() {
                               await confirmPayment(String(p.id));
                             }}
                           >
-                            <Button size="sm" type="submit">Konfirmasi</Button>
+                            <Button size="sm" type="submit">
+                              Konfirmasi
+                            </Button>
                           </form>
                         )}
                       </TableCell>

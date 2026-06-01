@@ -87,31 +87,46 @@ export function AcademicOverviewClient({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Link href="/academic/classes">
-          <Button variant="outline" className="w-full h-auto py-4 flex flex-col gap-2">
+          <Button
+            variant="outline"
+            className="w-full h-auto py-4 flex flex-col gap-2"
+          >
             <GraduationCap className="h-6 w-6" />
             <span>Kelola Kelas</span>
           </Button>
         </Link>
         <Link href="/academic/majors">
-          <Button variant="outline" className="w-full h-auto py-4 flex flex-col gap-2">
+          <Button
+            variant="outline"
+            className="w-full h-auto py-4 flex flex-col gap-2"
+          >
             <BookOpen className="h-6 w-6" />
             <span>Kelola Jurusan</span>
           </Button>
         </Link>
         <Link href="/academic/subjects">
-          <Button variant="outline" className="w-full h-auto py-4 flex flex-col gap-2">
+          <Button
+            variant="outline"
+            className="w-full h-auto py-4 flex flex-col gap-2"
+          >
             <Users className="h-6 w-6" />
             <span>Kelola Mapel</span>
           </Button>
         </Link>
         <Link href="/academic/semesters">
-          <Button variant="outline" className="w-full h-auto py-4 flex flex-col gap-2">
+          <Button
+            variant="outline"
+            className="w-full h-auto py-4 flex flex-col gap-2"
+          >
             <Calendar className="h-6 w-6" />
             <span>Kelola Semester</span>
           </Button>
         </Link>
         <Link href="/academic/grades">
-          <Button variant="outline" className="w-full h-auto py-4 flex flex-col gap-2">
+          <Button
+            variant="outline"
+            className="w-full h-auto py-4 flex flex-col gap-2"
+          >
             <GraduationCap className="h-6 w-6" />
             <span>Input Nilai</span>
           </Button>

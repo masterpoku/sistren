@@ -5,6 +5,7 @@ import {
   timestamp,
   varchar,
 } from 'drizzle-orm/mysql-core';
+import { relations } from 'drizzle-orm';
 import { users } from './users';
 import { permissions } from './permissions';
 
@@ -32,3 +33,17 @@ export const userPermissions = mysqlTable('user_permissions', {
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').onUpdateNow(),
 });
+
+export const userPermissionsRelations = relations(
+  userPermissions,
+  ({ one }) => ({
+    user: one(users, {
+      fields: [userPermissions.userId],
+      references: [users.id],
+    }),
+    permission: one(permissions, {
+      fields: [userPermissions.permissionId],
+      references: [permissions.id],
+    }),
+  })
+);

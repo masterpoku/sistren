@@ -46,7 +46,9 @@ export const profiles = mysqlTable('profiles', {
   weightKg: int('weight_kg'),
   heightCm: int('height_cm'),
   phone: varchar('phone', { length: 20 }),
-  religionId: bigint('religion_id', { mode: 'number' }).references(() => religions.id),
+  religionId: bigint('religion_id', { mode: 'number' }).references(
+    () => religions.id
+  ),
   diplomaNumber: varchar('diploma_number', { length: 255 }),
   skhuNumber: varchar('skhu_number', { length: 255 }),
   majorId: bigint('major_id', { mode: 'number' }).references(() => majors.id),

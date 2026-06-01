@@ -48,7 +48,9 @@ function categoryBadge(category: string | null | undefined) {
     kegiatan: 'bg-purple-100 text-purple-800',
   };
   return (
-    <span className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-medium ${colors[category ?? ''] ?? 'bg-gray-100 text-gray-800'}`}>
+    <span
+      className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-medium ${colors[category ?? ''] ?? 'bg-gray-100 text-gray-800'}`}
+    >
       {category ?? '-'}
     </span>
   );
@@ -65,7 +67,9 @@ export default async function AnnouncementsPage() {
     <div className="flex flex-col gap-6 p-4 md:p-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Pengumuman</h1>
-        <p className="text-muted-foreground">Informasi dan pengumuman sekolah.</p>
+        <p className="text-muted-foreground">
+          Informasi dan pengumuman sekolah.
+        </p>
       </div>
 
       {/* Create Form — admin only */}
@@ -88,7 +92,12 @@ export default async function AnnouncementsPage() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="title">Judul</Label>
-                  <Input id="title" name="title" placeholder="Judul pengumuman" required />
+                  <Input
+                    id="title"
+                    name="title"
+                    placeholder="Judul pengumuman"
+                    required
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="category">Kategori</Label>
@@ -120,11 +129,21 @@ export default async function AnnouncementsPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="description">Deskripsi Singkat</Label>
-                <Input id="description" name="description" placeholder="Deskripsi singkat (opsional)" />
+                <Input
+                  id="description"
+                  name="description"
+                  placeholder="Deskripsi singkat (opsional)"
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="content">Konten</Label>
-                <Textarea id="content" name="content" placeholder="Isi pengumuman lengkap" rows={4} required />
+                <Textarea
+                  id="content"
+                  name="content"
+                  placeholder="Isi pengumuman lengkap"
+                  rows={4}
+                  required
+                />
               </div>
               <Button type="submit">Publikasikan</Button>
             </form>
@@ -136,7 +155,9 @@ export default async function AnnouncementsPage() {
       {announcementList.length === 0 ? (
         <Card>
           <CardContent className="py-8">
-            <p className="text-center text-muted-foreground">Belum ada pengumuman.</p>
+            <p className="text-center text-muted-foreground">
+              Belum ada pengumuman.
+            </p>
           </CardContent>
         </Card>
       ) : (
@@ -174,31 +195,49 @@ export default async function AnnouncementsPage() {
                       )}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {a.publishedAt ? new Date(a.publishedAt).toLocaleDateString('id-ID') : '-'}
+                      {a.publishedAt
+                        ? new Date(a.publishedAt).toLocaleDateString('id-ID')
+                        : '-'}
                     </TableCell>
                     {roleLevel >= 80 && (
                       <TableCell>
                         <div className="flex gap-2 flex-wrap">
                           {!a.publishedAt ? (
-                            <form action={async () => {
-                              'use server';
-                              await publishAnnouncement(String(a.id));
-                            }}>
-                              <Button size="sm" type="submit">Publish</Button>
+                            <form
+                              action={async () => {
+                                'use server';
+                                await publishAnnouncement(String(a.id));
+                              }}
+                            >
+                              <Button size="sm" type="submit">
+                                Publish
+                              </Button>
                             </form>
                           ) : (
-                            <form action={async () => {
-                              'use server';
-                              await unpublishAnnouncement(String(a.id));
-                            }}>
-                              <Button size="sm" variant="outline" type="submit">Unpublish</Button>
+                            <form
+                              action={async () => {
+                                'use server';
+                                await unpublishAnnouncement(String(a.id));
+                              }}
+                            >
+                              <Button size="sm" variant="outline" type="submit">
+                                Unpublish
+                              </Button>
                             </form>
                           )}
-                          <form action={async () => {
-                            'use server';
-                            await deleteAnnouncement(String(a.id));
-                          }}>
-                            <Button size="sm" variant="destructive" type="submit">Hapus</Button>
+                          <form
+                            action={async () => {
+                              'use server';
+                              await deleteAnnouncement(String(a.id));
+                            }}
+                          >
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              type="submit"
+                            >
+                              Hapus
+                            </Button>
                           </form>
                         </div>
                       </TableCell>

@@ -12,6 +12,7 @@
 
 **Route:** `/academic/assignments`
 **Console error:**
+
 ```
 Error: Failed query: select `teacher_class_subjects`.`id`, ...
 from `teacher_class_subjects`
@@ -56,19 +57,23 @@ Navigation to this URL shows a 404 client-side.
 ### 3.2 `/admin` Has No Landing Content 🟢
 
 `src/app/(app)/admin/page.tsx`:
+
 ```tsx
 await verifyRoleLevel(80);
 redirect('/admin/users');
 ```
+
 Immediately redirects. No admin landing page or dashboard. Consider removing the route or adding content.
 
 ### 3.3 `/permissions` Immediately Redirects 🟢
 
 `src/app/(app)/permissions/page.tsx`:
+
 ```tsx
 await verifyRoleLevel(100);
 redirect('/admin/users');
 ```
+
 Same pattern — redirect with no content. This route is reachable via the sidebar (level 100 only) but shows no UI.
 
 ### 3.4 `/alumni/transcript` Redirects Superadmin 🟢
@@ -95,53 +100,53 @@ Dark mode CSS variables are defined in `global.css` under `.dark`, and `next-the
 
 ## 6. Data & Edge Cases
 
-| Observation | Notes |
-|-------------|-------|
-| Dashboard shows 1 student, 1 teacher, 0 enrollments, 0 announcements | Expected — fresh demo seed data |
-| Finance page accessible only to level ≥ 80 | Intentional (admin/TU only) |
-| Students page shows "Dokumen" column with no data | Expected — documents not uploaded yet |
-| Quick Login buttons on login page work correctly | Verified — all 4 roles login successfully |
-| Register (PPDB) page exists at `/register` | Functional for new student registration |
+| Observation                                                          | Notes                                     |
+| -------------------------------------------------------------------- | ----------------------------------------- |
+| Dashboard shows 1 student, 1 teacher, 0 enrollments, 0 announcements | Expected — fresh demo seed data           |
+| Finance page accessible only to level ≥ 80                           | Intentional (admin/TU only)               |
+| Students page shows "Dokumen" column with no data                    | Expected — documents not uploaded yet     |
+| Quick Login buttons on login page work correctly                     | Verified — all 4 roles login successfully |
+| Register (PPDB) page exists at `/register`                           | Functional for new student registration   |
 
 ---
 
 ## 7. Priority Recommendations
 
-| Priority | Item | Effort | Impact |
-|----------|------|--------|--------|
-| **P0** | Run migration to create `teacher_class_subjects` table | Low | Unblocks assignments page |
-| **P1** | Fix ToastProvider double-wrap | Low | Code cleanliness |
-| **P1** | Add dark mode toggle UI | Medium | UX completeness |
-| **P2** | Create `/attendance` page or remove sidebar link | Medium | Navigation accuracy |
-| **P2** | Add favicon | Low | Browser UX |
-| **P3** | Add content to `/admin` landing page | Low | Content completeness |
-| **P3** | `/permissions` — add content or remove route | Low | Dead route cleanup |
+| Priority | Item                                                   | Effort | Impact                    |
+| -------- | ------------------------------------------------------ | ------ | ------------------------- |
+| **P0**   | Run migration to create `teacher_class_subjects` table | Low    | Unblocks assignments page |
+| **P1**   | Fix ToastProvider double-wrap                          | Low    | Code cleanliness          |
+| **P1**   | Add dark mode toggle UI                                | Medium | UX completeness           |
+| **P2**   | Create `/attendance` page or remove sidebar link       | Medium | Navigation accuracy       |
+| **P2**   | Add favicon                                            | Low    | Browser UX                |
+| **P3**   | Add content to `/admin` landing page                   | Low    | Content completeness      |
+| **P3**   | `/permissions` — add content or remove route           | Low    | Dead route cleanup        |
 
 ---
 
 ## 8. Verified Pages (All Working)
 
-| Route | Status | Notes |
-|-------|--------|-------|
-| `/login` | ✅ | 4 quick-login buttons functional |
-| `/register` | ✅ | PPDB registration form |
-| `/dashboard` | ✅ | Stats cards, quick links |
-| `/students` | ✅ | Table with student data |
-| `/teachers` | ✅ | Table with teacher data |
-| `/academic` | ✅ | Overview with stat cards |
-| `/academic/classes` | ✅ | Class management |
-| `/academic/subjects` | ✅ | Subject management |
-| `/academic/majors` | ✅ | Major/jurusan management |
-| `/academic/semesters` | ✅ | Semester management |
-| `/academic/assignments` | ❌ 500 | Missing DB table |
-| `/finance` | ✅ | Payment records table |
-| `/payments` | ✅ | Payment management |
-| `/payments/methods` | ✅ | Payment method config |
-| `/announcements` | ✅ | CRUD announcements |
-| `/enrollments` | ✅ | Enrollment management |
-| `/profile` | ✅ | User profile view |
-| `/users` | ✅ | User list (level ≥ 80) |
-| `/roles` | ✅ | Role management (level 100) |
-| `/admin/users` | ✅ | Admin user management |
-| `/admin/approvals` | ✅ | Approval system |
-| `/unauthorized` | ✅ | Access denied page |
+| Route                   | Status | Notes                            |
+| ----------------------- | ------ | -------------------------------- |
+| `/login`                | ✅     | 4 quick-login buttons functional |
+| `/register`             | ✅     | PPDB registration form           |
+| `/dashboard`            | ✅     | Stats cards, quick links         |
+| `/students`             | ✅     | Table with student data          |
+| `/teachers`             | ✅     | Table with teacher data          |
+| `/academic`             | ✅     | Overview with stat cards         |
+| `/academic/classes`     | ✅     | Class management                 |
+| `/academic/subjects`    | ✅     | Subject management               |
+| `/academic/majors`      | ✅     | Major/jurusan management         |
+| `/academic/semesters`   | ✅     | Semester management              |
+| `/academic/assignments` | ❌ 500 | Missing DB table                 |
+| `/finance`              | ✅     | Payment records table            |
+| `/payments`             | ✅     | Payment management               |
+| `/payments/methods`     | ✅     | Payment method config            |
+| `/announcements`        | ✅     | CRUD announcements               |
+| `/enrollments`          | ✅     | Enrollment management            |
+| `/profile`              | ✅     | User profile view                |
+| `/users`                | ✅     | User list (level ≥ 80)           |
+| `/roles`                | ✅     | Role management (level 100)      |
+| `/admin/users`          | ✅     | Admin user management            |
+| `/admin/approvals`      | ✅     | Approval system                  |
+| `/unauthorized`         | ✅     | Access denied page               |

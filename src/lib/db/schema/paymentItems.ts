@@ -25,11 +25,18 @@ export const paymentItems = mysqlTable('payment_items', {
   name: varchar('name', { length: 100 }).notNull(),
   description: varchar('description', { length: 255 }),
   /** Default price shown in recordPayment — always editable per invoice */
-  standardPrice: decimal('standard_price', { precision: 10, scale: 2 }).notNull(),
+  standardPrice: decimal('standard_price', {
+    precision: 10,
+    scale: 2,
+  }).notNull(),
   /** recurring | one_time | variable */
-  type: mysqlEnum('type', ['recurring', 'one_time', 'variable']).default('one_time'),
+  type: mysqlEnum('type', ['recurring', 'one_time', 'variable']).default(
+    'one_time'
+  ),
   /** Optional: some items are semester-specific (SPP), others are not (Uang Gedung) */
-  semesterId: bigint('semester_id', { mode: 'number' }).references(() => semesters.id),
+  semesterId: bigint('semester_id', { mode: 'number' }).references(
+    () => semesters.id
+  ),
   isActive: boolean('is_active').default(true),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').onUpdateNow(),

@@ -3,12 +3,7 @@ import { verifyRoleLevel } from '@/lib/auth/verify-session';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MajorsClient } from '@/features/academic/majors/MajorsClient';
 
 export default async function MajorsPage() {
@@ -34,18 +29,35 @@ export default async function MajorsPage() {
           <form action={createMajorAction} className="flex items-end gap-4">
             <div className="space-y-2">
               <Label htmlFor="name">Nama Jurusan</Label>
-              <Input id="name" name="name" placeholder="Contoh: Teknik Komputer dan Jaringan" required />
+              <Input
+                id="name"
+                name="name"
+                placeholder="Contoh: Teknik Komputer dan Jaringan"
+                required
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="description">Deskripsi</Label>
-              <Input id="description" name="description" placeholder="Opsional" />
+              <Input
+                id="description"
+                name="description"
+                placeholder="Opsional"
+              />
             </div>
+            <a
+              href="/academic/majors"
+              className="inline-flex h-9 px-4 items-center justify-center rounded-md border border-input bg-background text-sm font-medium hover:bg-muted"
+            >
+              Batal
+            </a>
             <Button type="submit">Tambah</Button>
           </form>
         </CardContent>
       </Card>
 
-      <MajorsClient data={majorList} />
+      <div className="rounded-md border bg-card">
+        <MajorsClient data={majorList} />
+      </div>
     </div>
   );
 }

@@ -5,6 +5,8 @@ import {
   text,
   timestamp,
 } from 'drizzle-orm/mysql-core';
+import { relations } from 'drizzle-orm';
+import { userPermissions, rolePermissions } from './index';
 
 /**
  * Permissions table — defines all available system permissions for RBAC.
@@ -23,3 +25,8 @@ export const permissions = mysqlTable('permissions', {
   updatedAt: timestamp('updated_at').onUpdateNow(),
   deletedAt: timestamp('deleted_at'),
 });
+
+export const permissionsRelations = relations(permissions, ({ many }) => ({
+  userPermissions: many(userPermissions),
+  rolePermissions: many(rolePermissions),
+}));

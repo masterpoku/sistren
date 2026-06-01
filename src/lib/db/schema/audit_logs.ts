@@ -1,3 +1,4 @@
+import { relations } from 'drizzle-orm';
 import {
   mysqlTable,
   bigint,
@@ -24,3 +25,10 @@ export const auditLogs = mysqlTable('audit_logs', {
   userAgent: varchar('user_agent', { length: 255 }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
+
+export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
+  user: one(users, {
+    fields: [auditLogs.userId],
+    references: [users.id],
+  }),
+}));

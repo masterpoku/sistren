@@ -23,3 +23,4 @@ export * from './announcement_recipients';
 export * from './studentDocuments';
 export * from './teacherClassSubjects';
 export * from './paymentItems';
+export * from './system_configs';

@@ -85,7 +85,9 @@ export default async function ProfilePage() {
               <Button variant="outline" size="sm" className="mt-2" disabled>
                 Ubah Foto Profil
               </Button>
-              <p className="text-[10px] text-muted-foreground">Fitur upload belum tersedia.</p>
+              <p className="text-[10px] text-muted-foreground">
+                Fitur upload belum tersedia.
+              </p>
             </div>
           </div>
         </CardContent>

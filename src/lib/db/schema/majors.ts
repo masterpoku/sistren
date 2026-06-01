@@ -5,6 +5,8 @@ import {
   text,
   timestamp,
 } from 'drizzle-orm/mysql-core';
+import { relations } from 'drizzle-orm';
+import { subjects } from './subjects';
 
 /**
  * Academic majors/programs (e.g., TKJ, RPL, Automotive).
@@ -17,3 +19,7 @@ export const majors = mysqlTable('majors', {
   updatedAt: timestamp('updated_at').onUpdateNow(),
   deletedAt: timestamp('deleted_at'),
 });
+
+export const majorsRelations = relations(majors, ({ many }) => ({
+  subjects: many(subjects),
+}));
