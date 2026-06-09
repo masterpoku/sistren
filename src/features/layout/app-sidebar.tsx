@@ -1,19 +1,19 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import {
-  House,
-  GraduationCap,
-  Wallet,
-  Student,
-  Users,
-  UserCircle,
   Bell,
-  Shield,
   Gear,
+  GraduationCap,
+  House,
   Scroll,
-} from '@phosphor-icons/react';
+  Shield,
+  Student,
+  UserCircle,
+  Users,
+  Wallet,
+} from "@phosphor-icons/react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   Sidebar,
   SidebarContent,
@@ -25,9 +25,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from '@/components/ui/sidebar';
-import { ProfileDropdown } from './profile-dropdown';
-import { cn } from '@/lib/utils';
+} from "@/components/ui/sidebar";
+import { cn } from "@/lib/utils";
+import { ProfileDropdown } from "./profile-dropdown";
 
 interface NavItem {
   title: string;
@@ -38,22 +38,22 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { title: 'Dashboard', href: '/dashboard', icon: House },
-  { title: 'Akademik', href: '/academic', icon: GraduationCap, minLevel: 40 },
-  { title: 'Keuangan', href: '/finance', icon: Wallet, minLevel: 80 },
-  { title: 'Siswa', href: '/students', icon: Student, minLevel: 60 },
-  { title: 'Guru', href: '/teachers', icon: Users, minLevel: 60 },
-  { title: 'Pengguna', href: '/users', icon: UserCircle, minLevel: 80 },
-  { title: 'Pengumuman', href: '/announcements', icon: Bell },
+  { title: "Dashboard", href: "/dashboard", icon: House },
+  { title: "Akademik", href: "/academic", icon: GraduationCap, minLevel: 40 },
+  { title: "Keuangan", href: "/finance", icon: Wallet, minLevel: 80 },
+  { title: "Siswa", href: "/students", icon: Student, minLevel: 60 },
+  { title: "Guru", href: "/teachers", icon: Users, minLevel: 60 },
+  { title: "Pengguna", href: "/users", icon: UserCircle, minLevel: 80 },
+  { title: "Pengumuman", href: "/announcements", icon: Bell },
   {
-    title: 'Transkrip',
-    href: '/alumni/transcript',
+    title: "Transkrip",
+    href: "/alumni/transcript",
     icon: Scroll,
     minLevel: 20,
     maxLevel: 40,
   },
-  { title: 'Roles', href: '/roles', icon: Shield, minLevel: 100 },
-  { title: 'Permissions', href: '/permissions', icon: Gear, minLevel: 100 },
+  { title: "Roles", href: "/roles", icon: Shield, minLevel: 100 },
+  { title: "Permissions", href: "/permissions", icon: Gear, minLevel: 100 },
 ];
 
 interface AppSidebarProps {
@@ -73,18 +73,18 @@ export function AppSidebar({ user, onLogout }: AppSidebarProps) {
     <Sidebar
       collapsible="icon"
       className={cn(
-        'border-r border-sidebar-border transition-colors duration-300',
-        isAlumni && 'alumni-sidebar'
+        "border-r border-sidebar-border transition-colors duration-300",
+        isAlumni && "alumni-sidebar"
       )}
     >
       <SidebarHeader className="group-data-[collapsible=icon]:p-2">
         <div className="flex items-center gap-3 px-2">
           <div
             className={cn(
-              'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg shadow-sm',
+              "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg shadow-sm",
               isAlumni
-                ? 'bg-yellow-600 text-white'
-                : 'bg-sidebar-primary text-sidebar-primary-foreground'
+                ? "bg-yellow-600 text-white"
+                : "bg-sidebar-primary text-sidebar-primary-foreground"
             )}
           >
             <GraduationCap className="h-5 w-5" />
@@ -93,8 +93,8 @@ export function AppSidebar({ user, onLogout }: AppSidebarProps) {
             <span className="text-sm font-bold leading-none">SISTREN</span>
             <span
               className={cn(
-                'text-[10px]',
-                isAlumni ? 'text-yellow-900/70' : 'text-sidebar-foreground/70'
+                "text-[10px]",
+                isAlumni ? "text-yellow-900/70" : "text-sidebar-foreground/70"
               )}
             >
               SMK TERPADU
@@ -115,8 +115,8 @@ export function AppSidebar({ user, onLogout }: AppSidebarProps) {
         <SidebarGroup>
           <SidebarGroupLabel
             className={cn(
-              'font-semibold',
-              isAlumni ? 'text-yellow-900/60' : 'text-sidebar-foreground/50'
+              "font-semibold",
+              isAlumni ? "text-yellow-900/60" : "text-sidebar-foreground/50"
             )}
           >
             Menu Utama
@@ -143,20 +143,21 @@ export function AppSidebar({ user, onLogout }: AppSidebarProps) {
                   return (
                     <SidebarMenuItem key={item.href}>
                       <SidebarMenuButton
+                        asChild
                         isActive={isActive}
                         tooltip={item.title}
                         className={cn(
-                          'transition-colors',
+                          "transition-colors",
                           isAlumni
-                            ? 'hover:bg-yellow-500/40 data-[active=true]:bg-yellow-600/30 data-[active=true]:text-yellow-950'
-                            : 'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground'
+                            ? "hover:bg-yellow-500/40 data-[active=true]:bg-yellow-600/30 data-[active=true]:text-yellow-950"
+                            : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground"
                         )}
                       >
                         <Link
                           href={item.href}
-                          className="flex items-center gap-3"
+                          className="flex items-center gap-3 group-data-[collapsible=icon]:gap-0"
                         >
-                          <Icon className="h-4 w-4" />
+                          <Icon className="h-4 w-4 shrink-0" />
                           <span className="group-data-[collapsible=icon]:hidden">
                             {item.title}
                           </span>

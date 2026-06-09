@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 
 type PaymentItem = {
   id?: number;
@@ -17,7 +17,7 @@ type PaymentItem = {
   name: string;
   description: string | null;
   standardPrice: string;
-  type: 'recurring' | 'one_time' | 'variable' | null;
+  type: "recurring" | "one_time" | "variable" | null;
   semesterId: number | null;
   isActive: boolean | null;
 };
@@ -42,13 +42,13 @@ export function PaymentItemForm({ item, semesters }: Props) {
             id="code"
             name="code"
             placeholder="SPP-01"
-            defaultValue={item?.code ?? ''}
+            defaultValue={item?.code ?? ""}
             required
           />
         </div>
         <div className="space-y-2">
           <Label htmlFor="type">Tipe</Label>
-          <Select name="type" defaultValue={item?.type ?? 'one_time'}>
+          <Select name="type" defaultValue={item?.type ?? "one_time"}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
@@ -67,7 +67,7 @@ export function PaymentItemForm({ item, semesters }: Props) {
           id="name"
           name="name"
           placeholder="SPP Bulanan"
-          defaultValue={item?.name ?? ''}
+          defaultValue={item?.name ?? ""}
           required
         />
       </div>
@@ -78,7 +78,7 @@ export function PaymentItemForm({ item, semesters }: Props) {
           id="description"
           name="description"
           placeholder="Tagihan bulanan siswa"
-          defaultValue={item?.description ?? ''}
+          defaultValue={item?.description ?? ""}
         />
       </div>
 
@@ -92,7 +92,7 @@ export function PaymentItemForm({ item, semesters }: Props) {
             step="1000"
             min="0"
             placeholder="150000"
-            defaultValue={item?.standardPrice ?? ''}
+            defaultValue={item?.standardPrice ?? ""}
             required
           />
         </div>
@@ -100,7 +100,7 @@ export function PaymentItemForm({ item, semesters }: Props) {
           <Label htmlFor="semesterId">Semester (opsional)</Label>
           <Select
             name="semesterId"
-            defaultValue={item?.semesterId ? String(item.semesterId) : 'none'}
+            defaultValue={item?.semesterId ? String(item.semesterId) : "none"}
           >
             <SelectTrigger>
               <SelectValue placeholder="Semua semester" />

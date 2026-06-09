@@ -1,37 +1,37 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import {
+  Bell,
+  BookOpen,
+  CalendarCheck,
+  GraduationCap,
+  Student,
+  TrendUp,
+  User,
+  Users,
+  Wallet,
+} from "@phosphor-icons/react";
+import Link from "next/link";
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  XAxis,
+  YAxis,
+} from "recharts";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { ChartContainer, ChartTooltipContent } from '@/components/ui/chart';
-import {
-  User,
-  Wallet,
-  Bell,
-  GraduationCap,
-  Student,
-  Users,
-  TrendUp,
-  BookOpen,
-  CalendarCheck,
-} from '@phosphor-icons/react';
-import {
-  AreaChart,
-  Area,
-  LineChart,
-  Line,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-  ResponsiveContainer,
-} from 'recharts';
+} from "@/components/ui/card";
+import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
 
 interface DashboardClientProps {
   name: string;
@@ -48,18 +48,18 @@ interface DashboardClientProps {
 }
 
 const mockAcademicRecords = [
-  { semester: 'Sem 1', gpa: 3.85 },
-  { semester: 'Sem 2', gpa: 3.92 },
-  { semester: 'Sem 3', gpa: 3.78 },
-  { semester: 'Sem 4', gpa: 3.95 },
-  { semester: 'Sem 5', gpa: 3.88 },
+  { semester: "Sem 1", gpa: 3.85 },
+  { semester: "Sem 2", gpa: 3.92 },
+  { semester: "Sem 3", gpa: 3.78 },
+  { semester: "Sem 4", gpa: 3.95 },
+  { semester: "Sem 5", gpa: 3.88 },
 ];
 
 const mockRegistrationData = [
-  { name: 'Jan', total: 40 },
-  { name: 'Feb', total: 65 },
-  { name: 'Mar', total: 120 },
-  { name: 'Apr', total: 180 },
+  { name: "Jan", total: 40 },
+  { name: "Feb", total: 65 },
+  { name: "Mar", total: 120 },
+  { name: "Apr", total: 180 },
 ];
 
 function StatCard({
@@ -115,12 +115,12 @@ export function DashboardClient({
 
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold tracking-tight">
-          {isAlumni ? 'Dashboard Alumni' : `Selamat Datang, ${name}`}
+          {isAlumni ? "Dashboard Alumni" : `Selamat Datang, ${name}`}
         </h1>
         <p className="text-muted-foreground">
           {isAlumni
-            ? 'Berikut adalah ringkasan riwayat Anda selama di SMK TERPADU.'
-            : 'Berikut adalah ringkasan aktivitas akademik Anda hari ini.'}
+            ? "Berikut adalah ringkasan riwayat Anda selama di SMK TERPADU."
+            : "Berikut adalah ringkasan aktivitas akademik Anda hari ini."}
         </p>
       </div>
 
@@ -141,7 +141,7 @@ export function DashboardClient({
                 <div className="h-[300px] w-full">
                   <ChartContainer
                     config={{
-                      gpa: { label: 'Nilai', color: '#0f172a' },
+                      gpa: { label: "Nilai", color: "#0f172a" },
                     }}
                     className="h-[300px] w-full"
                   >
@@ -196,22 +196,22 @@ export function DashboardClient({
                 <div className="space-y-6">
                   {[
                     {
-                      time: '07:30 - 10:00',
-                      subject: 'Sistem Terdistribusi',
-                      room: 'Lab. Komputer 1',
-                      type: 'Teori',
+                      time: "07:30 - 10:00",
+                      subject: "Sistem Terdistribusi",
+                      room: "Lab. Komputer 1",
+                      type: "Teori",
                     },
                     {
-                      time: '10:30 - 13:00',
-                      subject: 'Kecerdasan Buatan',
-                      room: 'Ruang Kelas X-TKJ',
-                      type: 'Teori',
+                      time: "10:30 - 13:00",
+                      subject: "Kecerdasan Buatan",
+                      room: "Ruang Kelas X-TKJ",
+                      type: "Teori",
                     },
                     {
-                      time: '14:00 - 16:30',
-                      subject: 'Praktikum Jaringan Komputer',
-                      room: 'Lab. Jaringan',
-                      type: 'Praktikum',
+                      time: "14:00 - 16:30",
+                      subject: "Praktikum Jaringan Komputer",
+                      room: "Lab. Jaringan",
+                      type: "Praktikum",
                     },
                   ].map((item, i) => (
                     <div key={i} className="flex items-start gap-4">
@@ -283,7 +283,7 @@ export function DashboardClient({
                 <div className="h-[300px] w-full">
                   <ChartContainer
                     config={{
-                      total: { label: 'Pendaftaran', color: '#0f172a' },
+                      total: { label: "Pendaftaran", color: "#0f172a" },
                     }}
                     className="h-[300px] w-full"
                   >
@@ -371,7 +371,7 @@ export function DashboardClient({
                 <div className="h-[300px] w-full">
                   <ChartContainer
                     config={{
-                      gpa: { label: 'IP', color: '#0f172a' },
+                      gpa: { label: "IP", color: "#0f172a" },
                     }}
                     className="h-[300px] w-full"
                   >

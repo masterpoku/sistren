@@ -1,17 +1,17 @@
-'use client';
+"use client";
 
-import { useState, useTransition } from 'react';
-import { bulkCreateEnrollment } from '@/actions/enrollments';
-import { Button } from '@/components/ui/button';
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
+import { bulkCreateEnrollment } from "@/actions/enrollments";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import { useRouter } from 'next/navigation';
+} from "@/components/ui/select";
 
 interface BulkEnrollmentFormProps {
   classList: { id: number; name: string }[];
@@ -25,18 +25,18 @@ export function BulkEnrollmentForm({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<{
-    type: 'success' | 'error';
+    type: "success" | "error";
     text: string;
   } | null>(null);
 
   function handleSubmit(formData: FormData) {
     startTransition(async () => {
-      const classId = formData.get('classId') as string | null;
-      const semesterId = formData.get('semesterId') as string | null;
+      const classId = formData.get("classId") as string | null;
+      const semesterId = formData.get("semesterId") as string | null;
       if (!classId || !semesterId) {
         setMessage({
-          type: 'error',
-          text: 'Kelas dan semester wajib dipilih.',
+          type: "error",
+          text: "Kelas dan semester wajib dipilih.",
         });
         return;
       }
@@ -45,16 +45,16 @@ export function BulkEnrollmentForm({
         semesterId as string
       );
 
-      if ('error' in result) {
-        setMessage({ type: 'error', text: result.error as string });
+      if ("error" in result) {
+        setMessage({ type: "error", text: result.error as string });
       } else if (result.failed) {
         setMessage({
-          type: 'error',
-          text: result.message || 'Bulk enrollment failed.',
+          type: "error",
+          text: result.message || "Bulk enrollment failed.",
         });
       } else {
         setMessage({
-          type: 'success',
+          type: "success",
           text: `Berhasil mendaftarkan ${result.inserted} siswa. ${result.skipped} sudah terdaftar.`,
         });
         router.refresh();
@@ -96,15 +96,15 @@ export function BulkEnrollmentForm({
           </Select>
         </div>
         <Button type="submit" disabled={isPending}>
-          {isPending ? 'Processing...' : 'Enroll Semua Siswa'}
+          {isPending ? "Processing..." : "Enroll Semua Siswa"}
         </Button>
       </form>
       {message && (
         <p
           className={
-            message.type === 'error'
-              ? 'text-sm text-red-600'
-              : 'text-sm text-green-600'
+            message.type === "error"
+              ? "text-sm text-red-600"
+              : "text-sm text-green-600"
           }
         >
           {message.text}

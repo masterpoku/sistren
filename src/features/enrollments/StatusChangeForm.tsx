@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
+import { useRouter } from "next/navigation";
+import { useTransition } from "react";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { useTransition } from 'react';
-import { useRouter } from 'next/navigation';
+} from "@/components/ui/select";
 
 interface StatusChangeFormProps {
   enrollmentId: number;
@@ -20,10 +20,10 @@ export function StatusChangeForm({ enrollmentId }: StatusChangeFormProps) {
 
   function handleValueChange(value: string) {
     startTransition(async () => {
-      const { updateEnrollmentStatus } = await import('@/actions/enrollments');
+      const { updateEnrollmentStatus } = await import("@/actions/enrollments");
       await updateEnrollmentStatus(
         String(enrollmentId),
-        value as 'transferred' | 'dropped' | 'graduated'
+        value as "transferred" | "dropped" | "graduated"
       );
       router.refresh();
     });

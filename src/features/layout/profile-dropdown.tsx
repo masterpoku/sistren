@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { SignOut } from 'phosphor-react';
+import { SignOut } from "phosphor-react";
 
 interface ProfileDropdownProps {
   user: {
@@ -12,11 +12,11 @@ interface ProfileDropdownProps {
 
 export function ProfileDropdown({ user, onLogout }: ProfileDropdownProps) {
   return (
-    <div className="absolute bottom-0 left-0 right-0 border-t p-4">
+    <div className="mt-auto w-full border-t p-4">
       <div className="flex items-center gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100">
           <span className="text-sm font-medium">
-            {user.name?.charAt(0)?.toUpperCase() || 'U'}
+            {user.name?.charAt(0)?.toUpperCase() || "U"}
           </span>
         </div>
         <div className="flex-1">

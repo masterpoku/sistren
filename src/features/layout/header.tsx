@@ -1,19 +1,19 @@
-'use client';
+"use client";
 
-import { usePathname } from 'next/navigation';
-import Link from 'next/link';
-import { Bell, GraduationCap, MagnifyingGlass } from '@phosphor-icons/react';
-import { SidebarTrigger } from '@/components/ui/sidebar';
+import { Bell, GraduationCap, MagnifyingGlass } from "@phosphor-icons/react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Separator } from '@/components/ui/separator';
-import { Input } from '@/components/ui/input';
+} from "@/components/ui/breadcrumb";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 
 interface AppHeaderProps {
   user: {
@@ -27,10 +27,10 @@ interface AppHeaderProps {
 }
 
 function getPageTitle(pathname: string): string {
-  const segments = pathname.split('/').filter(Boolean);
-  if (segments.length === 0 || segments[0] === 'dashboard') return 'Dashboard';
+  const segments = pathname.split("/").filter(Boolean);
+  if (segments.length === 0 || segments[0] === "dashboard") return "Dashboard";
   const last = segments[segments.length - 1];
-  return last.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+  return last.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 export function AppHeader({ user }: AppHeaderProps) {

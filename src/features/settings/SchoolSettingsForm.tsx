@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useState, useTransition } from 'react';
-import { batchUpdateSchoolSettings } from '@/actions/settings';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState, useTransition } from "react";
+import { batchUpdateSchoolSettings } from "@/actions/settings";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface SchoolSettingsFormProps {
   schoolName: string;
@@ -23,16 +23,16 @@ export function SchoolSettingsForm({
   nss,
 }: SchoolSettingsFormProps) {
   const [isPending, startTransition] = useTransition();
-  const [status, setStatus] = useState<'idle' | 'saved' | 'error'>('idle');
-  const [errorMessage, setErrorMessage] = useState('');
+  const [status, setStatus] = useState<"idle" | "saved" | "error">("idle");
+  const [errorMessage, setErrorMessage] = useState("");
 
   function handleSubmit(formData: FormData) {
     const data: Record<string, string> = {};
-    const schoolNameVal = formData.get('schoolName') as string;
-    const schoolAddressVal = formData.get('schoolAddress') as string;
-    const headmasterVal = formData.get('headmaster') as string;
-    const npsnVal = formData.get('npsn') as string;
-    const nssVal = formData.get('nss') as string;
+    const schoolNameVal = formData.get("schoolName") as string;
+    const schoolAddressVal = formData.get("schoolAddress") as string;
+    const headmasterVal = formData.get("headmaster") as string;
+    const npsnVal = formData.get("npsn") as string;
+    const nssVal = formData.get("nss") as string;
 
     if (schoolNameVal) data.schoolName = schoolNameVal;
     if (schoolAddressVal) data.schoolAddress = schoolAddressVal;
@@ -41,17 +41,17 @@ export function SchoolSettingsForm({
     if (nssVal) data.nss = nssVal;
 
     startTransition(async () => {
-      setStatus('idle');
-      setErrorMessage('');
+      setStatus("idle");
+      setErrorMessage("");
 
       const result = await batchUpdateSchoolSettings(data);
 
-      if ('error' in result) {
-        setStatus('error');
+      if ("error" in result) {
+        setStatus("error");
         setErrorMessage(result.error);
       } else {
-        setStatus('saved');
-        setTimeout(() => setStatus('idle'), 3000);
+        setStatus("saved");
+        setTimeout(() => setStatus("idle"), 3000);
       }
     });
   }
@@ -114,12 +114,12 @@ export function SchoolSettingsForm({
           </div>
           <div className="flex items-center gap-3">
             <Button type="submit" disabled={isPending}>
-              {isPending ? 'Menyimpan...' : 'Simpan'}
+              {isPending ? "Menyimpan..." : "Simpan"}
             </Button>
-            {status === 'saved' && (
+            {status === "saved" && (
               <span className="text-sm text-green-600">Tersimpan!</span>
             )}
-            {status === 'error' && (
+            {status === "error" && (
               <span className="text-sm text-destructive">{errorMessage}</span>
             )}
           </div>

@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 type Student = {
   id: string;
@@ -36,16 +36,16 @@ export function RecordPaymentForm({
     const item = paymentItems.find((i) => i.id === Number(itemId));
     if (!item) return;
     const descInput = document.getElementById(
-      'description'
+      "description"
     ) as HTMLInputElement;
-    const priceInput = document.getElementById('price') as HTMLInputElement;
+    const priceInput = document.getElementById("price") as HTMLInputElement;
     if (descInput) descInput.value = item.description ?? item.name;
     if (priceInput) priceInput.value = item.standardPrice;
   }
 
   async function handleSubmit(formData: FormData) {
     const result = await recordAction(formData);
-    if (result && 'error' in result) {
+    if (result && "error" in result) {
       throw new Error(result.error);
     }
   }
