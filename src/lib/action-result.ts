@@ -3,7 +3,7 @@
  * All server actions return ActionResult<T> for consistent error handling.
  */
 
-import type { ErrorCode } from './errors/codes';
+import type { ErrorCode } from "./errors/codes";
 
 export type ActionResult<T = void> =
   | { success: true; data?: T }

@@ -1,15 +1,14 @@
-import { getDocuments, uploadDocument } from '@/actions/documents';
-import { verifySession } from '@/lib/auth/verify-session';
-import { getAuthContext } from '@/lib/auth/permissions';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
+import { getDocuments, uploadDocument } from "@/actions/documents";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -17,20 +16,21 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+} from "@/components/ui/table";
+import { getAuthContext } from "@/lib/auth/permissions";
+import { verifySession } from "@/lib/auth/verify-session";
 
 const DOCUMENT_TYPES = [
-  { value: 'ijasah', label: 'Ijazah (SMP)' },
-  { value: 'skhun', label: 'SKHUN' },
-  { value: 'skl', label: 'Surat Keterangan Lulus' },
-  { value: 'aktaKelahiran', label: 'Akta Kelahiran' },
-  { value: 'kk', label: 'Kartu Keluarga' },
-  { value: 'ktpAyah', label: 'KTP Ayah' },
-  { value: 'ktpIbu', label: 'KTP Ibu' },
-  { value: 'kip', label: 'KIP' },
-  { value: 'passFoto', label: 'Pas Foto 3x4' },
-  { value: 'rapor', label: 'Rapor' },
+  { value: "ijasah", label: "Ijazah (SMP)" },
+  { value: "skhun", label: "SKHUN" },
+  { value: "skl", label: "Surat Keterangan Lulus" },
+  { value: "aktaKelahiran", label: "Akta Kelahiran" },
+  { value: "kk", label: "Kartu Keluarga" },
+  { value: "ktpAyah", label: "KTP Ayah" },
+  { value: "ktpIbu", label: "KTP Ibu" },
+  { value: "kip", label: "KIP" },
+  { value: "passFoto", label: "Pas Foto 3x4" },
+  { value: "rapor", label: "Rapor" },
 ];
 
 interface PageProps {
@@ -45,7 +45,7 @@ export default async function StudentDocumentsPage({ params }: PageProps) {
   // Permission check: profile.edit_any (admin/guru) OR own profile
   if (
     !ctx ||
-    (!ctx.permissions.has('profile.edit_any') && session.userId !== studentId)
+    (!ctx.permissions.has("profile.edit_any") && session.userId !== studentId)
   ) {
     return (
       <div className="p-6">
@@ -58,7 +58,7 @@ export default async function StudentDocumentsPage({ params }: PageProps) {
 
   const docResult = await getDocuments(studentId);
   const documents =
-    'documents' in docResult && docResult.documents ? docResult.documents : [];
+    "documents" in docResult && docResult.documents ? docResult.documents : [];
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6">
@@ -75,9 +75,9 @@ export default async function StudentDocumentsPage({ params }: PageProps) {
         <CardContent>
           <form
             action={async (formData: FormData) => {
-              'use server';
+              "use server";
               const result = await uploadDocument(formData);
-              if (result && 'error' in result) {
+              if (result && "error" in result) {
                 throw new Error(result.error);
               }
             }}

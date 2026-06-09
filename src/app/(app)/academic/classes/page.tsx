@@ -1,11 +1,11 @@
-import { getClasses, createClassAction } from '@/actions/academic';
-import { verifyRoleLevel } from '@/lib/auth/verify-session';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { columns } from '@/features/academic/classes/ClassesClient';
-import { DataTable } from '@/components/ui/data-table';
+import { createClassAction, getClasses } from "@/actions/academic";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DataTable } from "@/components/ui/data-table";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { columns } from "@/features/academic/classes/ClassesClient";
+import { verifyRoleLevel } from "@/lib/auth/verify-session";
 
 export default async function ClassesPage() {
   await verifyRoleLevel(60);

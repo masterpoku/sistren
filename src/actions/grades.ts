@@ -1,19 +1,19 @@
-'use server';
+"use server";
 
-import { db } from '@/lib/db';
-import { grades, enrollments, subjects, users, classes } from '@/lib/db/schema';
-import { eq, isNull, and, sql } from 'drizzle-orm';
-import { verifySession, verifyRoleLevel } from '@/lib/auth/verify-session';
-import { getAuthContext } from '@/lib/auth/permissions';
-import { revalidatePath } from 'next/cache';
+import { and, eq, isNull, sql } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
+import { getAuthContext } from "@/lib/auth/permissions";
+import { verifyRoleLevel, verifySession } from "@/lib/auth/verify-session";
+import { db } from "@/lib/db";
+import { classes, enrollments, grades, subjects, users } from "@/lib/db/schema";
 
-type GradeType = 'knowledge' | 'skill' | 'attitude' | 'extracurricular';
+type GradeType = "knowledge" | "skill" | "attitude" | "extracurricular";
 
 const VALID_TYPES: GradeType[] = [
-  'knowledge',
-  'skill',
-  'attitude',
-  'extracurricular',
+  "knowledge",
+  "skill",
+  "attitude",
+  "extracurricular",
 ];
 
 function isValidGradeType(s: string): s is GradeType {
@@ -79,7 +79,7 @@ export async function getStudentGrades(studentId: string, semesterId?: number) {
   // Permission: own grades OR grades.read_any
   if (
     !ctx ||
-    (!ctx.permissions.has('grades.read_any') && session.userId !== studentId)
+    (!ctx.permissions.has("grades.read_any") && session.userId !== studentId)
   ) {
     return [];
   }
@@ -122,20 +122,20 @@ export async function getStudentGrades(studentId: string, semesterId?: number) {
 export async function upsertGrade(formData: FormData) {
   await verifyRoleLevel(60);
 
-  const enrollmentId = formData.get('enrollmentId') as string;
-  const subjectId = formData.get('subjectId') as string;
-  const type = formData.get('type') as string;
-  const score = formData.get('score') as string;
-  const grade = formData.get('grade') as string;
-  const predicate = formData.get('predicate') as string;
-  const description = formData.get('description') as string;
+  const enrollmentId = formData.get("enrollmentId") as string;
+  const subjectId = formData.get("subjectId") as string;
+  const type = formData.get("type") as string;
+  const score = formData.get("score") as string;
+  const grade = formData.get("grade") as string;
+  const predicate = formData.get("predicate") as string;
+  const description = formData.get("description") as string;
 
   if (!enrollmentId || !subjectId || !type) {
-    return { error: 'enrollmentId, subjectId, dan type wajib diisi.' };
+    return { error: "enrollmentId, subjectId, dan type wajib diisi." };
   }
 
   if (!isValidGradeType(type)) {
-    return { error: 'Tipe nilai tidak valid.' };
+    return { error: "Tipe nilai tidak valid." };
   }
 
   const values: Record<string, number | string | null> = {
@@ -151,15 +151,15 @@ export async function upsertGrade(formData: FormData) {
 
   // Sub-score fields
   const subScoreFields = [
-    'dailyTest1',
-    'dailyTest2',
-    'dailyTest3',
-    'dailyTest4',
-    'midterm',
-    'finalExam',
-    'practical',
-    'project',
-    'portfolio',
+    "dailyTest1",
+    "dailyTest2",
+    "dailyTest3",
+    "dailyTest4",
+    "midterm",
+    "finalExam",
+    "practical",
+    "project",
+    "portfolio",
   ] as const;
 
   for (const field of subScoreFields) {
@@ -176,7 +176,7 @@ export async function upsertGrade(formData: FormData) {
       set: values as any,
     });
 
-  revalidatePath('/academic/grades');
+  revalidatePath("/academic/grades");
   return { success: true };
 }
 
@@ -184,27 +184,27 @@ export async function bulkUpsertGrades(formData: FormData) {
   await verifyRoleLevel(60);
 
   // Parse JSON of grade rows from form data
-  const rowsJson = formData.get('rows') as string;
+  const rowsJson = formData.get("rows") as string;
   if (!rowsJson) {
-    return { error: 'Data nilai tidak ditemukan.' };
+    return { error: "Data nilai tidak ditemukan." };
   }
 
   let rows: Array<Record<string, any>>;
   try {
     rows = JSON.parse(rowsJson);
   } catch {
-    return { error: 'Format data nilai tidak valid.' };
+    return { error: "Format data nilai tidak valid." };
   }
 
   if (!Array.isArray(rows) || rows.length === 0) {
-    return { error: 'Tidak ada data nilai.' };
+    return { error: "Tidak ada data nilai." };
   }
 
   // Validate all rows
   for (const row of rows) {
     if (!row.enrollmentId || !row.subjectId || !row.type) {
       return {
-        error: 'Semua baris harus memiliki enrollmentId, subjectId, dan type.',
+        error: "Semua baris harus memiliki enrollmentId, subjectId, dan type.",
       };
     }
     if (!isValidGradeType(row.type)) {
@@ -225,15 +225,15 @@ export async function bulkUpsertGrades(formData: FormData) {
     if (row.description?.trim()) v.description = row.description;
 
     const subScoreFields = [
-      'dailyTest1',
-      'dailyTest2',
-      'dailyTest3',
-      'dailyTest4',
-      'midterm',
-      'finalExam',
-      'practical',
-      'project',
-      'portfolio',
+      "dailyTest1",
+      "dailyTest2",
+      "dailyTest3",
+      "dailyTest4",
+      "midterm",
+      "finalExam",
+      "practical",
+      "project",
+      "portfolio",
     ];
     for (const field of subScoreFields) {
       if (row[field]?.trim()) v[field] = row[field];
@@ -263,11 +263,11 @@ export async function bulkUpsertGrades(formData: FormData) {
         },
       });
 
-    revalidatePath('/academic/grades');
+    revalidatePath("/academic/grades");
     return { success: true, count: values.length };
   } catch (err: unknown) {
     const message =
-      err instanceof Error ? err.message : 'Gagal menyimpan nilai';
+      err instanceof Error ? err.message : "Gagal menyimpan nilai";
     return { error: message };
   }
 }
@@ -282,7 +282,7 @@ export async function deleteGrade(gradeId: string) {
     .limit(1);
 
   if (!existing) {
-    return { error: 'Nilai tidak ditemukan.' };
+    return { error: "Nilai tidak ditemukan." };
   }
 
   await db
@@ -290,6 +290,6 @@ export async function deleteGrade(gradeId: string) {
     .set({ deletedAt: new Date() })
     .where(eq(grades.id, Number(gradeId)));
 
-  revalidatePath('/academic/grades');
+  revalidatePath("/academic/grades");
   return { success: true };
 }

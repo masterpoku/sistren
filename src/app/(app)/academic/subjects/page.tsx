@@ -1,14 +1,14 @@
 import {
-  getSubjects,
   createSubjectAction,
   getClasses,
-} from '@/actions/academic';
-import { verifyRoleLevel } from '@/lib/auth/verify-session';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { SubjectsClient } from '@/features/academic/subjects/SubjectsClient';
+  getSubjects,
+} from "@/actions/academic";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { SubjectsClient } from "@/features/academic/subjects/SubjectsClient";
+import { verifyRoleLevel } from "@/lib/auth/verify-session";
 
 export default async function SubjectsPage() {
   await verifyRoleLevel(60);

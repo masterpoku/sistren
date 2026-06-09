@@ -1,10 +1,10 @@
-'use server';
+"use server";
 
-import { revalidatePath } from 'next/cache';
-import { db } from '@/lib/db';
-import { paymentItems, semesters } from '@/lib/db/schema';
-import { eq, isNull, and, like, or, ne } from 'drizzle-orm';
-import { verifyRoleLevel } from '@/lib/auth/verify-session';
+import { and, eq, isNull, like, ne, or } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
+import { verifyRoleLevel } from "@/lib/auth/verify-session";
+import { db } from "@/lib/db";
+import { paymentItems, semesters } from "@/lib/db/schema";
 
 export async function getPaymentItems(opts?: {
   search?: string;
@@ -17,7 +17,7 @@ export async function getPaymentItems(opts?: {
 
   if (opts?.type) {
     conditions.push(
-      eq(paymentItems.type, opts.type as 'recurring' | 'one_time' | 'variable')
+      eq(paymentItems.type, opts.type as "recurring" | "one_time" | "variable")
     );
   }
 
@@ -60,21 +60,21 @@ export async function getPaymentItems(opts?: {
 export async function createPaymentItem(formData: FormData) {
   await verifyRoleLevel(80);
 
-  const code = (formData.get('code') as string)?.trim().toUpperCase();
-  const name = (formData.get('name') as string)?.trim();
-  const description = (formData.get('description') as string)?.trim() || null;
-  const standardPriceStr = formData.get('standardPrice') as string;
-  const type = (formData.get('type') as string) || 'one_time';
-  const semesterIdStr = formData.get('semesterId') as string;
-  const isActive = formData.get('isActive') !== 'false';
+  const code = (formData.get("code") as string)?.trim().toUpperCase();
+  const name = (formData.get("name") as string)?.trim();
+  const description = (formData.get("description") as string)?.trim() || null;
+  const standardPriceStr = formData.get("standardPrice") as string;
+  const type = (formData.get("type") as string) || "one_time";
+  const semesterIdStr = formData.get("semesterId") as string;
+  const isActive = formData.get("isActive") !== "false";
 
   if (!code || !name || !standardPriceStr) {
-    return { error: 'Kode, nama, dan harga standar wajib diisi.' };
+    return { error: "Kode, nama, dan harga standar wajib diisi." };
   }
 
   const standardPrice = parseFloat(standardPriceStr);
-  if (isNaN(standardPrice) || standardPrice < 0) {
-    return { error: 'Harga standar tidak valid.' };
+  if (Number.isNaN(standardPrice) || standardPrice < 0) {
+    return { error: "Harga standar tidak valid." };
   }
 
   const [existing] = await db
@@ -94,33 +94,33 @@ export async function createPaymentItem(formData: FormData) {
     name,
     description,
     standardPrice: String(standardPrice),
-    type: type as 'recurring' | 'one_time' | 'variable',
-    semesterId: semesterId && !isNaN(semesterId) ? semesterId : null,
+    type: type as "recurring" | "one_time" | "variable",
+    semesterId: semesterId && !Number.isNaN(semesterId) ? semesterId : null,
     isActive,
   });
 
-  revalidatePath('/admin/payment-items');
+  revalidatePath("/admin/payment-items");
   return { success: true };
 }
 
 export async function updatePaymentItem(itemId: string, formData: FormData) {
   await verifyRoleLevel(80);
 
-  const code = (formData.get('code') as string)?.trim().toUpperCase();
-  const name = (formData.get('name') as string)?.trim();
-  const description = (formData.get('description') as string)?.trim() || null;
-  const standardPriceStr = formData.get('standardPrice') as string;
-  const type = (formData.get('type') as string) || 'one_time';
-  const semesterIdStr = formData.get('semesterId') as string;
-  const isActive = formData.get('isActive') !== 'false';
+  const code = (formData.get("code") as string)?.trim().toUpperCase();
+  const name = (formData.get("name") as string)?.trim();
+  const description = (formData.get("description") as string)?.trim() || null;
+  const standardPriceStr = formData.get("standardPrice") as string;
+  const type = (formData.get("type") as string) || "one_time";
+  const semesterIdStr = formData.get("semesterId") as string;
+  const isActive = formData.get("isActive") !== "false";
 
   if (!code || !name || !standardPriceStr) {
-    return { error: 'Kode, nama, dan harga standar wajib diisi.' };
+    return { error: "Kode, nama, dan harga standar wajib diisi." };
   }
 
   const standardPrice = parseFloat(standardPriceStr);
-  if (isNaN(standardPrice) || standardPrice < 0) {
-    return { error: 'Harga standar tidak valid.' };
+  if (Number.isNaN(standardPrice) || standardPrice < 0) {
+    return { error: "Harga standar tidak valid." };
   }
 
   const [existing] = await db
@@ -132,7 +132,7 @@ export async function updatePaymentItem(itemId: string, formData: FormData) {
     .limit(1);
 
   if (!existing) {
-    return { error: 'Item pembayaran tidak ditemukan.' };
+    return { error: "Item pembayaran tidak ditemukan." };
   }
 
   // Check code uniqueness excluding self
@@ -161,13 +161,13 @@ export async function updatePaymentItem(itemId: string, formData: FormData) {
       name,
       description,
       standardPrice: String(standardPrice),
-      type: type as 'recurring' | 'one_time' | 'variable',
-      semesterId: semesterId && !isNaN(semesterId) ? semesterId : null,
+      type: type as "recurring" | "one_time" | "variable",
+      semesterId: semesterId && !Number.isNaN(semesterId) ? semesterId : null,
       isActive,
     })
     .where(eq(paymentItems.id, Number(itemId)));
 
-  revalidatePath('/admin/payment-items');
+  revalidatePath("/admin/payment-items");
   return { success: true };
 }
 
@@ -183,7 +183,7 @@ export async function deletePaymentItem(itemId: string) {
     .limit(1);
 
   if (!existing) {
-    return { error: 'Item pembayaran tidak ditemukan.' };
+    return { error: "Item pembayaran tidak ditemukan." };
   }
 
   await db
@@ -191,6 +191,6 @@ export async function deletePaymentItem(itemId: string) {
     .set({ deletedAt: new Date() })
     .where(eq(paymentItems.id, Number(itemId)));
 
-  revalidatePath('/admin/payment-items');
+  revalidatePath("/admin/payment-items");
   return { success: true };
 }

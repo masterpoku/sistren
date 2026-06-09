@@ -1,13 +1,13 @@
+import { relations } from "drizzle-orm";
 import {
-  mysqlTable,
   bigint,
-  varchar,
-  timestamp,
-  int,
   boolean,
-} from 'drizzle-orm/mysql-core';
-import { relations } from 'drizzle-orm';
-import { users, rolePermissions } from './index';
+  int,
+  mysqlTable,
+  timestamp,
+  varchar,
+} from "drizzle-orm/mysql-core";
+import { rolePermissions, users } from "./index";
 
 /**
  * Roles table — stores user role definitions for RBAC.
@@ -17,15 +17,15 @@ import { users, rolePermissions } from './index';
  * Used by: users table (role_id foreign key)
  * Seeded with: superadmin, administrator, guru, siswa, alumni
  */
-export const roles = mysqlTable('roles', {
-  id: bigint('id', { mode: 'number' }).primaryKey().autoincrement(),
-  name: varchar('name', { length: 255 }).unique().notNull(),
-  description: varchar('description', { length: 255 }),
-  isDefault: boolean('is_default').default(false),
-  level: int('level').default(0),
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').onUpdateNow(),
-  deletedAt: timestamp('deleted_at'),
+export const roles = mysqlTable("roles", {
+  id: bigint("id", { mode: "number" }).primaryKey().autoincrement(),
+  name: varchar("name", { length: 255 }).unique().notNull(),
+  description: varchar("description", { length: 255 }),
+  isDefault: boolean("is_default").default(false),
+  level: int("level").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
 });
 
 export const rolesRelations = relations(roles, ({ many }) => ({

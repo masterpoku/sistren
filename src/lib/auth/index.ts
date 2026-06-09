@@ -1,14 +1,14 @@
-import { betterAuth } from 'better-auth';
-import { drizzleAdapter } from '@better-auth/drizzle-adapter';
-import { nextCookies } from 'better-auth/next-js';
-import { db } from '@/lib/db';
-import * as schema from '@/lib/db/schema';
+import { drizzleAdapter } from "@better-auth/drizzle-adapter";
+import { betterAuth } from "better-auth";
+import { nextCookies } from "better-auth/next-js";
+import { db } from "@/lib/db";
+import * as schema from "@/lib/db/schema";
 
 export const auth = betterAuth({
-  baseURL: process.env.BETTER_AUTH_URL || 'http://localhost:3000',
+  baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
   secret: process.env.BETTER_AUTH_SECRET,
   database: drizzleAdapter(db, {
-    provider: 'mysql',
+    provider: "mysql",
     schema,
     usePlural: true,
   }),
@@ -22,7 +22,7 @@ export const auth = betterAuth({
   },
   additionalFields: {
     roleId: {
-      type: 'number',
+      type: "number",
       required: false,
       input: false, // admin-only, not user-settable during signup
     },

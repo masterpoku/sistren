@@ -1,11 +1,11 @@
-'use server';
+"use server";
 
-import { revalidatePath } from 'next/cache';
-import { db } from '@/lib/db';
-import { isNull } from 'drizzle-orm';
-import { systemConfigs } from '@/lib/db/schema';
-import { verifyRoleLevel } from '@/lib/auth/verify-session';
-import { schoolSettingsSchema } from '@/lib/validation/schemas/settings';
+import { isNull } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
+import { verifyRoleLevel } from "@/lib/auth/verify-session";
+import { db } from "@/lib/db";
+import { systemConfigs } from "@/lib/db/schema";
+import { schoolSettingsSchema } from "@/lib/validation/schemas/settings";
 
 export async function getSchoolSettings() {
   await verifyRoleLevel(80);
@@ -29,7 +29,7 @@ export async function updateSchoolSetting(key: string, value: string) {
       set: { value, updatedAt: new Date() },
     });
 
-  revalidatePath('/settings/school');
+  revalidatePath("/settings/school");
   return { success: true };
 }
 
@@ -45,7 +45,7 @@ export async function batchUpdateSchoolSettings(
 
   const entries = Object.entries(parsed.data);
   if (entries.length === 0) {
-    return { error: 'Tidak ada data untuk disimpan.' };
+    return { error: "Tidak ada data untuk disimpan." };
   }
 
   let updated = 0;
@@ -62,6 +62,6 @@ export async function batchUpdateSchoolSettings(
     }
   });
 
-  revalidatePath('/settings/school');
+  revalidatePath("/settings/school");
   return { success: true, data: { updated } };
 }

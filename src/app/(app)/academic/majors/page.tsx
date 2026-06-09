@@ -1,10 +1,10 @@
-import { getMajors, createMajorAction } from '@/actions/academic';
-import { verifyRoleLevel } from '@/lib/auth/verify-session';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { MajorsClient } from '@/features/academic/majors/MajorsClient';
+import { createMajorAction, getMajors } from "@/actions/academic";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { MajorsClient } from "@/features/academic/majors/MajorsClient";
+import { verifyRoleLevel } from "@/lib/auth/verify-session";
 
 export default async function MajorsPage() {
   await verifyRoleLevel(60);

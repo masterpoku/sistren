@@ -1,14 +1,14 @@
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
 import {
-  MagnifyingGlass,
-  Tray,
-  FolderOpen,
   Bell,
   FileText,
-} from '@phosphor-icons/react';
+  FolderOpen,
+  MagnifyingGlass,
+  Tray,
+} from "@phosphor-icons/react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
-type EmptyIcon = 'search' | 'inbox' | 'folder' | 'bell' | 'file';
+type EmptyIcon = "search" | "inbox" | "folder" | "bell" | "file";
 
 const ICONS: Record<EmptyIcon, React.ElementType> = {
   search: MagnifyingGlass,
@@ -30,7 +30,7 @@ interface EmptyStateProps {
 }
 
 export function EmptyState({
-  icon = 'inbox',
+  icon = "inbox",
   title,
   description,
   action,
@@ -41,7 +41,7 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        'flex flex-col items-center justify-center py-12 px-4 text-center',
+        "flex flex-col items-center justify-center py-12 px-4 text-center",
         className
       )}
     >

@@ -1,69 +1,69 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   BookOpen,
-  CalendarCheck,
   Calendar,
+  CalendarCheck,
   Clock,
-  MapPin,
   DownloadSimple,
   MagnifyingGlass,
-} from '@phosphor-icons/react';
-import { getStudentGrades } from '@/actions/grades';
+  MapPin,
+} from "@phosphor-icons/react";
+import { useEffect, useState } from "react";
+import { getStudentGrades } from "@/actions/grades";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const MOCK_SCHEDULE = [
   {
-    day: 'Senin',
-    time: '07:30-10:00',
-    subject: 'Sistem Terdistribusi',
-    room: 'Lab. Komputer 1',
+    day: "Senin",
+    time: "07:30-10:00",
+    subject: "Sistem Terdistribusi",
+    room: "Lab. Komputer 1",
   },
   {
-    day: 'Senin',
-    time: '10:30-13:00',
-    subject: 'Kecerdasan Buatan',
-    room: 'Ruang XII-TKJ',
+    day: "Senin",
+    time: "10:30-13:00",
+    subject: "Kecerdasan Buatan",
+    room: "Ruang XII-TKJ",
   },
   {
-    day: 'Selasa',
-    time: '07:30-10:00',
-    subject: 'Jaringan Komputer',
-    room: 'Lab. Jaringan',
+    day: "Selasa",
+    time: "07:30-10:00",
+    subject: "Jaringan Komputer",
+    room: "Lab. Jaringan",
   },
   {
-    day: 'Selasa',
-    time: '10:30-13:00',
-    subject: 'Basis Data',
-    room: 'Ruang XII-TKJ',
+    day: "Selasa",
+    time: "10:30-13:00",
+    subject: "Basis Data",
+    room: "Ruang XII-TKJ",
   },
   {
-    day: 'Rabu',
-    time: '07:30-10:00',
-    subject: 'Praktikum Jaringan',
-    room: 'Lab. Komputer 2',
+    day: "Rabu",
+    time: "07:30-10:00",
+    subject: "Praktikum Jaringan",
+    room: "Lab. Komputer 2",
   },
   {
-    day: 'Rabu',
-    time: '10:30-13:00',
-    subject: 'Pemrograman Web',
-    room: 'Lab. Komputer 1',
+    day: "Rabu",
+    time: "10:30-13:00",
+    subject: "Pemrograman Web",
+    room: "Lab. Komputer 1",
   },
   {
-    day: 'Kamis',
-    time: '07:30-10:00',
-    subject: 'Sistem Terdistribusi',
-    room: 'Ruang XII-TKJ',
+    day: "Kamis",
+    time: "07:30-10:00",
+    subject: "Sistem Terdistribusi",
+    room: "Ruang XII-TKJ",
   },
   {
     day: "Jum'at",
-    time: '07:30-09:00',
-    subject: 'Bimbingan Karir',
-    room: 'Aula',
+    time: "07:30-09:00",
+    subject: "Bimbingan Karir",
+    room: "Aula",
   },
 ];
 
@@ -84,7 +84,7 @@ interface Props {
 }
 
 export function StudentAcademicClient({ userId }: Props) {
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [grades, setGrades] = useState<GradeItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [semesterOptions, setSemesterOptions] = useState<
@@ -121,13 +121,13 @@ export function StudentAcademicClient({ userId }: Props) {
     .filter(
       (g) =>
         g.subjectName.toLowerCase().includes(search.toLowerCase()) ||
-        (g.subjectCode?.toLowerCase() ?? '').includes(search.toLowerCase())
+        (g.subjectCode?.toLowerCase() ?? "").includes(search.toLowerCase())
     );
 
   // Group by type for display
-  const knowledgeGrades = filteredGrades.filter((g) => g.type === 'knowledge');
-  const skillGrades = filteredGrades.filter((g) => g.type === 'skill');
-  const attitudeGrades = filteredGrades.filter((g) => g.type === 'attitude');
+  const knowledgeGrades = filteredGrades.filter((g) => g.type === "knowledge");
+  const skillGrades = filteredGrades.filter((g) => g.type === "skill");
+  const attitudeGrades = filteredGrades.filter((g) => g.type === "attitude");
 
   // Calculate IP from knowledge grades
   const totalCredits = knowledgeGrades.reduce(
@@ -135,7 +135,7 @@ export function StudentAcademicClient({ userId }: Props) {
     0
   );
   const totalWeighted = knowledgeGrades.reduce((sum, g) => {
-    const score = parseFloat(g.score ?? '0');
+    const score = parseFloat(g.score ?? "0");
     const credits = g.subjectCredits ?? 0;
     // Convert score to IP scale (0-4)
     const ip =
@@ -143,11 +143,11 @@ export function StudentAcademicClient({ userId }: Props) {
     return sum + ip * credits;
   }, 0);
   const ipSemester =
-    totalCredits > 0 ? (totalWeighted / totalCredits).toFixed(2) : '0.00';
+    totalCredits > 0 ? (totalWeighted / totalCredits).toFixed(2) : "0.00";
 
   // Current semester label
   const selectedSemesterLabel =
-    semesterOptions.find((s) => s.id === selectedSemester)?.label ?? 'Semester';
+    semesterOptions.find((s) => s.id === selectedSemester)?.label ?? "Semester";
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6">
@@ -181,7 +181,7 @@ export function StudentAcademicClient({ userId }: Props) {
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                   <select
-                    value={selectedSemester ?? ''}
+                    value={selectedSemester ?? ""}
                     onChange={(e) =>
                       setSelectedSemester(Number(e.target.value))
                     }
@@ -266,30 +266,30 @@ export function StudentAcademicClient({ userId }: Props) {
                                 className="border-b border-border/50 hover:bg-muted/30 transition-colors"
                               >
                                 <td className="px-4 py-3 font-mono text-xs">
-                                  {g.subjectCode ?? '-'}
+                                  {g.subjectCode ?? "-"}
                                 </td>
                                 <td className="px-4 py-3">{g.subjectName}</td>
                                 <td className="px-4 py-3 text-center">
-                                  {g.subjectCredits ?? '-'}
+                                  {g.subjectCredits ?? "-"}
                                 </td>
                                 <td className="px-4 py-3 text-center font-medium">
-                                  {g.score ?? '-'}
+                                  {g.score ?? "-"}
                                 </td>
                                 <td className="px-4 py-3 text-center">
                                   {g.grade ? (
                                     <Badge
                                       variant={
-                                        g.grade.startsWith('A')
-                                          ? 'default'
-                                          : g.grade.startsWith('B')
-                                            ? 'secondary'
-                                            : 'outline'
+                                        g.grade.startsWith("A")
+                                          ? "default"
+                                          : g.grade.startsWith("B")
+                                            ? "secondary"
+                                            : "outline"
                                       }
                                     >
                                       {g.grade}
                                     </Badge>
                                   ) : (
-                                    '-'
+                                    "-"
                                   )}
                                 </td>
                               </tr>
@@ -355,27 +355,27 @@ export function StudentAcademicClient({ userId }: Props) {
                                 className="border-b border-border/50 hover:bg-muted/30 transition-colors"
                               >
                                 <td className="px-4 py-3 font-mono text-xs">
-                                  {g.subjectCode ?? '-'}
+                                  {g.subjectCode ?? "-"}
                                 </td>
                                 <td className="px-4 py-3">{g.subjectName}</td>
                                 <td className="px-4 py-3 text-center font-medium">
-                                  {g.score ?? '-'}
+                                  {g.score ?? "-"}
                                 </td>
                                 <td className="px-4 py-3 text-center">
                                   {g.grade ? (
                                     <Badge
                                       variant={
-                                        g.grade.startsWith('A')
-                                          ? 'default'
-                                          : g.grade.startsWith('B')
-                                            ? 'secondary'
-                                            : 'outline'
+                                        g.grade.startsWith("A")
+                                          ? "default"
+                                          : g.grade.startsWith("B")
+                                            ? "secondary"
+                                            : "outline"
                                       }
                                     >
                                       {g.grade}
                                     </Badge>
                                   ) : (
-                                    '-'
+                                    "-"
                                   )}
                                 </td>
                               </tr>
@@ -416,7 +416,7 @@ export function StudentAcademicClient({ userId }: Props) {
                               >
                                 <td className="px-4 py-3">{g.subjectName}</td>
                                 <td className="px-4 py-3 text-center font-medium">
-                                  {g.predicate ?? g.score ?? '-'}
+                                  {g.predicate ?? g.score ?? "-"}
                                 </td>
                               </tr>
                             ))}
@@ -466,11 +466,11 @@ export function StudentAcademicClient({ userId }: Props) {
                             className="border-b border-border/50 hover:bg-muted/30 transition-colors"
                           >
                             <td className="px-4 py-3 font-mono text-xs">
-                              {g.subjectCode ?? '-'}
+                              {g.subjectCode ?? "-"}
                             </td>
                             <td className="px-4 py-3">{g.subjectName}</td>
                             <td className="px-4 py-3 text-center">
-                              {g.subjectCredits ?? '-'}
+                              {g.subjectCredits ?? "-"}
                             </td>
                             <td className="px-4 py-3 text-center">
                               <Badge variant="default">Aktif</Badge>
@@ -510,7 +510,7 @@ export function StudentAcademicClient({ userId }: Props) {
                       </tr>
                     </thead>
                     <tbody>
-                      {['Senin', 'Selasa', 'Rabu', 'Kamis', "Jum'at"].map(
+                      {["Senin", "Selasa", "Rabu", "Kamis", "Jum'at"].map(
                         (day) => {
                           const daySchedules = MOCK_SCHEDULE.filter(
                             (s) => s.day === day

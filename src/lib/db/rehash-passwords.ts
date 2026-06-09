@@ -1,12 +1,13 @@
 // Rehash passwords to Better Auth's scrypt format
 // Run: bun run src/lib/db/rehash-passwords.ts
-import { db } from './index';
-import { accounts, users } from './schema';
-import { eq } from 'drizzle-orm';
-import { hashPassword } from 'better-auth/crypto';
+
+import { hashPassword } from "better-auth/crypto";
+import { eq } from "drizzle-orm";
+import { db } from "./index";
+import { accounts, users } from "./schema";
 
 async function rehashPasswords() {
-  console.log('=== Re-hashing passwords to Better Auth scrypt format ===\n');
+  console.log("=== Re-hashing passwords to Better Auth scrypt format ===\n");
 
   // Get all users
   const userRows = await db
@@ -25,7 +26,7 @@ async function rehashPasswords() {
 
     try {
       // Generate new scrypt hash (Better Auth uses this format)
-      const newHash = await hashPassword('Password123!');
+      const newHash = await hashPassword("Password123!");
       console.log(`  New hash: ${newHash.substring(0, 40)}...`);
 
       // Check if account already exists
@@ -46,7 +47,7 @@ async function rehashPasswords() {
         await db.insert(accounts).values({
           userId: row.id,
           accountId: row.email,
-          providerId: 'credential',
+          providerId: "credential",
           password: newHash,
         });
       }
@@ -57,7 +58,7 @@ async function rehashPasswords() {
     }
   }
 
-  console.log('\n=== Done ===');
+  console.log("\n=== Done ===");
   process.exit(0);
 }
 

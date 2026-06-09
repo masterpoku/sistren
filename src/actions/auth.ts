@@ -1,19 +1,19 @@
-'use server';
+"use server";
 
-import { redirect } from 'next/navigation';
-import { auth } from '@/lib/auth';
-import { headers } from 'next/headers';
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
 
 export async function loginAction(formData: FormData) {
-  const email = formData.get('email') as string;
-  const password = formData.get('password') as string;
+  const email = formData.get("email") as string;
+  const password = formData.get("password") as string;
 
   if (!email || !password) {
-    return { error: 'Email dan password wajib diisi.' };
+    return { error: "Email dan password wajib diisi." };
   }
 
   if (password.length < 6) {
-    return { error: 'Password minimal 6 karakter.' };
+    return { error: "Password minimal 6 karakter." };
   }
 
   try {
@@ -22,15 +22,15 @@ export async function loginAction(formData: FormData) {
       headers: await headers(),
     });
 
-    if ('error' in result && result.error) {
-      return { error: 'Email atau password salah.' };
+    if ("error" in result && result.error) {
+      return { error: "Email atau password salah." };
     }
 
-    redirect('/dashboard');
+    redirect("/dashboard");
   } catch (err: unknown) {
-    if (err instanceof Error && err.message.includes('NEXT_REDIRECT')) {
+    if (err instanceof Error && err.message.includes("NEXT_REDIRECT")) {
       throw err;
     }
-    return { error: 'Terjadi kesalahan. Silakan coba lagi.' };
+    return { error: "Terjadi kesalahan. Silakan coba lagi." };
   }
 }

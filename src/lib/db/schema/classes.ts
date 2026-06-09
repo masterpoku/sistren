@@ -1,17 +1,17 @@
-import { mysqlTable, bigint, varchar, timestamp } from 'drizzle-orm/mysql-core';
-import { relations } from 'drizzle-orm';
-import { enrollments } from './enrollments';
+import { relations } from "drizzle-orm";
+import { bigint, mysqlTable, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { enrollments } from "./enrollments";
 
 /**
  * Class/grade levels (X, XI, XII) with numeric code for sorting.
  */
-export const classes = mysqlTable('classes', {
-  id: bigint('id', { mode: 'number' }).primaryKey().autoincrement(),
-  name: varchar('name', { length: 255 }).notNull(),
-  code: varchar('code', { length: 255 }).unique().notNull(),
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').onUpdateNow(),
-  deletedAt: timestamp('deleted_at'),
+export const classes = mysqlTable("classes", {
+  id: bigint("id", { mode: "number" }).primaryKey().autoincrement(),
+  name: varchar("name", { length: 255 }).notNull(),
+  code: varchar("code", { length: 255 }).unique().notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
 });
 
 export const classesRelations = relations(classes, ({ many }) => ({

@@ -1,15 +1,24 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
+import {
+  Bank,
+  Building,
+  CheckCircle,
+  Clock,
+  QrCode,
+  Wallet,
+  WarningCircle,
+} from "@phosphor-icons/react";
+import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+} from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -17,17 +26,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import {
-  Wallet,
-  Bank,
-  QrCode,
-  Building,
-  WarningCircle,
-  Clock,
-  CheckCircle,
-} from '@phosphor-icons/react';
-import { EmptyState } from '@/components/ui/empty-state';
+} from "@/components/ui/dialog";
+import { EmptyState } from "@/components/ui/empty-state";
 
 interface Payment {
   id: number;
@@ -46,14 +46,14 @@ const STATUS_MAP: Record<
   string,
   {
     label: string;
-    variant: 'default' | 'secondary' | 'destructive' | 'outline';
+    variant: "default" | "secondary" | "destructive" | "outline";
     icon: React.ElementType;
   }
 > = {
-  draft: { label: 'Draft', variant: 'secondary', icon: Clock },
-  pending: { label: 'Menunggu', variant: 'outline', icon: Clock },
-  paid: { label: 'Lunas', variant: 'default', icon: CheckCircle },
-  cancelled: { label: 'Batal', variant: 'destructive', icon: WarningCircle },
+  draft: { label: "Draft", variant: "secondary", icon: Clock },
+  pending: { label: "Menunggu", variant: "outline", icon: Clock },
+  paid: { label: "Lunas", variant: "default", icon: CheckCircle },
+  cancelled: { label: "Batal", variant: "destructive", icon: WarningCircle },
 };
 
 export function StudentFinanceClient({ payments }: StudentFinanceClientProps) {
@@ -61,15 +61,15 @@ export function StudentFinanceClient({ payments }: StudentFinanceClientProps) {
   const [paymentOpen, setPaymentOpen] = useState(false);
 
   const totalTagihan = payments
-    .filter((p) => p.status !== 'cancelled')
+    .filter((p) => p.status !== "cancelled")
     .reduce((sum, p) => sum + Number(p.total ?? 0), 0);
 
   const totalLunas = payments
-    .filter((p) => p.status === 'paid')
+    .filter((p) => p.status === "paid")
     .reduce((sum, p) => sum + Number(p.total ?? 0), 0);
 
   const pendingCount = payments.filter(
-    (p) => p.status === 'pending' || p.status === 'draft'
+    (p) => p.status === "pending" || p.status === "draft"
   ).length;
 
   return (
@@ -91,7 +91,7 @@ export function StudentFinanceClient({ payments }: StudentFinanceClientProps) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              Rp {totalTagihan.toLocaleString('id-ID')}
+              Rp {totalTagihan.toLocaleString("id-ID")}
             </div>
           </CardContent>
         </Card>
@@ -106,12 +106,12 @@ export function StudentFinanceClient({ payments }: StudentFinanceClientProps) {
             <div className="text-2xl font-bold">
               {totalTagihan > 0
                 ? `${Math.round((totalLunas / totalTagihan) * 100)}%`
-                : '0%'}
+                : "0%"}
             </div>
             <p className="text-xs text-muted-foreground">
               {pendingCount > 0
                 ? `${pendingCount} tagihan menunggu`
-                : 'Semua lunas'}
+                : "Semua lunas"}
             </p>
           </CardContent>
         </Card>
@@ -154,22 +154,22 @@ export function StudentFinanceClient({ payments }: StudentFinanceClientProps) {
                 <div className="space-y-3 py-4">
                   {[
                     {
-                      id: 'va',
-                      name: 'Virtual Account',
+                      id: "va",
+                      name: "Virtual Account",
                       icon: Bank,
-                      desc: 'BCA, Mandiri, BNI, BRI',
+                      desc: "BCA, Mandiri, BNI, BRI",
                     },
                     {
-                      id: 'qris',
-                      name: 'QRIS',
+                      id: "qris",
+                      name: "QRIS",
                       icon: QrCode,
-                      desc: 'Scan via GoPay, OVO, Dana',
+                      desc: "Scan via GoPay, OVO, Dana",
                     },
                     {
-                      id: 'retail',
-                      name: 'Convenience Store',
+                      id: "retail",
+                      name: "Convenience Store",
                       icon: Building,
-                      desc: 'Alfamart, Indomaret',
+                      desc: "Alfamart, Indomaret",
                     },
                   ].map((method) => (
                     <button
@@ -178,8 +178,8 @@ export function StudentFinanceClient({ payments }: StudentFinanceClientProps) {
                       onClick={() => setSelectedMethod(method.id)}
                       className={`w-full flex items-center gap-4 rounded-lg border p-4 text-left transition-colors hover:bg-muted ${
                         selectedMethod === method.id
-                          ? 'border-primary bg-primary/5'
-                          : 'border-border'
+                          ? "border-primary bg-primary/5"
+                          : "border-border"
                       }`}
                     >
                       <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
@@ -204,7 +204,7 @@ export function StudentFinanceClient({ payments }: StudentFinanceClientProps) {
                 >
                   {selectedMethod
                     ? `Bayar via ${selectedMethod.toUpperCase()}`
-                    : 'Pilih metode'}
+                    : "Pilih metode"}
                 </Button>
               </DialogContent>
             </Dialog>
@@ -234,7 +234,7 @@ export function StudentFinanceClient({ payments }: StudentFinanceClientProps) {
                 <tbody>
                   {payments.map((p) => {
                     const statusInfo =
-                      STATUS_MAP[p.status ?? 'draft'] ?? STATUS_MAP.draft;
+                      STATUS_MAP[p.status ?? "draft"] ?? STATUS_MAP.draft;
                     const StatusIcon = statusInfo.icon;
                     return (
                       <tr
@@ -246,7 +246,7 @@ export function StudentFinanceClient({ payments }: StudentFinanceClientProps) {
                         </td>
                         <td className="px-4 py-3">{p.description}</td>
                         <td className="px-4 py-3 font-medium">
-                          Rp {Number(p.total).toLocaleString('id-ID')}
+                          Rp {Number(p.total).toLocaleString("id-ID")}
                         </td>
                         <td className="px-4 py-3">
                           <Badge variant={statusInfo.variant}>
@@ -259,14 +259,14 @@ export function StudentFinanceClient({ payments }: StudentFinanceClientProps) {
                         <td className="px-4 py-3 text-muted-foreground">
                           {p.createdAt
                             ? new Date(p.createdAt).toLocaleDateString(
-                                'id-ID',
+                                "id-ID",
                                 {
-                                  day: '2-digit',
-                                  month: 'short',
-                                  year: 'numeric',
+                                  day: "2-digit",
+                                  month: "short",
+                                  year: "numeric",
                                 }
                               )
-                            : '-'}
+                            : "-"}
                         </td>
                       </tr>
                     );
@@ -278,7 +278,7 @@ export function StudentFinanceClient({ payments }: StudentFinanceClientProps) {
         </CardContent>
       </Card>
 
-      {payments.filter((p) => p.status === 'paid').length > 0 && (
+      {payments.filter((p) => p.status === "paid").length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle>Riwayat Pembayaran</CardTitle>
@@ -299,7 +299,7 @@ export function StudentFinanceClient({ payments }: StudentFinanceClientProps) {
                 </thead>
                 <tbody>
                   {payments
-                    .filter((p) => p.status === 'paid')
+                    .filter((p) => p.status === "paid")
                     .map((p) => (
                       <tr
                         key={p.id}
@@ -310,19 +310,19 @@ export function StudentFinanceClient({ payments }: StudentFinanceClientProps) {
                         </td>
                         <td className="px-4 py-3">{p.description}</td>
                         <td className="px-4 py-3 font-medium">
-                          Rp {Number(p.total).toLocaleString('id-ID')}
+                          Rp {Number(p.total).toLocaleString("id-ID")}
                         </td>
                         <td className="px-4 py-3 text-muted-foreground">
                           {p.createdAt
                             ? new Date(p.createdAt).toLocaleDateString(
-                                'id-ID',
+                                "id-ID",
                                 {
-                                  day: '2-digit',
-                                  month: 'short',
-                                  year: 'numeric',
+                                  day: "2-digit",
+                                  month: "short",
+                                  year: "numeric",
                                 }
                               )
-                            : '-'}
+                            : "-"}
                         </td>
                       </tr>
                     ))}

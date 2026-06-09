@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { downloadDocument } from '@/actions/documents';
+import { type NextRequest, NextResponse } from "next/server";
+import { downloadDocument } from "@/actions/documents";
 
 export async function GET(
   _request: NextRequest,
@@ -9,7 +9,7 @@ export async function GET(
 
   const result = await downloadDocument(studentId, documentType);
 
-  if ('error' in result) {
+  if ("error" in result) {
     return NextResponse.json({ error: result.error }, { status: 400 });
   }
 

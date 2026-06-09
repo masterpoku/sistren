@@ -9,30 +9,31 @@
  *
  * Run: bun run db:seed
  */
-import { db } from './index';
-import { auth } from '@/lib/auth';
+
+import { and, eq, isNull } from "drizzle-orm";
+import { auth } from "@/lib/auth";
+import { db } from "./index";
 import {
-  roles,
   permissions,
-  rolePermissions,
-  users,
   religions,
-} from './schema';
-import { eq, isNull, and } from 'drizzle-orm';
+  rolePermissions,
+  roles,
+  users,
+} from "./schema";
 
 // ==================== REFERENCE DATA ====================
 
 const religionNames = [
-  'Islam',
-  'Kristen',
-  'Katolik',
-  'Hindu',
-  'Budha',
-  'Konghucu',
+  "Islam",
+  "Kristen",
+  "Katolik",
+  "Hindu",
+  "Budha",
+  "Konghucu",
 ];
 
 async function seedReligions() {
-  console.log('\n--- Seeding religions ---');
+  console.log("\n--- Seeding religions ---");
   for (const name of religionNames) {
     const [existing] = await db
       .select({ id: religions.id })
@@ -50,284 +51,284 @@ async function seedReligions() {
   }
 }
 const roleEntries = [
-  { name: 'superadmin', description: 'Full system access', level: 100 },
-  { name: 'administrator', description: 'Admin staff (TU)', level: 80 },
-  { name: 'guru', description: 'Teacher', level: 60 },
-  { name: 'siswa', description: 'Student', level: 40 },
-  { name: 'alumni', description: 'Alumni (read-only)', level: 20 },
+  { name: "superadmin", description: "Full system access", level: 100 },
+  { name: "administrator", description: "Admin staff (TU)", level: 80 },
+  { name: "guru", description: "Teacher", level: 60 },
+  { name: "siswa", description: "Student", level: 40 },
+  { name: "alumni", description: "Alumni (read-only)", level: 20 },
 ];
 
 // ==================== PERMISSIONS ====================
 const permEntries = [
   {
-    name: 'users.create',
-    description: 'Create users',
-    resource: 'users',
-    action: 'create',
+    name: "users.create",
+    description: "Create users",
+    resource: "users",
+    action: "create",
   },
   {
-    name: 'users.read',
-    description: 'Read users',
-    resource: 'users',
-    action: 'read',
+    name: "users.read",
+    description: "Read users",
+    resource: "users",
+    action: "read",
   },
   {
-    name: 'users.update',
-    description: 'Update users',
-    resource: 'users',
-    action: 'update',
+    name: "users.update",
+    description: "Update users",
+    resource: "users",
+    action: "update",
   },
   {
-    name: 'users.delete',
-    description: 'Delete users',
-    resource: 'users',
-    action: 'delete',
+    name: "users.delete",
+    description: "Delete users",
+    resource: "users",
+    action: "delete",
   },
   {
-    name: 'students.create',
-    description: 'Create student records',
-    resource: 'students',
-    action: 'create',
+    name: "students.create",
+    description: "Create student records",
+    resource: "students",
+    action: "create",
   },
   {
-    name: 'students.read',
-    description: 'Read student records',
-    resource: 'students',
-    action: 'read',
+    name: "students.read",
+    description: "Read student records",
+    resource: "students",
+    action: "read",
   },
   {
-    name: 'students.update',
-    description: 'Update student records',
-    resource: 'students',
-    action: 'update',
+    name: "students.update",
+    description: "Update student records",
+    resource: "students",
+    action: "update",
   },
   {
-    name: 'students.delete',
-    description: 'Delete student records',
-    resource: 'students',
-    action: 'delete',
+    name: "students.delete",
+    description: "Delete student records",
+    resource: "students",
+    action: "delete",
   },
   {
-    name: 'students.promote',
-    description: 'Promote students',
-    resource: 'students',
-    action: 'promote',
+    name: "students.promote",
+    description: "Promote students",
+    resource: "students",
+    action: "promote",
   },
   {
-    name: 'students.graduate',
-    description: 'Graduate students',
-    resource: 'students',
-    action: 'graduate',
+    name: "students.graduate",
+    description: "Graduate students",
+    resource: "students",
+    action: "graduate",
   },
   {
-    name: 'students.import',
-    description: 'Import students',
-    resource: 'students',
-    action: 'import',
+    name: "students.import",
+    description: "Import students",
+    resource: "students",
+    action: "import",
   },
   {
-    name: 'teachers.create',
-    description: 'Create teacher records',
-    resource: 'teachers',
-    action: 'create',
+    name: "teachers.create",
+    description: "Create teacher records",
+    resource: "teachers",
+    action: "create",
   },
   {
-    name: 'teachers.read',
-    description: 'Read teacher records',
-    resource: 'teachers',
-    action: 'read',
+    name: "teachers.read",
+    description: "Read teacher records",
+    resource: "teachers",
+    action: "read",
   },
   {
-    name: 'teachers.update',
-    description: 'Update teacher records',
-    resource: 'teachers',
-    action: 'update',
+    name: "teachers.update",
+    description: "Update teacher records",
+    resource: "teachers",
+    action: "update",
   },
   {
-    name: 'teachers.delete',
-    description: 'Delete teacher records',
-    resource: 'teachers',
-    action: 'delete',
+    name: "teachers.delete",
+    description: "Delete teacher records",
+    resource: "teachers",
+    action: "delete",
   },
   {
-    name: 'teachers.assign_class',
-    description: 'Assign teachers to classes',
-    resource: 'teachers',
-    action: 'assign_class',
+    name: "teachers.assign_class",
+    description: "Assign teachers to classes",
+    resource: "teachers",
+    action: "assign_class",
   },
   {
-    name: 'teachers.assign_subject',
-    description: 'Assign teachers to subjects',
-    resource: 'teachers',
-    action: 'assign_subject',
+    name: "teachers.assign_subject",
+    description: "Assign teachers to subjects",
+    resource: "teachers",
+    action: "assign_subject",
   },
   {
-    name: 'classes.manage',
-    description: 'Manage classes',
-    resource: 'classes',
-    action: 'manage',
+    name: "classes.manage",
+    description: "Manage classes",
+    resource: "classes",
+    action: "manage",
   },
   {
-    name: 'majors.manage',
-    description: 'Manage majors',
-    resource: 'majors',
-    action: 'manage',
+    name: "majors.manage",
+    description: "Manage majors",
+    resource: "majors",
+    action: "manage",
   },
   {
-    name: 'subjects.manage',
-    description: 'Manage subjects',
-    resource: 'subjects',
-    action: 'manage',
+    name: "subjects.manage",
+    description: "Manage subjects",
+    resource: "subjects",
+    action: "manage",
   },
   {
-    name: 'semesters.manage',
-    description: 'Manage semesters',
-    resource: 'semesters',
-    action: 'manage',
+    name: "semesters.manage",
+    description: "Manage semesters",
+    resource: "semesters",
+    action: "manage",
   },
   {
-    name: 'enrollments.create',
-    description: 'Create enrollments',
-    resource: 'enrollments',
-    action: 'create',
+    name: "enrollments.create",
+    description: "Create enrollments",
+    resource: "enrollments",
+    action: "create",
   },
   {
-    name: 'enrollments.read',
-    description: 'Read enrollments',
-    resource: 'enrollments',
-    action: 'read',
+    name: "enrollments.read",
+    description: "Read enrollments",
+    resource: "enrollments",
+    action: "read",
   },
   {
-    name: 'enrollments.update',
-    description: 'Update enrollments',
-    resource: 'enrollments',
-    action: 'update',
+    name: "enrollments.update",
+    description: "Update enrollments",
+    resource: "enrollments",
+    action: "update",
   },
   {
-    name: 'enrollments.delete',
-    description: 'Delete enrollments',
-    resource: 'enrollments',
-    action: 'delete',
+    name: "enrollments.delete",
+    description: "Delete enrollments",
+    resource: "enrollments",
+    action: "delete",
   },
   {
-    name: 'grades.input',
-    description: 'Input grades',
-    resource: 'grades',
-    action: 'input',
+    name: "grades.input",
+    description: "Input grades",
+    resource: "grades",
+    action: "input",
   },
   {
-    name: 'grades.read_any',
-    description: 'Read any grades',
-    resource: 'grades',
-    action: 'read_any',
+    name: "grades.read_any",
+    description: "Read any grades",
+    resource: "grades",
+    action: "read_any",
   },
   {
-    name: 'grades.read_own',
-    description: 'Read own grades',
-    resource: 'grades',
-    action: 'read_own',
+    name: "grades.read_own",
+    description: "Read own grades",
+    resource: "grades",
+    action: "read_own",
   },
   {
-    name: 'grades.print',
-    description: 'Print grade reports',
-    resource: 'grades',
-    action: 'print',
+    name: "grades.print",
+    description: "Print grade reports",
+    resource: "grades",
+    action: "print",
   },
   {
-    name: 'announcements.create',
-    description: 'Create announcements',
-    resource: 'announcements',
-    action: 'create',
+    name: "announcements.create",
+    description: "Create announcements",
+    resource: "announcements",
+    action: "create",
   },
   {
-    name: 'announcements.read',
-    description: 'Read announcements',
-    resource: 'announcements',
-    action: 'read',
+    name: "announcements.read",
+    description: "Read announcements",
+    resource: "announcements",
+    action: "read",
   },
   {
-    name: 'announcements.update',
-    description: 'Update announcements',
-    resource: 'announcements',
-    action: 'update',
+    name: "announcements.update",
+    description: "Update announcements",
+    resource: "announcements",
+    action: "update",
   },
   {
-    name: 'announcements.delete',
-    description: 'Delete announcements',
-    resource: 'announcements',
-    action: 'delete',
+    name: "announcements.delete",
+    description: "Delete announcements",
+    resource: "announcements",
+    action: "delete",
   },
   {
-    name: 'announcements.publish',
-    description: 'Publish announcements',
-    resource: 'announcements',
-    action: 'publish',
+    name: "announcements.publish",
+    description: "Publish announcements",
+    resource: "announcements",
+    action: "publish",
   },
   {
-    name: 'payments.create',
-    description: 'Create payments',
-    resource: 'payments',
-    action: 'create',
+    name: "payments.create",
+    description: "Create payments",
+    resource: "payments",
+    action: "create",
   },
   {
-    name: 'payments.read_any',
-    description: 'Read any payments',
-    resource: 'payments',
-    action: 'read_any',
+    name: "payments.read_any",
+    description: "Read any payments",
+    resource: "payments",
+    action: "read_any",
   },
   {
-    name: 'payments.read_own',
-    description: 'Read own payments',
-    resource: 'payments',
-    action: 'read_own',
+    name: "payments.read_own",
+    description: "Read own payments",
+    resource: "payments",
+    action: "read_own",
   },
   {
-    name: 'payments.update',
-    description: 'Update payments',
-    resource: 'payments',
-    action: 'update',
+    name: "payments.update",
+    description: "Update payments",
+    resource: "payments",
+    action: "update",
   },
   {
-    name: 'payments.approve',
-    description: 'Approve payments',
-    resource: 'payments',
-    action: 'approve',
+    name: "payments.approve",
+    description: "Approve payments",
+    resource: "payments",
+    action: "approve",
   },
   {
-    name: 'payments.generate_report',
-    description: 'Generate payment reports',
-    resource: 'payments',
-    action: 'generate_report',
+    name: "payments.generate_report",
+    description: "Generate payment reports",
+    resource: "payments",
+    action: "generate_report",
   },
   {
-    name: 'payment_methods.manage',
-    description: 'Manage payment methods',
-    resource: 'payment_methods',
-    action: 'manage',
+    name: "payment_methods.manage",
+    description: "Manage payment methods",
+    resource: "payment_methods",
+    action: "manage",
   },
   {
-    name: 'system_configs.manage',
-    description: 'Manage system configs',
-    resource: 'system_configs',
-    action: 'manage',
+    name: "system_configs.manage",
+    description: "Manage system configs",
+    resource: "system_configs",
+    action: "manage",
   },
   {
-    name: 'profile.edit_own',
-    description: 'Edit own profile',
-    resource: 'profile',
-    action: 'edit_own',
+    name: "profile.edit_own",
+    description: "Edit own profile",
+    resource: "profile",
+    action: "edit_own",
   },
   {
-    name: 'profile.edit_any',
-    description: 'Edit any profile',
-    resource: 'profile',
-    action: 'edit_any',
+    name: "profile.edit_any",
+    description: "Edit any profile",
+    resource: "profile",
+    action: "edit_any",
   },
   {
-    name: 'profile.assets.upload',
-    description: 'Upload profile assets',
-    resource: 'profile',
-    action: 'assets_upload',
+    name: "profile.assets.upload",
+    description: "Upload profile assets",
+    resource: "profile",
+    action: "assets_upload",
   },
 ];
 
@@ -335,83 +336,83 @@ const permEntries = [
 const rolePermAssignments: Record<string, string[]> = {
   superadmin: permEntries.map((p) => p.name),
   administrator: [
-    'users.create',
-    'users.read',
-    'users.update',
-    'students.create',
-    'students.read',
-    'students.update',
-    'students.delete',
-    'students.promote',
-    'students.graduate',
-    'students.import',
-    'teachers.create',
-    'teachers.read',
-    'teachers.update',
-    'teachers.delete',
-    'teachers.assign_class',
-    'teachers.assign_subject',
-    'classes.manage',
-    'majors.manage',
-    'subjects.manage',
-    'semesters.manage',
-    'enrollments.create',
-    'enrollments.read',
-    'enrollments.update',
-    'enrollments.delete',
-    'grades.input',
-    'grades.read_any',
-    'grades.read_own',
-    'grades.print',
-    'announcements.create',
-    'announcements.read',
-    'announcements.update',
-    'announcements.delete',
-    'announcements.publish',
-    'payments.create',
-    'payments.read_any',
-    'payments.read_own',
-    'payments.update',
-    'payments.approve',
-    'payments.generate_report',
-    'payment_methods.manage',
-    'system_configs.manage',
-    'profile.edit_own',
-    'profile.edit_any',
-    'profile.assets.upload',
+    "users.create",
+    "users.read",
+    "users.update",
+    "students.create",
+    "students.read",
+    "students.update",
+    "students.delete",
+    "students.promote",
+    "students.graduate",
+    "students.import",
+    "teachers.create",
+    "teachers.read",
+    "teachers.update",
+    "teachers.delete",
+    "teachers.assign_class",
+    "teachers.assign_subject",
+    "classes.manage",
+    "majors.manage",
+    "subjects.manage",
+    "semesters.manage",
+    "enrollments.create",
+    "enrollments.read",
+    "enrollments.update",
+    "enrollments.delete",
+    "grades.input",
+    "grades.read_any",
+    "grades.read_own",
+    "grades.print",
+    "announcements.create",
+    "announcements.read",
+    "announcements.update",
+    "announcements.delete",
+    "announcements.publish",
+    "payments.create",
+    "payments.read_any",
+    "payments.read_own",
+    "payments.update",
+    "payments.approve",
+    "payments.generate_report",
+    "payment_methods.manage",
+    "system_configs.manage",
+    "profile.edit_own",
+    "profile.edit_any",
+    "profile.assets.upload",
   ],
   guru: [
-    'grades.input',
-    'grades.read_any',
-    'students.read',
-    'announcements.read',
-    'profile.edit_own',
-    'subjects.manage',
-    'teachers.read',
-    'classes.manage',
-    'majors.manage',
-    'semesters.manage',
-    'enrollments.read',
+    "grades.input",
+    "grades.read_any",
+    "students.read",
+    "announcements.read",
+    "profile.edit_own",
+    "subjects.manage",
+    "teachers.read",
+    "classes.manage",
+    "majors.manage",
+    "semesters.manage",
+    "enrollments.read",
   ],
   siswa: [
-    'grades.read_own',
-    'announcements.read',
-    'profile.edit_own',
-    'students.read',
-    'payments.read_own',
-    'enrollments.read',
+    "grades.read_own",
+    "announcements.read",
+    "profile.edit_own",
+    "students.read",
+    "payments.read_own",
+    "enrollments.read",
   ],
-  alumni: ['grades.read_own', 'profile.edit_own'],
+  alumni: ["grades.read_own", "profile.edit_own"],
 };
 
 async function seed() {
-  console.log('🌱 Starting main seed...');
+  console.log("🌱 Starting main seed...");
 
   // ==================== RELIGIONS ====================
   await seedReligions();
 
   // ==================== ROLES ====================
-  console.log('\n--- Seeding roles ---');
+  console.log("\n--- Seeding roles ---");
   const roleMap: Record<string, number> = {};
   for (const entry of roleEntries) {
     const [existing] = await db
@@ -459,7 +460,7 @@ async function seed() {
   }
 
   // ==================== PERMISSIONS ====================
-  console.log('\n--- Seeding permissions ---');
+  console.log("\n--- Seeding permissions ---");
   const permMap: Record<string, number> = {};
   for (const entry of permEntries) {
     const [existing] = await db
@@ -501,7 +502,7 @@ async function seed() {
   }
 
   // ==================== ROLE_PERMISSIONS ====================
-  console.log('\n--- Assigning permissions to roles ---');
+  console.log("\n--- Assigning permissions to roles ---");
   for (const [roleName, permNames] of Object.entries(rolePermAssignments)) {
     const roleId = roleMap[roleName];
     if (!roleId) {
@@ -575,32 +576,32 @@ async function seed() {
   }
 
   // ==================== TEST USERS ====================
-  console.log('\n--- Creating test users ---');
+  console.log("\n--- Creating test users ---");
 
   const testUsers = [
     {
-      email: 'superadmin@sister.com',
-      password: 'Password123!',
-      name: 'Super Admin',
-      role: 'superadmin',
+      email: "superadmin@sister.com",
+      password: "Password123!",
+      name: "Super Admin",
+      role: "superadmin",
     },
     {
-      email: 'admin@sister.com',
-      password: 'Password123!',
-      name: 'Administrator',
-      role: 'administrator',
+      email: "admin@sister.com",
+      password: "Password123!",
+      name: "Administrator",
+      role: "administrator",
     },
     {
-      email: 'guru@sister.com',
-      password: 'Password123!',
-      name: 'Guru Honorer',
-      role: 'guru',
+      email: "guru@sister.com",
+      password: "Password123!",
+      name: "Guru Honorer",
+      role: "guru",
     },
     {
-      email: 'siswa@sister.com',
-      password: 'Password123!',
-      name: 'Siswa Demo',
-      role: 'siswa',
+      email: "siswa@sister.com",
+      password: "Password123!",
+      name: "Siswa Demo",
+      role: "siswa",
     },
   ];
 
@@ -622,7 +623,7 @@ async function seed() {
       body: { email, password, name },
     });
 
-    const userId = ('id' in user ? user.id : user.user.id) as string;
+    const userId = ("id" in user ? user.id : user.user.id) as string;
     console.log(`✅ Created user: ${email} (id=${userId})`);
 
     // Now set roleId via Drizzle update — signUpEmail cannot set additionalFields
@@ -635,7 +636,7 @@ async function seed() {
     }
   }
 
-  console.log('\n🎉 Seed completed');
+  console.log("\n🎉 Seed completed");
 }
 
 // Only run if executed directly (not imported)

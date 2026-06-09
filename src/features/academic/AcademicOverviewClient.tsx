@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import {
-  GraduationCap,
   BookOpen,
-  Users,
   Calendar,
-} from '@phosphor-icons/react';
+  GraduationCap,
+  Users,
+} from "@phosphor-icons/react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface AcademicStats {
   classCount: number;

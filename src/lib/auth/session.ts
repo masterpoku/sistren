@@ -1,6 +1,6 @@
-import 'server-only';
-import { auth } from '@/lib/auth';
-import { headers } from 'next/headers';
+import "server-only";
+import { headers } from "next/headers";
+import { auth } from "@/lib/auth";
 
 /**
  * Gets the current session from better-auth.

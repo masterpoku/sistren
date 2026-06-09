@@ -1,15 +1,15 @@
-import { loginAction } from '@/actions/auth';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import Link from "next/link";
+import { loginAction } from "@/actions/auth";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import Link from 'next/link';
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default async function AlumniLoginPage() {
   return (
@@ -25,9 +25,9 @@ export default async function AlumniLoginPage() {
         <CardContent>
           <form
             action={async (formData: FormData) => {
-              'use server';
+              "use server";
               const result = await loginAction(formData);
-              if (result && 'error' in result) {
+              if (result && "error" in result) {
                 throw new Error(result.error);
               }
             }}

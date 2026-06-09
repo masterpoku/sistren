@@ -1,13 +1,13 @@
-import { redirect } from 'next/navigation';
-import { getSession } from '@/lib/auth/session';
-import { getAuthContext } from '@/lib/auth/permissions';
-import { auth } from '@/lib/auth';
-import { AppLayoutClient } from '@/features/layout/AppLayoutClient';
-import { ToastProvider } from '@/hooks/use-toast';
+import { redirect } from "next/navigation";
+import { AppLayoutClient } from "@/features/layout/AppLayoutClient";
+import { ToastProvider } from "@/hooks/use-toast";
+import { auth } from "@/lib/auth";
+import { getAuthContext } from "@/lib/auth/permissions";
+import { getSession } from "@/lib/auth/session";
 
 async function handleLogout() {
-  'use server';
-  const { headers } = await import('next/headers');
+  "use server";
+  const { headers } = await import("next/headers");
   await auth.api.signOut({ headers: await headers() });
 }
 
@@ -19,13 +19,13 @@ export default async function ProtectedLayout({
   const session = await getSession();
 
   if (!session?.user) {
-    redirect('/login');
+    redirect("/login");
   }
 
   const ctx = await getAuthContext(session.user.id);
 
   if (!ctx) {
-    redirect('/login');
+    redirect("/login");
   }
 
   return (

@@ -1,11 +1,11 @@
-'use server';
+"use server";
 
-import { revalidatePath } from 'next/cache';
-import { db } from '@/lib/db';
-import { paymentMethods, payments, users } from '@/lib/db/schema';
-import { eq, isNull, and, desc } from 'drizzle-orm';
-import { verifySession, verifyRoleLevel } from '@/lib/auth/verify-session';
-import { getAuthContext } from '@/lib/auth/permissions';
+import { and, desc, eq, isNull } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
+import { getAuthContext } from "@/lib/auth/permissions";
+import { verifyRoleLevel, verifySession } from "@/lib/auth/verify-session";
+import { db } from "@/lib/db";
+import { paymentMethods, payments, users } from "@/lib/db/schema";
 
 export async function getPaymentMethods() {
   await verifyRoleLevel(80);
@@ -20,14 +20,14 @@ export async function getPaymentMethods() {
 export async function createPaymentMethod(formData: FormData) {
   await verifyRoleLevel(80);
 
-  const name = formData.get('name') as string;
-  const accountNumber = formData.get('accountNumber') as string;
-  const accountName = formData.get('accountName') as string;
-  const provider = formData.get('provider') as string;
-  const instructions = formData.get('instructions') as string;
+  const name = formData.get("name") as string;
+  const accountNumber = formData.get("accountNumber") as string;
+  const accountName = formData.get("accountName") as string;
+  const provider = formData.get("provider") as string;
+  const instructions = formData.get("instructions") as string;
 
   if (!name?.trim()) {
-    return { error: 'Nama metode pembayaran wajib diisi.' };
+    return { error: "Nama metode pembayaran wajib diisi." };
   }
 
   const [existing] = await db
@@ -42,7 +42,7 @@ export async function createPaymentMethod(formData: FormData) {
     .limit(1);
 
   if (existing) {
-    return { error: 'Nama metode sudah ada.' };
+    return { error: "Nama metode sudah ada." };
   }
 
   await db.insert(paymentMethods).values({
@@ -53,7 +53,7 @@ export async function createPaymentMethod(formData: FormData) {
     instructions: instructions?.trim() || null,
   });
 
-  revalidatePath('/payments/methods');
+  revalidatePath("/payments/methods");
   return { success: true };
 }
 
@@ -63,14 +63,14 @@ export async function updatePaymentMethod(
 ) {
   await verifyRoleLevel(80);
 
-  const name = formData.get('name') as string;
-  const accountNumber = formData.get('accountNumber') as string;
-  const accountName = formData.get('accountName') as string;
-  const provider = formData.get('provider') as string;
-  const instructions = formData.get('instructions') as string;
+  const name = formData.get("name") as string;
+  const accountNumber = formData.get("accountNumber") as string;
+  const accountName = formData.get("accountName") as string;
+  const provider = formData.get("provider") as string;
+  const instructions = formData.get("instructions") as string;
 
   if (!name?.trim()) {
-    return { error: 'Nama metode pembayaran wajib diisi.' };
+    return { error: "Nama metode pembayaran wajib diisi." };
   }
 
   const [existing] = await db
@@ -85,7 +85,7 @@ export async function updatePaymentMethod(
     .limit(1);
 
   if (!existing) {
-    return { error: 'Metode pembayaran tidak ditemukan.' };
+    return { error: "Metode pembayaran tidak ditemukan." };
   }
 
   await db
@@ -99,7 +99,7 @@ export async function updatePaymentMethod(
     })
     .where(eq(paymentMethods.id, Number(methodId)));
 
-  revalidatePath('/payments/methods');
+  revalidatePath("/payments/methods");
   return { success: true };
 }
 
@@ -118,7 +118,7 @@ export async function deletePaymentMethod(methodId: string) {
     .limit(1);
 
   if (!existing) {
-    return { error: 'Metode pembayaran tidak ditemukan.' };
+    return { error: "Metode pembayaran tidak ditemukan." };
   }
 
   await db
@@ -126,7 +126,7 @@ export async function deletePaymentMethod(methodId: string) {
     .set({ deletedAt: new Date() })
     .where(eq(paymentMethods.id, Number(methodId)));
 
-  revalidatePath('/payments/methods');
+  revalidatePath("/payments/methods");
   return { success: true };
 }
 
@@ -153,7 +153,7 @@ export async function getPayments(opts?: {
     conditions.push(
       eq(
         payments.status,
-        opts.status as 'draft' | 'pending' | 'paid' | 'cancelled'
+        opts.status as "draft" | "pending" | "paid" | "cancelled"
       )
     );
   }
@@ -182,14 +182,14 @@ export async function getPayments(opts?: {
 export async function recordPayment(formData: FormData) {
   await verifyRoleLevel(80);
 
-  const studentId = formData.get('studentId') as string;
-  const paymentItemIdStr = formData.get('paymentItemId') as string;
-  const description = formData.get('description') as string;
-  const priceStr = formData.get('price') as string;
-  const quantityStr = formData.get('quantity') as string;
+  const studentId = formData.get("studentId") as string;
+  const paymentItemIdStr = formData.get("paymentItemId") as string;
+  const description = formData.get("description") as string;
+  const priceStr = formData.get("price") as string;
+  const quantityStr = formData.get("quantity") as string;
 
   if (!studentId || !description || !priceStr) {
-    return { error: 'Student, deskripsi, dan jumlah wajib diisi.' };
+    return { error: "Student, deskripsi, dan jumlah wajib diisi." };
   }
 
   // Optional catalog item — pre-fills description/standardPrice but never enforces
@@ -198,9 +198,9 @@ export async function recordPayment(formData: FormData) {
     : null;
 
   const price = parseFloat(priceStr);
-  const quantity = parseInt(quantityStr || '1', 10);
-  if (isNaN(price) || price < 0) {
-    return { error: 'Harga tidak valid.' };
+  const quantity = parseInt(quantityStr || "1", 10);
+  if (Number.isNaN(price) || price < 0) {
+    return { error: "Harga tidak valid." };
   }
 
   const total = price * quantity;
@@ -210,15 +210,15 @@ export async function recordPayment(formData: FormData) {
     studentId,
     code,
     paymentItemId:
-      paymentItemId && !isNaN(paymentItemId) ? paymentItemId : null,
+      paymentItemId && !Number.isNaN(paymentItemId) ? paymentItemId : null,
     description: description.trim(),
     price: String(price),
     quantity,
     total: String(total),
-    status: 'pending',
+    status: "pending",
   });
 
-  revalidatePath('/finance');
+  revalidatePath("/finance");
   return { success: true };
 }
 
@@ -232,15 +232,15 @@ export async function confirmPayment(paymentId: string) {
     .limit(1);
 
   if (!existing) {
-    return { error: 'Pembayaran tidak ditemukan.' };
+    return { error: "Pembayaran tidak ditemukan." };
   }
 
   await db
     .update(payments)
-    .set({ status: 'paid', paidAt: new Date() })
+    .set({ status: "paid", paidAt: new Date() })
     .where(eq(payments.id, Number(paymentId)));
 
-  revalidatePath('/finance');
+  revalidatePath("/finance");
   return { success: true };
 }
 
@@ -254,14 +254,14 @@ export async function cancelPayment(paymentId: string) {
     .limit(1);
 
   if (!existing) {
-    return { error: 'Pembayaran tidak ditemukan.' };
+    return { error: "Pembayaran tidak ditemukan." };
   }
 
   await db
     .update(payments)
-    .set({ status: 'cancelled' })
+    .set({ status: "cancelled" })
     .where(eq(payments.id, Number(paymentId)));
 
-  revalidatePath('/finance');
+  revalidatePath("/finance");
   return { success: true };
 }

@@ -1,18 +1,31 @@
-'use client';
+"use client";
 
-import * as React from 'react';
 import {
-  ColumnDef,
-  ColumnFiltersState,
-  SortingState,
-  VisibilityState,
+  type ColumnDef,
+  type ColumnFiltersState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
+  type SortingState,
   useReactTable,
-} from '@tanstack/react-table';
+  type VisibilityState,
+} from "@tanstack/react-table";
+import Papa from "papaparse";
+import { CaretDown, Export, File, FileCsv, Upload } from "phosphor-react";
+import * as React from "react";
+import * as XLSX from "xlsx";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -20,20 +33,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu';
-import { CaretDown, Export, File, FileCsv, Upload } from 'phosphor-react';
-import * as XLSX from 'xlsx';
-import Papa from 'papaparse';
+} from "@/components/ui/table";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -47,7 +47,7 @@ export function DataTable<TData, TValue>({
   columns,
   data,
   searchKey,
-  exportFilename = 'data-export',
+  exportFilename = "data-export",
   onImport,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -89,7 +89,7 @@ export function DataTable<TData, TValue>({
       dataToExport as Record<string, unknown>[]
     );
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Data');
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Data");
     XLSX.writeFile(workbook, `${exportFilename}.xlsx`);
   };
 
@@ -101,12 +101,12 @@ export function DataTable<TData, TValue>({
         : table.getFilteredRowModel().rows.map((row) => row.original);
 
     const csv = Papa.unparse(dataToExport as Record<string, unknown>[]);
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `${exportFilename}.csv`);
-    link.style.visibility = 'hidden';
+    link.setAttribute("href", url);
+    link.setAttribute("download", `${exportFilename}.csv`);
+    link.style.visibility = "hidden";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -119,20 +119,20 @@ export function DataTable<TData, TValue>({
     const reader = new FileReader();
     reader.onload = (e) => {
       const content = e.target?.result;
-      if (file.name.endsWith('.csv')) {
+      if (file.name.endsWith(".csv")) {
         Papa.parse(content as string, {
           header: true,
           complete: (results) => onImport(results.data),
         });
       } else {
-        const workbook = XLSX.read(content, { type: 'binary' });
+        const workbook = XLSX.read(content, { type: "binary" });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
         const json = XLSX.utils.sheet_to_json(worksheet);
         onImport(json);
       }
     };
-    if (file.name.endsWith('.csv')) {
+    if (file.name.endsWith(".csv")) {
       reader.readAsText(file);
     } else {
       reader.readAsBinaryString(file);
@@ -147,7 +147,7 @@ export function DataTable<TData, TValue>({
             <Input
               placeholder={`Cari ${searchKey}...`}
               value={
-                (table.getColumn(searchKey)?.getFilterValue() as string) ?? ''
+                (table.getColumn(searchKey)?.getFilterValue() as string) ?? ""
               }
               onChange={(event) =>
                 table.getColumn(searchKey)?.setFilterValue(event.target.value)
@@ -249,7 +249,7 @@ export function DataTable<TData, TValue>({
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  data-state={row.getIsSelected() && 'selected'}
+                  data-state={row.getIsSelected() && "selected"}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
@@ -276,7 +276,7 @@ export function DataTable<TData, TValue>({
       </div>
       <div className="flex items-center justify-between px-2">
         <div className="flex-1 text-sm text-muted-foreground">
-          {table.getFilteredSelectedRowModel().rows.length} dari{' '}
+          {table.getFilteredSelectedRowModel().rows.length} dari{" "}
           {table.getFilteredRowModel().rows.length} baris dipilih.
         </div>
         <div className="flex items-center space-x-2">

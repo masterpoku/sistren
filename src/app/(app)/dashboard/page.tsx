@@ -1,22 +1,22 @@
-import { redirect } from 'next/navigation';
-import { verifySession } from '@/lib/auth/verify-session';
-import { getAuthContext } from '@/lib/auth/permissions';
-import { db } from '@/lib/db';
+import { and, eq, isNull, sql } from "drizzle-orm";
+import { redirect } from "next/navigation";
+import { DashboardClient } from "@/features/dashboard/DashboardClient";
+import { getAuthContext } from "@/lib/auth/permissions";
+import { verifySession } from "@/lib/auth/verify-session";
+import { db } from "@/lib/db";
 import {
-  users,
-  roles,
+  announcements,
   enrollments,
+  roles,
   semesters,
   teacherClassSubjects,
-  announcements,
-} from '@/lib/db/schema';
-import { eq, isNull, and, sql } from 'drizzle-orm';
-import { DashboardClient } from './components';
+  users,
+} from "@/lib/db/schema";
 
 export default async function DashboardPage() {
   const session = await verifySession();
   const ctx = await getAuthContext(session.userId);
-  if (!ctx) redirect('/unauthorized');
+  if (!ctx) redirect("/unauthorized");
 
   const roleLevel = ctx.roleLevel;
 
@@ -47,7 +47,7 @@ export default async function DashboardPage() {
       .from(enrollments)
       .where(
         and(
-          eq(enrollments.status, 'active' as const),
+          eq(enrollments.status, "active" as const),
           isNull(enrollments.deletedAt)
         )
       )
@@ -113,7 +113,7 @@ export default async function DashboardPage() {
       .limit(1);
 
     if (enrollmentRow) {
-      stats = { ownEnrollmentStatus: enrollmentRow.status ?? 'unknown' };
+      stats = { ownEnrollmentStatus: enrollmentRow.status ?? "unknown" };
     }
   }
 

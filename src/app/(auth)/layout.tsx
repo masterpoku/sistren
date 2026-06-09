@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation';
-import { getSession } from '@/lib/auth/session';
+import { redirect } from "next/navigation";
+import { getSession } from "@/lib/auth/session";
 
 export default async function AuthLayout({
   children,
@@ -10,7 +10,7 @@ export default async function AuthLayout({
 
   // Redirect already logged-in users to dashboard
   if (session?.user) {
-    redirect('/dashboard');
+    redirect("/dashboard");
   }
 
   return <>{children}</>;

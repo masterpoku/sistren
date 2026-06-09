@@ -1,18 +1,18 @@
+import { relations } from "drizzle-orm";
 import {
-  mysqlTable,
   bigint,
-  varchar,
-  decimal,
   char,
+  decimal,
+  mysqlEnum,
+  mysqlTable,
   text,
   timestamp,
-  mysqlEnum,
   unique,
-} from 'drizzle-orm/mysql-core';
-import { relations } from 'drizzle-orm';
-import { enrollments } from './enrollments';
-import { subjects } from './subjects';
-import { users } from './users';
+  varchar,
+} from "drizzle-orm/mysql-core";
+import { enrollments } from "./enrollments";
+import { subjects } from "./subjects";
+import { users } from "./users";
 
 /**
  * Student grades per subject per semester.
@@ -27,52 +27,52 @@ import { users } from './users';
  * Unique: one grade row per (enrollment, subject, type).
  */
 export const grades = mysqlTable(
-  'grades',
+  "grades",
   {
-    id: bigint('id', { mode: 'number' }).primaryKey().autoincrement(),
-    enrollmentId: bigint('enrollment_id', { mode: 'number' })
+    id: bigint("id", { mode: "number" }).primaryKey().autoincrement(),
+    enrollmentId: bigint("enrollment_id", { mode: "number" })
       .notNull()
-      .references(() => enrollments.id, { onDelete: 'cascade' }),
-    subjectId: bigint('subject_id', { mode: 'number' })
+      .references(() => enrollments.id, { onDelete: "cascade" }),
+    subjectId: bigint("subject_id", { mode: "number" })
       .notNull()
-      .references(() => subjects.id, { onDelete: 'cascade' }),
-    type: mysqlEnum('type', [
-      'knowledge',
-      'skill',
-      'attitude',
-      'extracurricular',
+      .references(() => subjects.id, { onDelete: "cascade" }),
+    type: mysqlEnum("type", [
+      "knowledge",
+      "skill",
+      "attitude",
+      "extracurricular",
     ]).notNull(),
 
     // Knowledge sub-scores (type = 'knowledge')
-    dailyTest1: decimal('daily_test_1', { precision: 5, scale: 2 }),
-    dailyTest2: decimal('daily_test_2', { precision: 5, scale: 2 }),
-    dailyTest3: decimal('daily_test_3', { precision: 5, scale: 2 }),
-    dailyTest4: decimal('daily_test_4', { precision: 5, scale: 2 }),
-    midterm: decimal('midterm', { precision: 5, scale: 2 }),
-    finalExam: decimal('final_exam', { precision: 5, scale: 2 }),
+    dailyTest1: decimal("daily_test_1", { precision: 5, scale: 2 }),
+    dailyTest2: decimal("daily_test_2", { precision: 5, scale: 2 }),
+    dailyTest3: decimal("daily_test_3", { precision: 5, scale: 2 }),
+    dailyTest4: decimal("daily_test_4", { precision: 5, scale: 2 }),
+    midterm: decimal("midterm", { precision: 5, scale: 2 }),
+    finalExam: decimal("final_exam", { precision: 5, scale: 2 }),
 
     // Skill sub-scores (type = 'skill')
-    practical: decimal('practical', { precision: 5, scale: 2 }),
-    project: decimal('project', { precision: 5, scale: 2 }),
-    portfolio: decimal('portfolio', { precision: 5, scale: 2 }),
+    practical: decimal("practical", { precision: 5, scale: 2 }),
+    project: decimal("project", { precision: 5, scale: 2 }),
+    portfolio: decimal("portfolio", { precision: 5, scale: 2 }),
 
     // Teacher who entered the grade
-    teacherId: varchar('teacher_id', { length: 36 })
+    teacherId: varchar("teacher_id", { length: 36 })
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+      .references(() => users.id, { onDelete: "cascade" }),
 
     // Results
-    score: decimal('score', { precision: 5, scale: 2 }),
-    grade: char('grade', { length: 2 }),
-    predicate: varchar('predicate', { length: 20 }),
-    description: text('description'),
+    score: decimal("score", { precision: 5, scale: 2 }),
+    grade: char("grade", { length: 2 }),
+    predicate: varchar("predicate", { length: 20 }),
+    description: text("description"),
 
-    createdAt: timestamp('created_at').defaultNow(),
-    updatedAt: timestamp('updated_at').onUpdateNow(),
-    deletedAt: timestamp('deleted_at'),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").onUpdateNow(),
+    deletedAt: timestamp("deleted_at"),
   },
   (table) => ({
-    enrollmentSubjectTypeUnique: unique('grades_est_unique').on(
+    enrollmentSubjectTypeUnique: unique("grades_est_unique").on(
       table.enrollmentId,
       table.subjectId,
       table.type

@@ -1,21 +1,21 @@
-import { getPayments } from '@/actions/payments';
-import { verifySession } from '@/lib/auth/verify-session';
-import { getAuthContext } from '@/lib/auth/permissions';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { StudentFinanceClient } from '@/features/payments/StudentFinanceClient';
+import { getPayments } from "@/actions/payments";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { StudentFinanceClient } from "@/features/payments/StudentFinanceClient";
+import { getAuthContext } from "@/lib/auth/permissions";
+import { verifySession } from "@/lib/auth/verify-session";
 
 const STATUS_LABELS: Record<
   string,
   {
     label: string;
-    variant: 'default' | 'secondary' | 'destructive' | 'outline';
+    variant: "default" | "secondary" | "destructive" | "outline";
   }
 > = {
-  draft: { label: 'Draft', variant: 'secondary' },
-  pending: { label: 'Menunggu', variant: 'outline' },
-  paid: { label: 'Lunas', variant: 'default' },
-  cancelled: { label: 'Batal', variant: 'destructive' },
+  draft: { label: "Draft", variant: "secondary" },
+  pending: { label: "Menunggu", variant: "outline" },
+  paid: { label: "Lunas", variant: "default" },
+  cancelled: { label: "Batal", variant: "destructive" },
 };
 
 export default async function PaymentsPage() {
@@ -70,7 +70,7 @@ export default async function PaymentsPage() {
                 <tbody>
                   {paymentList.map((p) => {
                     const statusInfo =
-                      STATUS_LABELS[p.status ?? 'draft'] ?? STATUS_LABELS.draft;
+                      STATUS_LABELS[p.status ?? "draft"] ?? STATUS_LABELS.draft;
                     return (
                       <tr
                         key={p.id}
@@ -81,7 +81,7 @@ export default async function PaymentsPage() {
                         </td>
                         <td className="px-4 py-3">{p.description}</td>
                         <td className="px-4 py-3 font-medium">
-                          Rp {Number(p.total).toLocaleString('id-ID')}
+                          Rp {Number(p.total).toLocaleString("id-ID")}
                         </td>
                         <td className="px-4 py-3">
                           <Badge variant={statusInfo.variant}>
@@ -91,14 +91,14 @@ export default async function PaymentsPage() {
                         <td className="px-4 py-3 text-muted-foreground">
                           {p.createdAt
                             ? new Date(p.createdAt).toLocaleDateString(
-                                'id-ID',
+                                "id-ID",
                                 {
-                                  day: '2-digit',
-                                  month: 'short',
-                                  year: 'numeric',
+                                  day: "2-digit",
+                                  month: "short",
+                                  year: "numeric",
                                 }
                               )
-                            : '-'}
+                            : "-"}
                         </td>
                       </tr>
                     );

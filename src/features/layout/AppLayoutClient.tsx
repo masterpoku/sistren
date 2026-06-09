@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
-import { AppSidebar } from '@/components/layout/app-sidebar';
-import { AppHeader } from '@/components/layout/header';
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/features/layout/app-sidebar";
+import { AppHeader } from "@/features/layout/header";
 
 interface User {
   id: string;

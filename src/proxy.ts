@@ -1,15 +1,15 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
-import { auth } from '@/lib/auth';
-import { db } from '@/lib/db';
-import { users } from '@/lib/db/schema';
+import { eq } from "drizzle-orm";
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { hasPermission, hasRoleLevel } from "@/lib/auth/permissions";
 import {
   PUBLIC_ROUTES,
-  ROUTE_PERMISSIONS,
   ROLE_LEVEL_REQUIREMENTS,
-} from '@/lib/auth/route-permissions';
-import { hasPermission, hasRoleLevel } from '@/lib/auth/permissions';
-import { eq } from 'drizzle-orm';
+  ROUTE_PERMISSIONS,
+} from "@/lib/auth/route-permissions";
+import { db } from "@/lib/db";
+import { users } from "@/lib/db/schema";
 
 // Pre-sort routes by length (longest first) so more specific paths match first
 const SORTED_ROUTE_ENTRIES = Object.entries(ROUTE_PERMISSIONS).sort(
@@ -28,8 +28,8 @@ export async function proxy(request: NextRequest) {
   });
 
   if (!session?.user) {
-    const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('callbackUrl', pathname);
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
@@ -42,8 +42,8 @@ export async function proxy(request: NextRequest) {
 
   if (userRecord && userRecord.deletedAt !== null) {
     await auth.api.signOut({ headers: request.headers });
-    const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('callbackUrl', pathname);
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
@@ -51,7 +51,7 @@ export async function proxy(request: NextRequest) {
   if (minLevel !== undefined) {
     const hasLevel = await hasRoleLevel(session.user.id, minLevel);
     if (!hasLevel) {
-      return NextResponse.redirect(new URL('/unauthorized', request.url));
+      return NextResponse.redirect(new URL("/unauthorized", request.url));
     }
   }
 
@@ -62,7 +62,7 @@ export async function proxy(request: NextRequest) {
   if (requiredPermission) {
     const allowed = await hasPermission(session.user.id, requiredPermission);
     if (!allowed) {
-      return NextResponse.redirect(new URL('/unauthorized', request.url));
+      return NextResponse.redirect(new URL("/unauthorized", request.url));
     }
   }
 
@@ -71,6 +71,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|api/auth|better-auth|css|images|fonts|js).*)',
+    "/((?!_next/static|_next/image|favicon.ico|api/auth|better-auth|css|images|fonts|js).*)",
   ],
 };

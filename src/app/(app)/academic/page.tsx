@@ -1,13 +1,13 @@
-import { verifySession } from '@/lib/auth/verify-session';
-import { getAuthContext } from '@/lib/auth/permissions';
 import {
   getClasses,
   getMajors,
-  getSubjects,
   getSemesters,
-} from '@/actions/academic';
-import { AcademicOverviewClient } from '@/features/academic/AcademicOverviewClient';
-import { StudentAcademicClient } from '@/features/academic/StudentAcademicClient';
+  getSubjects,
+} from "@/actions/academic";
+import { AcademicOverviewClient } from "@/features/academic/AcademicOverviewClient";
+import { StudentAcademicClient } from "@/features/academic/StudentAcademicClient";
+import { getAuthContext } from "@/lib/auth/permissions";
+import { verifySession } from "@/lib/auth/verify-session";
 
 export default async function AcademicOverviewPage() {
   const session = await verifySession();

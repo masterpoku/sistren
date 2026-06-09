@@ -1,12 +1,12 @@
+import { relations } from "drizzle-orm";
 import {
-  mysqlTable,
   bigint,
-  varchar,
+  mysqlTable,
   text,
   timestamp,
-} from 'drizzle-orm/mysql-core';
-import { relations } from 'drizzle-orm';
-import { userPermissions, rolePermissions } from './index';
+  varchar,
+} from "drizzle-orm/mysql-core";
+import { rolePermissions, userPermissions } from "./index";
 
 /**
  * Permissions table — defines all available system permissions for RBAC.
@@ -14,16 +14,16 @@ import { userPermissions, rolePermissions } from './index';
  * Permissions follow {resource}.{action} naming convention.
  * Example: users.create, grades.input, announcements.publish
  */
-export const permissions = mysqlTable('permissions', {
-  id: bigint('id', { mode: 'number' }).primaryKey().autoincrement(),
-  name: varchar('name', { length: 255 }).unique().notNull(),
-  description: text('description'),
-  resource: varchar('resource', { length: 100 }).notNull(),
-  action: varchar('action', { length: 50 }).notNull(),
-  scope: varchar('scope', { length: 20 }).default('global'),
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').onUpdateNow(),
-  deletedAt: timestamp('deleted_at'),
+export const permissions = mysqlTable("permissions", {
+  id: bigint("id", { mode: "number" }).primaryKey().autoincrement(),
+  name: varchar("name", { length: 255 }).unique().notNull(),
+  description: text("description"),
+  resource: varchar("resource", { length: 100 }).notNull(),
+  action: varchar("action", { length: 50 }).notNull(),
+  scope: varchar("scope", { length: 20 }).default("global"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
 });
 
 export const permissionsRelations = relations(permissions, ({ many }) => ({

@@ -1,10 +1,10 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 export const gradeTypeSchema = z.enum([
-  'knowledge',
-  'skill',
-  'attitude',
-  'extracurricular',
+  "knowledge",
+  "skill",
+  "attitude",
+  "extracurricular",
 ]);
 
 export const upsertGradeSchema = z.object({
@@ -29,7 +29,7 @@ export const upsertGradeSchema = z.object({
 export const bulkGradesSchema = z.object({
   rows: z.string().transform((val) => {
     const parsed = JSON.parse(val);
-    if (!Array.isArray(parsed)) throw new Error('Rows must be an array');
+    if (!Array.isArray(parsed)) throw new Error("Rows must be an array");
     return parsed;
   }),
 });

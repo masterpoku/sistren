@@ -1,8 +1,8 @@
-import 'server-only';
-import { auth } from '@/lib/auth';
-import { headers } from 'next/headers';
-import { redirect } from 'next/navigation';
-import { getAuthContext } from './permissions';
+import "server-only";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
+import { getAuthContext } from "./permissions";
 
 /**
  * Gets the user session if one exists, or null if none.
@@ -44,7 +44,7 @@ export async function verifySession(): Promise<{
   });
 
   if (!session?.user) {
-    redirect('/login');
+    redirect("/login");
   }
 
   return {
@@ -64,12 +64,12 @@ export async function verifyAdmin(): Promise<string> {
   });
 
   if (!session?.user) {
-    redirect('/login');
+    redirect("/login");
   }
 
   const ctx = await getAuthContext(session.user.id);
   if (!ctx || ctx.roleLevel < 80) {
-    redirect('/unauthorized');
+    redirect("/unauthorized");
   }
 
   return session.user.id;
@@ -85,12 +85,12 @@ export async function verifyRoleLevel(minLevel: number): Promise<string> {
   });
 
   if (!session?.user) {
-    redirect('/login');
+    redirect("/login");
   }
 
   const ctx = await getAuthContext(session.user.id);
   if (!ctx || ctx.roleLevel < minLevel) {
-    redirect('/unauthorized');
+    redirect("/unauthorized");
   }
 
   return session.user.id;
@@ -109,12 +109,12 @@ export async function verifyPermission(
   });
 
   if (!session?.user) {
-    redirect('/login');
+    redirect("/login");
   }
 
   const ctx = await getAuthContext(session.user.id);
-  if (!ctx || !ctx.permissions.has(permissionName)) {
-    redirect('/unauthorized');
+  if (!ctx?.permissions.has(permissionName)) {
+    redirect("/unauthorized");
   }
 
   return session.user.id;

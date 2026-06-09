@@ -1,17 +1,22 @@
-'use server';
+"use server";
 
+import { revalidatePath } from "next/cache";
+import { getClasses, getSemesters } from "@/actions/academic";
 import {
-  getEnrollments,
-  getAvailableStudents,
   createEnrollment,
-} from '@/actions/enrollments';
-import { getSemesters } from '@/actions/academic';
-import { getClasses } from '@/actions/academic';
-import { verifyRoleLevel } from '@/lib/auth/verify-session';
-import { EnrollmentStatusBadge } from './components/EnrollmentStatusBadge';
-import { BulkEnrollmentForm } from './components/BulkEnrollmentForm';
-import { StatusChangeForm } from './components/StatusChangeForm';
-import { Button } from '@/components/ui/button';
+  getAvailableStudents,
+  getEnrollments,
+} from "@/actions/enrollments";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -19,17 +24,11 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { revalidatePath } from 'next/cache';
+} from "@/components/ui/table";
+import { BulkEnrollmentForm } from "@/features/enrollments/BulkEnrollmentForm";
+import { EnrollmentStatusBadge } from "@/features/enrollments/EnrollmentStatusBadge";
+import { StatusChangeForm } from "@/features/enrollments/StatusChangeForm";
+import { verifyRoleLevel } from "@/lib/auth/verify-session";
 
 export default async function EnrollmentsPage() {
   await verifyRoleLevel(60);
@@ -72,12 +71,12 @@ export default async function EnrollmentsPage() {
         <CardContent>
           <form
             action={async (formData: FormData) => {
-              'use server';
+              "use server";
               const result = await createEnrollment(formData);
-              if (result && 'error' in result) {
+              if (result && "error" in result) {
                 throw new Error(result.error);
               }
-              revalidatePath('/enrollments');
+              revalidatePath("/enrollments");
             }}
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
           >
@@ -180,7 +179,7 @@ export default async function EnrollmentsPage() {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      {e.status === 'active' ? (
+                      {e.status === "active" ? (
                         <StatusChangeForm enrollmentId={e.id} />
                       ) : (
                         <span className="text-xs text-muted-foreground">
@@ -189,11 +188,12 @@ export default async function EnrollmentsPage() {
                       )}
                       <form
                         action={async () => {
-                          'use server';
-                          const { deleteEnrollment } =
-                            await import('@/actions/enrollments');
+                          "use server";
+                          const { deleteEnrollment } = await import(
+                            "@/actions/enrollments"
+                          );
                           await deleteEnrollment(String(e.id));
-                          revalidatePath('/enrollments');
+                          revalidatePath("/enrollments");
                         }}
                       >
                         <Button size="sm" variant="destructive" type="submit">

@@ -1,12 +1,11 @@
-'use server';
+"use server";
 
-import { revalidatePath } from 'next/cache';
-
-import { db } from '@/lib/db';
-import { announcements, users, announcementRecipients } from '@/lib/db/schema';
-import { eq, isNull, and, desc, isNotNull } from 'drizzle-orm';
-import { verifySession, verifyRoleLevel } from '@/lib/auth/verify-session';
-import { getAuthContext } from '@/lib/auth/permissions';
+import { and, desc, eq, isNotNull, isNull } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
+import { getAuthContext } from "@/lib/auth/permissions";
+import { verifyRoleLevel, verifySession } from "@/lib/auth/verify-session";
+import { db } from "@/lib/db";
+import { announcementRecipients, announcements, users } from "@/lib/db/schema";
 
 export async function getAnnouncements(limit?: number) {
   const session = await verifySession();
@@ -43,21 +42,21 @@ export async function getAnnouncements(limit?: number) {
 
 export async function createAnnouncement(formData: FormData) {
   const session = await verifySession();
-  if (!session) return { error: 'Tidak ada sesi.' };
+  if (!session) return { error: "Tidak ada sesi." };
 
   const ctx = await getAuthContext(session.userId);
   if (!ctx || ctx.roleLevel < 80) {
-    return { error: 'Anda tidak memiliki izin.' };
+    return { error: "Anda tidak memiliki izin." };
   }
 
-  const title = formData.get('title') as string;
-  const content = formData.get('content') as string;
-  const description = formData.get('description') as string;
-  const category = formData.get('category') as string;
-  const priority = formData.get('priority') as string;
+  const title = formData.get("title") as string;
+  const content = formData.get("content") as string;
+  const description = formData.get("description") as string;
+  const category = formData.get("category") as string;
+  const priority = formData.get("priority") as string;
 
   if (!title?.trim() || !content?.trim()) {
-    return { error: 'Judul dan konten wajib diisi.' };
+    return { error: "Judul dan konten wajib diisi." };
   }
 
   await db.insert(announcements).values({
@@ -65,25 +64,25 @@ export async function createAnnouncement(formData: FormData) {
     content: content.trim(),
     description: description?.trim() || null,
     category: category?.trim() || null,
-    priority: (['normal', 'important', 'urgent'].includes(priority)
+    priority: (["normal", "important", "urgent"].includes(priority)
       ? priority
-      : 'normal') as 'normal' | 'important' | 'urgent',
+      : "normal") as "normal" | "important" | "urgent",
     authorId: session.userId,
     publishedAt: new Date(),
   });
 
-  revalidatePath('/announcements');
+  revalidatePath("/announcements");
 
   return { success: true };
 }
 
 export async function deleteAnnouncement(announcementId: string) {
   const session = await verifySession();
-  if (!session) return { error: 'Tidak ada sesi.' };
+  if (!session) return { error: "Tidak ada sesi." };
 
   const ctx = await getAuthContext(session.userId);
   if (!ctx || ctx.roleLevel < 80) {
-    return { error: 'Anda tidak memiliki izin.' };
+    return { error: "Anda tidak memiliki izin." };
   }
 
   const [existing] = await db
@@ -98,7 +97,7 @@ export async function deleteAnnouncement(announcementId: string) {
     .limit(1);
 
   if (!existing) {
-    return { error: 'Pengumuman tidak ditemukan.' };
+    return { error: "Pengumuman tidak ditemukan." };
   }
 
   await db
@@ -106,7 +105,7 @@ export async function deleteAnnouncement(announcementId: string) {
     .set({ deletedAt: new Date() })
     .where(eq(announcements.id, Number(announcementId)));
 
-  revalidatePath('/announcements');
+  revalidatePath("/announcements");
 
   return { success: true };
 }
@@ -116,11 +115,11 @@ export async function updateAnnouncement(
   formData: FormData
 ) {
   const session = await verifySession();
-  if (!session) return { error: 'Tidak ada sesi.' };
+  if (!session) return { error: "Tidak ada sesi." };
 
   const ctx = await getAuthContext(session.userId);
   if (!ctx || ctx.roleLevel < 80) {
-    return { error: 'Anda tidak memiliki izin.' };
+    return { error: "Anda tidak memiliki izin." };
   }
 
   const [existing] = await db
@@ -135,17 +134,17 @@ export async function updateAnnouncement(
     .limit(1);
 
   if (!existing) {
-    return { error: 'Pengumuman tidak ditemukan.' };
+    return { error: "Pengumuman tidak ditemukan." };
   }
 
-  const title = formData.get('title') as string;
-  const content = formData.get('content') as string;
-  const description = formData.get('description') as string;
-  const category = formData.get('category') as string;
-  const priority = formData.get('priority') as string;
+  const title = formData.get("title") as string;
+  const content = formData.get("content") as string;
+  const description = formData.get("description") as string;
+  const category = formData.get("category") as string;
+  const priority = formData.get("priority") as string;
 
   if (!title?.trim() || !content?.trim()) {
-    return { error: 'Judul dan konten wajib diisi.' };
+    return { error: "Judul dan konten wajib diisi." };
   }
 
   await db
@@ -155,13 +154,13 @@ export async function updateAnnouncement(
       content: content.trim(),
       description: description?.trim() || null,
       category: category?.trim() || null,
-      priority: (['normal', 'important', 'urgent'].includes(priority)
+      priority: (["normal", "important", "urgent"].includes(priority)
         ? priority
-        : 'normal') as 'normal' | 'important' | 'urgent',
+        : "normal") as "normal" | "important" | "urgent",
     })
     .where(eq(announcements.id, Number(announcementId)));
 
-  revalidatePath('/announcements');
+  revalidatePath("/announcements");
 
   return { success: true };
 }
@@ -181,7 +180,7 @@ export async function publishAnnouncement(announcementId: string) {
     .limit(1);
 
   if (!existing) {
-    return { error: 'Pengumuman tidak ditemukan.' };
+    return { error: "Pengumuman tidak ditemukan." };
   }
 
   await db
@@ -189,7 +188,7 @@ export async function publishAnnouncement(announcementId: string) {
     .set({ publishedAt: new Date() })
     .where(eq(announcements.id, Number(announcementId)));
 
-  revalidatePath('/announcements');
+  revalidatePath("/announcements");
 
   return { success: true };
 }
@@ -209,7 +208,7 @@ export async function unpublishAnnouncement(announcementId: string) {
     .limit(1);
 
   if (!existing) {
-    return { error: 'Pengumuman tidak ditemukan.' };
+    return { error: "Pengumuman tidak ditemukan." };
   }
 
   await db
@@ -217,7 +216,7 @@ export async function unpublishAnnouncement(announcementId: string) {
     .set({ publishedAt: null })
     .where(eq(announcements.id, Number(announcementId)));
 
-  revalidatePath('/announcements');
+  revalidatePath("/announcements");
 
   return { success: true };
 }

@@ -1,8 +1,17 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { createAuthClient } from 'better-auth/client';
+import {
+  GraduationCap,
+  ShieldCheck,
+  Student,
+  UserCircle,
+  Warning,
+} from "@phosphor-icons/react";
+import { createAuthClient } from "better-auth/client";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { loginAction } from "@/actions/auth";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -10,21 +19,12 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import {
-  GraduationCap,
-  ShieldCheck,
-  Student,
-  UserCircle,
-  Warning,
-} from '@phosphor-icons/react';
-import { loginAction } from '@/actions/auth';
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const authClient = createAuthClient({
-  baseURL: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+  baseURL: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
 });
 
 export default function LoginPage() {
@@ -35,7 +35,7 @@ export default function LoginPage() {
   useEffect(() => {
     authClient.getSession().then((session) => {
       if (session?.data) {
-        router.push('/dashboard');
+        router.push("/dashboard");
       }
     });
   }, [router]);
@@ -49,12 +49,12 @@ export default function LoginPage() {
 
     try {
       const result = await loginAction(formData);
-      if (result && 'error' in result) {
+      if (result && "error" in result) {
         setError(result.error);
       }
       // redirect happens via loginAction for success case
-    } catch (err) {
-      setError('Terjadi kesalahan. Silakan coba lagi.');
+    } catch (_err) {
+      setError("Terjadi kesalahan. Silakan coba lagi.");
     } finally {
       setLoading(false);
     }
@@ -62,18 +62,18 @@ export default function LoginPage() {
 
   const quickLogin = (email: string) => {
     const formData = new FormData();
-    formData.set('email', email);
-    formData.set('password', 'Password123!');
+    formData.set("email", email);
+    formData.set("password", "Password123!");
     setLoading(true);
     loginAction(formData)
       .then((result) => {
-        if (result && 'error' in result) {
+        if (result && "error" in result) {
           setError(result.error);
           setLoading(false);
         }
       })
       .catch(() => {
-        setError('Terjadi kesalahan.');
+        setError("Terjadi kesalahan.");
         setLoading(false);
       });
   };
@@ -83,7 +83,7 @@ export default function LoginPage() {
       <style>{`@keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }`}</style>
       <div
         className="w-full max-w-md space-y-8"
-        style={{ animation: 'fadeUp 500ms ease' }}
+        style={{ animation: "fadeUp 500ms ease" }}
       >
         <div className="text-center space-y-2">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg">
@@ -129,7 +129,7 @@ export default function LoginPage() {
                     type="button"
                     className="text-xs text-muted-foreground hover:text-primary transition-colors"
                     onClick={() =>
-                      alert('Hubungi administrator untuk reset password.')
+                      alert("Hubungi administrator untuk reset password.")
                     }
                   >
                     Lupa password?
@@ -140,7 +140,7 @@ export default function LoginPage() {
             </CardContent>
             <CardFooter className="flex flex-col gap-4">
               <Button type="submit" className="w-full h-11" disabled={loading}>
-                {loading ? 'Memuat...' : 'Masuk'}
+                {loading ? "Memuat..." : "Masuk"}
               </Button>
               <div className="relative w-full">
                 <div className="absolute inset-0 flex items-center">
@@ -156,7 +156,7 @@ export default function LoginPage() {
                 variant="outline"
                 className="w-full h-11"
                 type="button"
-                onClick={() => router.push('/register')}
+                onClick={() => router.push("/register")}
               >
                 PPDB - Pendaftaran Siswa Baru
               </Button>
@@ -173,7 +173,7 @@ export default function LoginPage() {
               variant="secondary"
               size="sm"
               className="text-[10px] h-8"
-              onClick={() => quickLogin('superadmin@sister.com')}
+              onClick={() => quickLogin("superadmin@sister.com")}
             >
               <ShieldCheck className="mr-1 h-3 w-3" /> Superadmin
             </Button>
@@ -181,7 +181,7 @@ export default function LoginPage() {
               variant="secondary"
               size="sm"
               className="text-[10px] h-8"
-              onClick={() => quickLogin('admin@sister.com')}
+              onClick={() => quickLogin("admin@sister.com")}
             >
               <ShieldCheck className="mr-1 h-3 w-3" /> Admin
             </Button>
@@ -189,7 +189,7 @@ export default function LoginPage() {
               variant="secondary"
               size="sm"
               className="text-[10px] h-8"
-              onClick={() => quickLogin('guru@sister.com')}
+              onClick={() => quickLogin("guru@sister.com")}
             >
               <ShieldCheck className="mr-1 h-3 w-3" /> Guru
             </Button>
@@ -197,7 +197,7 @@ export default function LoginPage() {
               variant="secondary"
               size="sm"
               className="text-[10px] h-8"
-              onClick={() => quickLogin('siswa@sister.com')}
+              onClick={() => quickLogin("siswa@sister.com")}
             >
               <Student className="mr-1 h-3 w-3" /> Siswa
             </Button>
@@ -205,7 +205,7 @@ export default function LoginPage() {
               variant="secondary"
               size="sm"
               className="text-[10px] h-8 col-span-2"
-              onClick={() => quickLogin('alumni@sister.com')}
+              onClick={() => quickLogin("alumni@sister.com")}
             >
               <UserCircle className="mr-1 h-3 w-3" /> Alumni
             </Button>

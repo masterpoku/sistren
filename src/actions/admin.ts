@@ -1,12 +1,12 @@
-'use server';
+"use server";
 
-import { revalidatePath } from 'next/cache';
-import { auth } from '@/lib/auth';
-import { db } from '@/lib/db';
-import { users, roles } from '@/lib/db/schema';
-import { eq, isNull, and } from 'drizzle-orm';
-import { verifyRoleLevel } from '@/lib/auth/verify-session';
-import { headers } from 'next/headers';
+import { and, eq, isNull } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
+import { auth } from "@/lib/auth";
+import { verifyRoleLevel } from "@/lib/auth/verify-session";
+import { db } from "@/lib/db";
+import { roles, users } from "@/lib/db/schema";
 
 export async function approveStudent(userId: string) {
   await verifyRoleLevel(80);
@@ -18,11 +18,11 @@ export async function approveStudent(userId: string) {
     .limit(1);
 
   if (!user) {
-    return { error: 'Pengguna tidak ditemukan.' };
+    return { error: "Pengguna tidak ditemukan." };
   }
 
   if (user.emailVerified) {
-    return { error: 'Pengguna sudah disetujui.' };
+    return { error: "Pengguna sudah disetujui." };
   }
 
   await db
@@ -43,7 +43,7 @@ export async function rejectStudent(userId: string) {
     .limit(1);
 
   if (!user) {
-    return { error: 'Pengguna tidak ditemukan.' };
+    return { error: "Pengguna tidak ditemukan." };
   }
 
   await db
@@ -51,29 +51,29 @@ export async function rejectStudent(userId: string) {
     .set({ deletedAt: new Date() })
     .where(eq(users.id, userId));
 
-  revalidatePath('/admin/approvals');
+  revalidatePath("/admin/approvals");
   return { success: true };
 }
 
 export async function createStaffAccount(formData: FormData) {
   await verifyRoleLevel(80);
 
-  const name = formData.get('name') as string;
-  const email = formData.get('email') as string;
-  const password = formData.get('password') as string;
-  const roleIdStr = formData.get('roleId') as string;
+  const name = formData.get("name") as string;
+  const email = formData.get("email") as string;
+  const password = formData.get("password") as string;
+  const roleIdStr = formData.get("roleId") as string;
 
   if (!name || !email || !password || !roleIdStr) {
-    return { error: 'Semua field wajib diisi.' };
+    return { error: "Semua field wajib diisi." };
   }
 
   if (password.length < 6) {
-    return { error: 'Password minimal 6 karakter.' };
+    return { error: "Password minimal 6 karakter." };
   }
 
   const roleId = Number(roleIdStr);
   if (![60, 80].includes(roleId)) {
-    return { error: 'Role tidak valid. Pilih Guru atau Administrator.' };
+    return { error: "Role tidak valid. Pilih Guru atau Administrator." };
   }
 
   const [existing] = await db
@@ -83,7 +83,7 @@ export async function createStaffAccount(formData: FormData) {
     .limit(1);
 
   if (existing) {
-    return { error: 'Email sudah terdaftar.' };
+    return { error: "Email sudah terdaftar." };
   }
 
   try {
@@ -92,7 +92,7 @@ export async function createStaffAccount(formData: FormData) {
         body: { email, password, name },
         headers: await headers(),
       });
-      const userId = ('id' in result ? result.id : result.user.id) as string;
+      const userId = ("id" in result ? result.id : result.user.id) as string;
       await tx
         .update(users)
         .set({ roleId, emailVerified: true })
@@ -102,12 +102,12 @@ export async function createStaffAccount(formData: FormData) {
   } catch (err: unknown) {
     if (
       err instanceof Error &&
-      (err.message.includes('already exists') ||
-        err.message.includes('duplicate'))
+      (err.message.includes("already exists") ||
+        err.message.includes("duplicate"))
     ) {
-      return { error: 'Email sudah terdaftar.' };
+      return { error: "Email sudah terdaftar." };
     }
-    return { error: 'Gagal membuat akun. Silakan coba lagi.' };
+    return { error: "Gagal membuat akun. Silakan coba lagi." };
   }
 }
 
@@ -126,11 +126,11 @@ export async function deleteStaffAccount(userId: string) {
     .limit(1);
 
   if (!user) {
-    return { error: 'Pengguna tidak ditemukan.' };
+    return { error: "Pengguna tidak ditemukan." };
   }
 
   if (user.roleLevel !== null && user.roleLevel >= 100) {
-    return { error: 'Tidak dapat menghapus superadmin.' };
+    return { error: "Tidak dapat menghapus superadmin." };
   }
 
   await db
@@ -138,6 +138,6 @@ export async function deleteStaffAccount(userId: string) {
     .set({ deletedAt: new Date() })
     .where(eq(users.id, userId));
 
-  revalidatePath('/admin/users');
+  revalidatePath("/admin/users");
   return { success: true };
 }

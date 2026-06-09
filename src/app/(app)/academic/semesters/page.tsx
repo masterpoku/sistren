@@ -1,7 +1,7 @@
-import { getSemesters } from '@/actions/academic';
-import { verifyRoleLevel } from '@/lib/auth/verify-session';
-import { SemestersClient } from '@/features/academic/semesters/SemestersClient';
-import { SemesterFormCard } from './semester-form-card';
+import { getSemesters } from "@/actions/academic";
+import { SemesterFormCard } from "@/features/academic/SemesterFormCard";
+import { SemestersClient } from "@/features/academic/semesters/SemestersClient";
+import { verifyRoleLevel } from "@/lib/auth/verify-session";
 
 export default async function SemestersPage() {
   await verifyRoleLevel(60);

@@ -1,12 +1,13 @@
+import { getSemesters } from "@/actions/academic";
 import {
-  getPaymentItems,
   createPaymentItem,
-  updatePaymentItem,
   deletePaymentItem,
-} from '@/actions/paymentItems';
-import { getSemesters } from '@/actions/academic';
-import { verifyRoleLevel } from '@/lib/auth/verify-session';
-import { Button } from '@/components/ui/button';
+  getPaymentItems,
+  updatePaymentItem,
+} from "@/actions/paymentItems";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -14,16 +15,15 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { PaymentItemDialog } from './payment-item-dialog';
-import { PaymentItemForm } from './payment-item-form';
+} from "@/components/ui/table";
+import { PaymentItemDialog } from "@/features/payments/PaymentItemDialog";
+import { PaymentItemForm } from "@/features/payments/PaymentItemForm";
+import { verifyRoleLevel } from "@/lib/auth/verify-session";
 
 const TYPE_LABELS: Record<string, string> = {
-  recurring: 'Berulang',
-  one_time: 'Sekali',
-  variable: 'Variabel',
+  recurring: "Berulang",
+  one_time: "Sekali",
+  variable: "Variabel",
 };
 
 export default async function AdminPaymentItemsPage() {
@@ -35,7 +35,7 @@ export default async function AdminPaymentItemsPage() {
   ]);
 
   const typeLabel = (t: string | null | undefined) =>
-    TYPE_LABELS[t ?? 'one_time'] ?? t ?? '—';
+    TYPE_LABELS[t ?? "one_time"] ?? t ?? "—";
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6">
@@ -88,15 +88,15 @@ export default async function AdminPaymentItemsPage() {
                     </TableCell>
                     <TableCell className="font-medium">{item.name}</TableCell>
                     <TableCell className="text-muted-foreground max-w-[200px] truncate">
-                      {item.description ?? '—'}
+                      {item.description ?? "—"}
                     </TableCell>
                     <TableCell className="font-medium">
-                      Rp {Number(item.standardPrice).toLocaleString('id-ID')}
+                      Rp {Number(item.standardPrice).toLocaleString("id-ID")}
                     </TableCell>
                     <TableCell>
                       <Badge variant="secondary">{typeLabel(item.type)}</Badge>
                     </TableCell>
-                    <TableCell>{item.semesterName ?? 'Semua'}</TableCell>
+                    <TableCell>{item.semesterName ?? "Semua"}</TableCell>
                     <TableCell>
                       {item.isActive ? (
                         <Badge variant="default" className="bg-green-500">
@@ -124,7 +124,7 @@ export default async function AdminPaymentItemsPage() {
                         </PaymentItemDialog>
                         <form
                           action={async () => {
-                            'use server';
+                            "use server";
                             await deletePaymentItem(String(item.id));
                           }}
                         >

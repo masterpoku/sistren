@@ -1,7 +1,7 @@
-import { getClasses, getSubjects, getSemesters } from '@/actions/academic';
-import { verifySession } from '@/lib/auth/verify-session';
-import { getAuthContext } from '@/lib/auth/permissions';
-import { GradesPageClient } from './grades-client';
+import { getClasses, getSemesters, getSubjects } from "@/actions/academic";
+import { GradesClient } from "@/features/academic/GradesClient";
+import { getAuthContext } from "@/lib/auth/permissions";
+import { verifySession } from "@/lib/auth/verify-session";
 
 export default async function GradesPage() {
   const session = await verifySession();
@@ -18,7 +18,7 @@ export default async function GradesPage() {
   // If teacher (level 60), get assigned subjects
   const assignedSubjectIds: number[] = [];
   if (roleLevel === 60) {
-    const { getAssignments } = await import('@/actions/academic');
+    const { getAssignments } = await import("@/actions/academic");
     const assignments = await getAssignments();
     const filtered = assignments.filter((a) => a.teacherId === userId);
     assignedSubjectIds.push(...filtered.map((a) => a.subjectId));
@@ -33,7 +33,7 @@ export default async function GradesPage() {
         </p>
       </div>
 
-      <GradesPageClient
+      <GradesClient
         classes={classList}
         subjects={subjectList}
         semesters={semesterList}

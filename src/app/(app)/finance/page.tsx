@@ -1,8 +1,8 @@
-import { getPayments, confirmPayment, recordPayment } from '@/actions/payments';
-import { verifyRoleLevel } from '@/lib/auth/verify-session';
-import { db } from '@/lib/db';
-import { users, roles, paymentItems } from '@/lib/db/schema';
-import { eq, isNull, and } from 'drizzle-orm';
+import { and, eq, isNull } from "drizzle-orm";
+import { confirmPayment, getPayments, recordPayment } from "@/actions/payments";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -10,23 +10,23 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { RecordPaymentForm } from './record-payment-form';
+} from "@/components/ui/table";
+import { RecordPaymentForm } from "@/features/finance/RecordPaymentForm";
+import { verifyRoleLevel } from "@/lib/auth/verify-session";
+import { db } from "@/lib/db";
+import { paymentItems, roles, users } from "@/lib/db/schema";
 
 const STATUS_LABELS: Record<
   string,
   {
     label: string;
-    variant: 'default' | 'secondary' | 'destructive' | 'outline';
+    variant: "default" | "secondary" | "destructive" | "outline";
   }
 > = {
-  draft: { label: 'Draft', variant: 'secondary' },
-  pending: { label: 'Menunggu', variant: 'outline' },
-  paid: { label: 'Lunas', variant: 'default' },
-  cancelled: { label: 'Batal', variant: 'destructive' },
+  draft: { label: "Draft", variant: "secondary" },
+  pending: { label: "Menunggu", variant: "outline" },
+  paid: { label: "Lunas", variant: "default" },
+  cancelled: { label: "Batal", variant: "destructive" },
 };
 
 export default async function FinancePage() {
@@ -102,7 +102,7 @@ export default async function FinancePage() {
               <TableBody>
                 {paymentList.map((p) => {
                   const statusInfo =
-                    STATUS_LABELS[p.status ?? 'draft'] ?? STATUS_LABELS.draft;
+                    STATUS_LABELS[p.status ?? "draft"] ?? STATUS_LABELS.draft;
                   return (
                     <TableRow key={p.id}>
                       <TableCell className="font-medium">
@@ -113,7 +113,7 @@ export default async function FinancePage() {
                       </TableCell>
                       <TableCell>{p.description}</TableCell>
                       <TableCell className="font-medium">
-                        Rp {Number(p.total).toLocaleString('id-ID')}
+                        Rp {Number(p.total).toLocaleString("id-ID")}
                       </TableCell>
                       <TableCell>
                         <Badge variant={statusInfo.variant}>
@@ -121,10 +121,10 @@ export default async function FinancePage() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {p.status === 'pending' && (
+                        {p.status === "pending" && (
                           <form
                             action={async () => {
-                              'use server';
+                              "use server";
                               await confirmPayment(String(p.id));
                             }}
                           >

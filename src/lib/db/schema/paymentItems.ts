@@ -1,14 +1,14 @@
+import { relations } from "drizzle-orm";
 import {
-  mysqlTable,
   bigint,
-  varchar,
-  decimal,
   boolean,
+  decimal,
+  mysqlEnum,
+  mysqlTable,
   timestamp,
-} from 'drizzle-orm/mysql-core';
-import { mysqlEnum } from 'drizzle-orm/mysql-core';
-import { relations } from 'drizzle-orm';
-import { semesters } from './semesters';
+  varchar,
+} from "drizzle-orm/mysql-core";
+import { semesters } from "./semesters";
 
 /**
  * Payment item catalog — Odoo-style product template.
@@ -19,28 +19,28 @@ import { semesters } from './semesters';
  *
  * @see SPECS.md decision log 2026-05-30 — Odoo-style product + invoice line pattern
  */
-export const paymentItems = mysqlTable('payment_items', {
-  id: bigint('id', { mode: 'number' }).primaryKey().autoincrement(),
-  code: varchar('code', { length: 50 }).unique().notNull(),
-  name: varchar('name', { length: 100 }).notNull(),
-  description: varchar('description', { length: 255 }),
+export const paymentItems = mysqlTable("payment_items", {
+  id: bigint("id", { mode: "number" }).primaryKey().autoincrement(),
+  code: varchar("code", { length: 50 }).unique().notNull(),
+  name: varchar("name", { length: 100 }).notNull(),
+  description: varchar("description", { length: 255 }),
   /** Default price shown in recordPayment — always editable per invoice */
-  standardPrice: decimal('standard_price', {
+  standardPrice: decimal("standard_price", {
     precision: 10,
     scale: 2,
   }).notNull(),
   /** recurring | one_time | variable */
-  type: mysqlEnum('type', ['recurring', 'one_time', 'variable']).default(
-    'one_time'
+  type: mysqlEnum("type", ["recurring", "one_time", "variable"]).default(
+    "one_time"
   ),
   /** Optional: some items are semester-specific (SPP), others are not (Uang Gedung) */
-  semesterId: bigint('semester_id', { mode: 'number' }).references(
+  semesterId: bigint("semester_id", { mode: "number" }).references(
     () => semesters.id
   ),
-  isActive: boolean('is_active').default(true),
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').onUpdateNow(),
-  deletedAt: timestamp('deleted_at'),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
 });
 
 export const paymentItemsRelations = relations(paymentItems, ({ one }) => ({

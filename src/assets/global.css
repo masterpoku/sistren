@@ -1,4 +1,4 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 @plugin "tailwindcss-animate";
 
 @theme {
@@ -82,13 +82,13 @@
   }
 
   .alumni-sidebar {
-    --sidebar-background: 42 98% 53% !important;
-    --sidebar-foreground: 222.2 47.4% 11.2% !important;
-    --sidebar-primary: 210 100% 30% !important;
-    --sidebar-primary-foreground: 0 0% 100% !important;
-    --sidebar-accent: 42 98% 48% !important;
-    --sidebar-accent-foreground: 222.2 47.4% 11.2% !important;
-    --sidebar-border: 42 98% 45% !important;
+    --sidebar-background: 42 98% 53%;
+    --sidebar-foreground: 222.2 47.4% 11.2%;
+    --sidebar-primary: 210 100% 30%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 42 98% 48%;
+    --sidebar-accent-foreground: 222.2 47.4% 11.2%;
+    --sidebar-border: 42 98% 45%;
   }
 
   .dark {

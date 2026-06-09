@@ -1,15 +1,15 @@
+import { relations } from "drizzle-orm";
 import {
-  mysqlTable,
   bigint,
-  varchar,
-  timestamp,
   mysqlEnum,
+  mysqlTable,
+  timestamp,
   unique,
-} from 'drizzle-orm/mysql-core';
-import { relations } from 'drizzle-orm';
-import { users } from './users';
-import { classes } from './classes';
-import { semesters } from './semesters';
+  varchar,
+} from "drizzle-orm/mysql-core";
+import { classes } from "./classes";
+import { semesters } from "./semesters";
+import { users } from "./users";
 
 /**
  * Student course registration per semester (KRS).
@@ -20,29 +20,29 @@ import { semesters } from './semesters';
  * Status transitions: active → transferred/dropped/graduated (one-way, irreversible).
  */
 export const enrollments = mysqlTable(
-  'enrollments',
+  "enrollments",
   {
-    id: bigint('id', { mode: 'number' }).primaryKey().autoincrement(),
-    studentId: varchar('student_id', { length: 36 })
+    id: bigint("id", { mode: "number" }).primaryKey().autoincrement(),
+    studentId: varchar("student_id", { length: 36 })
       .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
-    semesterId: bigint('semester_id', { mode: 'number' })
+      .references(() => users.id, { onDelete: "cascade" }),
+    semesterId: bigint("semester_id", { mode: "number" })
       .notNull()
-      .references(() => semesters.id, { onDelete: 'cascade' }),
-    classId: bigint('class_id', { mode: 'number' })
+      .references(() => semesters.id, { onDelete: "cascade" }),
+    classId: bigint("class_id", { mode: "number" })
       .notNull()
-      .references(() => classes.id, { onDelete: 'cascade' }),
-    status: mysqlEnum('status', [
-      'active',
-      'transferred',
-      'dropped',
-      'graduated',
+      .references(() => classes.id, { onDelete: "cascade" }),
+    status: mysqlEnum("status", [
+      "active",
+      "transferred",
+      "dropped",
+      "graduated",
     ])
       .notNull()
-      .default('active'),
-    createdAt: timestamp('created_at').defaultNow(),
-    updatedAt: timestamp('updated_at').onUpdateNow(),
-    deletedAt: timestamp('deleted_at'),
+      .default("active"),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").onUpdateNow(),
+    deletedAt: timestamp("deleted_at"),
   },
   (table) => ({
     studentSemesterUnique: unique().on(table.studentId, table.semesterId),

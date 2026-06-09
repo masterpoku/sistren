@@ -1,6 +1,7 @@
-'use client';
+"use client";
 
-import { useState, use } from 'react';
+import { use, useState } from "react";
+import { getReligions } from "@/actions/religions";
 import {
   Card,
   CardContent,
@@ -8,15 +9,15 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { getReligions } from '@/actions/religions';
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 
 const religionsPromise = getReligions();
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { GraduationCap, Warning } from '@phosphor-icons/react';
-import { registerAction } from '@/actions/register';
+
+import { GraduationCap, Warning } from "@phosphor-icons/react";
+import { registerAction } from "@/actions/register";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 
 export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
@@ -32,15 +33,15 @@ export default function RegisterPage() {
 
     try {
       const result = await registerAction(formData);
-      if (result && 'error' in result) {
+      if (result && "error" in result) {
         setError(result.error);
       }
       // redirect happens via registerAction on success
     } catch (err: unknown) {
-      if (err instanceof Error && err.message.includes('NEXT_REDIRECT')) {
+      if (err instanceof Error && err.message.includes("NEXT_REDIRECT")) {
         return; // redirect is happening, do nothing
       }
-      setError('Terjadi kesalahan. Silakan coba lagi.');
+      setError("Terjadi kesalahan. Silakan coba lagi.");
     } finally {
       setLoading(false);
     }
@@ -192,10 +193,10 @@ export default function RegisterPage() {
             </CardContent>
             <CardFooter className="flex flex-col gap-4">
               <Button type="submit" className="w-full h-11" disabled={loading}>
-                {loading ? 'Memuat...' : 'Daftar'}
+                {loading ? "Memuat..." : "Daftar"}
               </Button>
               <p className="text-center text-sm text-muted-foreground">
-                Sudah punya akun?{' '}
+                Sudah punya akun?{" "}
                 <a href="/login" className="text-primary hover:underline">
                   Login di sini
                 </a>

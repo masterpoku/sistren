@@ -1,19 +1,19 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { ColumnDef } from '@tanstack/react-table';
-import { DataTable } from '@/components/ui/data-table';
-import { Button } from '@/components/ui/button';
-import { Trash, Pencil } from '@phosphor-icons/react';
+import { Pencil, Trash } from "@phosphor-icons/react";
+import type { ColumnDef } from "@tanstack/react-table";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { DataTable } from "@/components/ui/data-table";
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 type SubjectItem = {
   id: number;
@@ -25,26 +25,26 @@ type SubjectItem = {
 
 export const columns: ColumnDef<SubjectItem>[] = [
   {
-    accessorKey: 'name',
-    header: 'Nama',
+    accessorKey: "name",
+    header: "Nama",
   },
   {
-    accessorKey: 'code',
-    header: 'Kode',
-    cell: ({ row }) => row.getValue('code') ?? '-',
+    accessorKey: "code",
+    header: "Kode",
+    cell: ({ row }) => row.getValue("code") ?? "-",
   },
   {
-    accessorKey: 'className',
-    header: 'Kelas',
+    accessorKey: "className",
+    header: "Kelas",
   },
   {
-    accessorKey: 'credits',
-    header: 'SKS',
-    cell: ({ row }) => row.getValue('credits') ?? 0,
+    accessorKey: "credits",
+    header: "SKS",
+    cell: ({ row }) => row.getValue("credits") ?? 0,
   },
   {
-    id: 'actions',
-    header: 'Aksi',
+    id: "actions",
+    header: "Aksi",
     cell: ({ row }) => (
       <SubjectActions
         id={row.original.id}
@@ -60,14 +60,14 @@ function SubjectActions({ id, name, code, credits }: SubjectItem) {
   const [editOpen, setEditOpen] = useState(false);
 
   async function handleEdit(formData: FormData) {
-    const { updateSubject } = await import('@/actions/academic');
+    const { updateSubject } = await import("@/actions/academic");
     await updateSubject(String(id), formData);
     setEditOpen(false);
   }
 
   async function handleDelete() {
-    if (!confirm('Yakin hapus mapel ini?')) return;
-    const { deleteSubject } = await import('@/actions/academic');
+    if (!confirm("Yakin hapus mapel ini?")) return;
+    const { deleteSubject } = await import("@/actions/academic");
     await deleteSubject(String(id));
   }
 
@@ -104,7 +104,7 @@ function SubjectActions({ id, name, code, credits }: SubjectItem) {
               <Input
                 id={`subj-code-${id}`}
                 name="code"
-                defaultValue={code ?? ''}
+                defaultValue={code ?? ""}
               />
             </div>
             <div className="space-y-2">

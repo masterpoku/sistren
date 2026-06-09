@@ -1,12 +1,12 @@
-import { getSchoolSettings } from '@/actions/settings';
-import { verifyRoleLevel } from '@/lib/auth/verify-session';
-import { SchoolSettingsForm } from './school-settings-form';
+import { getSchoolSettings } from "@/actions/settings";
+import { SchoolSettingsForm } from "@/features/settings/SchoolSettingsForm";
+import { verifyRoleLevel } from "@/lib/auth/verify-session";
 
 export default async function SchoolSettingsPage() {
   await verifyRoleLevel(80);
   const settings = await getSchoolSettings();
 
-  const getSetting = (key: string, fallback = '') =>
+  const getSetting = (key: string, fallback = "") =>
     settings.find((s) => s.key === key)?.value ?? fallback;
 
   return (
@@ -19,11 +19,11 @@ export default async function SchoolSettingsPage() {
       </div>
 
       <SchoolSettingsForm
-        schoolName={getSetting('school_name')}
-        schoolAddress={getSetting('school_address')}
-        headmaster={getSetting('headmaster')}
-        npsn={getSetting('npsn')}
-        nss={getSetting('nss')}
+        schoolName={getSetting("school_name")}
+        schoolAddress={getSetting("school_address")}
+        headmaster={getSetting("headmaster")}
+        npsn={getSetting("npsn")}
+        nss={getSetting("nss")}
       />
     </div>
   );

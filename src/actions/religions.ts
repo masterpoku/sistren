@@ -1,8 +1,8 @@
-'use server';
+"use server";
 
-import { db } from '@/lib/db';
-import { religions } from '@/lib/db/schema';
-import { isNull } from 'drizzle-orm';
+import { isNull } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { religions } from "@/lib/db/schema";
 
 export async function getReligions() {
   return db

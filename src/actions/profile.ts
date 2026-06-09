@@ -1,18 +1,18 @@
-'use server';
+"use server";
 
-import { revalidatePath } from 'next/cache';
-import { db } from '@/lib/db';
-import { profiles } from '@/lib/db/schema';
-import { eq, and, isNull } from 'drizzle-orm';
-import { verifySession } from '@/lib/auth/verify-session';
+import { and, eq, isNull } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
+import { verifySession } from "@/lib/auth/verify-session";
+import { db } from "@/lib/db";
+import { profiles } from "@/lib/db/schema";
 
 export async function updateProfile(formData: FormData) {
   const session = await verifySession();
 
-  const phone = formData.get('phone') as string;
-  const address = formData.get('address') as string;
-  const fatherName = formData.get('fatherName') as string;
-  const motherName = formData.get('motherName') as string;
+  const phone = formData.get("phone") as string;
+  const address = formData.get("address") as string;
+  const fatherName = formData.get("fatherName") as string;
+  const motherName = formData.get("motherName") as string;
 
   // Verify profile exists
   const [existing] = await db
@@ -22,7 +22,7 @@ export async function updateProfile(formData: FormData) {
     .limit(1);
 
   if (!existing) {
-    return { error: 'Profil tidak ditemukan.' };
+    return { error: "Profil tidak ditemukan." };
   }
 
   const updateValues: Record<string, string> = {};
@@ -32,7 +32,7 @@ export async function updateProfile(formData: FormData) {
   if (motherName?.trim()) updateValues.motherName = motherName;
 
   if (Object.keys(updateValues).length === 0) {
-    return { error: 'Tidak ada data yang diubah.' };
+    return { error: "Tidak ada data yang diubah." };
   }
 
   await db
@@ -40,6 +40,6 @@ export async function updateProfile(formData: FormData) {
     .set(updateValues)
     .where(eq(profiles.userId, session.userId));
 
-  revalidatePath('/profile');
+  revalidatePath("/profile");
   return { success: true };
 }

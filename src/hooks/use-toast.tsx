@@ -1,23 +1,23 @@
-'use client';
+"use client";
 
 import {
   createContext,
+  type ReactNode,
+  useCallback,
   useContext,
   useState,
-  useCallback,
-  ReactNode,
-} from 'react';
+} from "react";
 
 export interface Toast {
   id: string;
   title?: string;
   description?: string;
-  variant?: 'default' | 'destructive';
+  variant?: "default" | "destructive";
 }
 
 interface ToastContextType {
   toasts: Toast[];
-  toast: (toast: Omit<Toast, 'id'>) => void;
+  toast: (toast: Omit<Toast, "id">) => void;
   dismiss: (id: string) => void;
 }
 
@@ -26,7 +26,7 @@ const ToastContext = createContext<ToastContextType | undefined>(undefined);
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
-  const toast = useCallback((newToast: Omit<Toast, 'id'>) => {
+  const toast = useCallback((newToast: Omit<Toast, "id">) => {
     const id = Math.random().toString(36).substring(7);
     setToasts((prev) => [...prev, { ...newToast, id }]);
     setTimeout(() => {
@@ -46,9 +46,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           <div
             key={t.id}
             className={`rounded-lg border p-4 shadow-lg ${
-              t.variant === 'destructive'
-                ? 'bg-destructive text-destructive-foreground border-destructive'
-                : 'bg-background border-border'
+              t.variant === "destructive"
+                ? "bg-destructive text-destructive-foreground border-destructive"
+                : "bg-background border-border"
             }`}
           >
             {t.title && <div className="font-medium">{t.title}</div>}

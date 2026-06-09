@@ -1,18 +1,18 @@
-'use server';
+"use server";
 
-import { revalidatePath } from 'next/cache';
-import { db } from '@/lib/db';
+import { and, desc, eq, isNull } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
+import { getAuthContext } from "@/lib/auth/permissions";
+import { verifySession } from "@/lib/auth/verify-session";
+import { db } from "@/lib/db";
 import {
-  enrollments,
-  users,
-  semesters,
-  classes,
-  roles,
   auditLogs,
-} from '@/lib/db/schema';
-import { eq, isNull, and, desc } from 'drizzle-orm';
-import { verifySession } from '@/lib/auth/verify-session';
-import { getAuthContext } from '@/lib/auth/permissions';
+  classes,
+  enrollments,
+  roles,
+  semesters,
+  users,
+} from "@/lib/db/schema";
 
 export async function getEnrollments(opts?: {
   semesterId?: string;
@@ -38,7 +38,7 @@ export async function getEnrollments(opts?: {
     conditions.push(
       eq(
         enrollments.status,
-        opts.status as 'active' | 'transferred' | 'dropped' | 'graduated'
+        opts.status as "active" | "transferred" | "dropped" | "graduated"
       )
     );
   }
@@ -89,15 +89,15 @@ export async function createEnrollment(formData: FormData) {
   const ctx = await getAuthContext(session.userId);
 
   if (!ctx || ctx.roleLevel < 80) {
-    return { error: 'Anda tidak memiliki izin.' };
+    return { error: "Anda tidak memiliki izin." };
   }
 
-  const studentId = formData.get('studentId') as string;
-  const semesterId = formData.get('semesterId') as string;
-  const classId = formData.get('classId') as string;
+  const studentId = formData.get("studentId") as string;
+  const semesterId = formData.get("semesterId") as string;
+  const classId = formData.get("classId") as string;
 
   if (!studentId || !semesterId || !classId) {
-    return { error: 'Semua field wajib diisi.' };
+    return { error: "Semua field wajib diisi." };
   }
 
   const [student] = await db
@@ -107,7 +107,7 @@ export async function createEnrollment(formData: FormData) {
     .limit(1);
 
   if (!student) {
-    return { error: 'Siswa tidak ditemukan.' };
+    return { error: "Siswa tidak ditemukan." };
   }
 
   const [existing] = await db
@@ -123,17 +123,17 @@ export async function createEnrollment(formData: FormData) {
     .limit(1);
 
   if (existing) {
-    return { error: 'Siswa sudah terdaftar untuk semester ini.' };
+    return { error: "Siswa sudah terdaftar untuk semester ini." };
   }
 
   await db.insert(enrollments).values({
     studentId,
     semesterId: Number(semesterId),
     classId: Number(classId),
-    status: 'active',
+    status: "active",
   });
 
-  revalidatePath('/enrollments');
+  revalidatePath("/enrollments");
   return { success: true };
 }
 
@@ -142,7 +142,7 @@ export async function deleteEnrollment(enrollmentId: string) {
   const ctx = await getAuthContext(session.userId);
 
   if (!ctx || ctx.roleLevel < 80) {
-    return { error: 'Anda tidak memiliki izin.' };
+    return { error: "Anda tidak memiliki izin." };
   }
 
   const [existing] = await db
@@ -157,7 +157,7 @@ export async function deleteEnrollment(enrollmentId: string) {
     .limit(1);
 
   if (!existing) {
-    return { error: 'Pendaftaran tidak ditemukan.' };
+    return { error: "Pendaftaran tidak ditemukan." };
   }
 
   await db
@@ -165,7 +165,7 @@ export async function deleteEnrollment(enrollmentId: string) {
     .set({ deletedAt: new Date() })
     .where(eq(enrollments.id, Number(enrollmentId)));
 
-  revalidatePath('/enrollments');
+  revalidatePath("/enrollments");
   return { success: true };
 }
 
@@ -177,11 +177,11 @@ export async function bulkCreateEnrollment(
   const ctx = await getAuthContext(session.userId);
 
   if (!ctx || ctx.roleLevel < 80) {
-    return { error: 'Anda tidak memiliki izin.' };
+    return { error: "Anda tidak memiliki izin." };
   }
 
   if (!classId || !semesterId) {
-    return { error: 'Kelas dan semester wajib dipilih.' };
+    return { error: "Kelas dan semester wajib dipilih." };
   }
 
   const targetClassId = Number(classId);
@@ -198,7 +198,7 @@ export async function bulkCreateEnrollment(
         eq(roles.level, 40),
         eq(enrollments.classId, targetClassId),
         eq(enrollments.semesterId, targetSemesterId),
-        eq(enrollments.status, 'active'),
+        eq(enrollments.status, "active"),
         isNull(enrollments.deletedAt),
         isNull(users.deletedAt)
       )
@@ -210,7 +210,7 @@ export async function bulkCreateEnrollment(
     return {
       inserted: 0,
       skipped: 0,
-      message: 'Tidak ada siswa di kelas ini.',
+      message: "Tidak ada siswa di kelas ini.",
     };
   }
 
@@ -245,7 +245,7 @@ export async function bulkCreateEnrollment(
             studentId: student.id,
             semesterId: targetSemesterId,
             classId: targetClassId,
-            status: 'active',
+            status: "active",
           });
           inserted++;
         }
@@ -265,13 +265,13 @@ export async function bulkCreateEnrollment(
 
 export async function updateEnrollmentStatus(
   enrollmentId: string,
-  newStatus: 'active' | 'transferred' | 'dropped' | 'graduated'
+  newStatus: "active" | "transferred" | "dropped" | "graduated"
 ) {
   const session = await verifySession();
   const ctx = await getAuthContext(session.userId);
 
   if (!ctx || ctx.roleLevel < 80) {
-    return { error: 'Anda tidak memiliki izin.' };
+    return { error: "Anda tidak memiliki izin." };
   }
 
   const [existing] = await db
@@ -286,15 +286,15 @@ export async function updateEnrollmentStatus(
     .limit(1);
 
   if (!existing) {
-    return { error: 'Pendaftaran tidak ditemukan.' };
+    return { error: "Pendaftaran tidak ditemukan." };
   }
 
-  if (existing.status === 'dropped') {
-    return { error: 'Status tidak dapat diubah lagi.' };
+  if (existing.status === "dropped") {
+    return { error: "Status tidak dapat diubah lagi." };
   }
 
-  if (existing.status === 'transferred' && newStatus !== 'dropped') {
-    return { error: 'Hanya dapat mengubah ke dropout.' };
+  if (existing.status === "transferred" && newStatus !== "dropped") {
+    return { error: "Hanya dapat mengubah ke dropout." };
   }
 
   await db
@@ -304,8 +304,8 @@ export async function updateEnrollmentStatus(
 
   await db.insert(auditLogs).values({
     userId: session.userId,
-    action: 'enrollment.status_change',
-    entityType: 'enrollment',
+    action: "enrollment.status_change",
+    entityType: "enrollment",
     entityId: Number(enrollmentId),
     metadata: {
       changes: {
@@ -315,6 +315,6 @@ export async function updateEnrollmentStatus(
     },
   });
 
-  revalidatePath('/enrollments');
+  revalidatePath("/enrollments");
   return { success: true };
 }

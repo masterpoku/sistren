@@ -1,12 +1,12 @@
-import { db } from '@/lib/db';
+import { and, eq, gt, isNull, or } from "drizzle-orm";
+import { db } from "@/lib/db";
 import {
   permissions,
   rolePermissions,
+  roles,
   userPermissions,
   users,
-  roles,
-} from '@/lib/db/schema';
-import { eq, and, isNull, or, gt } from 'drizzle-orm';
+} from "@/lib/db/schema";
 
 export interface AuthContext {
   userId: string; // string UUID
@@ -90,7 +90,7 @@ export async function getAuthContext(
   return {
     userId: user.id as string,
     roleId: user.roleId as number,
-    roleName: user.roleName || 'unknown',
+    roleName: user.roleName || "unknown",
     roleLevel: (user.roleLevel as number) ?? 0,
     permissions: effectivePermissions,
   };

@@ -1,20 +1,20 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { ColumnDef } from '@tanstack/react-table';
-import { DataTable } from '@/components/ui/data-table';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Trash, Play, Pencil } from '@phosphor-icons/react';
+import { Pencil, Play, Trash } from "@phosphor-icons/react";
+import type { ColumnDef } from "@tanstack/react-table";
+import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { DataTable } from "@/components/ui/data-table";
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 type SemesterItem = {
   id: number;
@@ -25,26 +25,26 @@ type SemesterItem = {
 
 export const columns: ColumnDef<SemesterItem>[] = [
   {
-    accessorKey: 'name',
-    header: 'Nama',
+    accessorKey: "name",
+    header: "Nama",
   },
   {
-    accessorKey: 'academicYear',
-    header: 'Tahun Ajaran',
+    accessorKey: "academicYear",
+    header: "Tahun Ajaran",
   },
   {
-    accessorKey: 'isActive',
-    header: 'Status',
+    accessorKey: "isActive",
+    header: "Status",
     cell: ({ row }) =>
-      row.getValue('isActive') ? (
+      row.getValue("isActive") ? (
         <Badge className="bg-green-500">Aktif</Badge>
       ) : (
         <Badge variant="outline">Tidak Aktif</Badge>
       ),
   },
   {
-    id: 'actions',
-    header: 'Aksi',
+    id: "actions",
+    header: "Aksi",
     cell: ({ row }) => (
       <SemesterActions
         id={row.original.id}
@@ -60,19 +60,19 @@ function SemesterActions({ id, name, academicYear, isActive }: SemesterItem) {
   const [editOpen, setEditOpen] = useState(false);
 
   async function handleEdit(formData: FormData) {
-    const { updateSemester } = await import('@/actions/academic');
+    const { updateSemester } = await import("@/actions/academic");
     await updateSemester(String(id), formData);
     setEditOpen(false);
   }
 
   async function handleDelete() {
-    if (!confirm('Yakin hapus semester ini?')) return;
-    const { deleteSemester } = await import('@/actions/academic');
+    if (!confirm("Yakin hapus semester ini?")) return;
+    const { deleteSemester } = await import("@/actions/academic");
     await deleteSemester(String(id));
   }
 
   async function handleActivate() {
-    const { setActiveSemester } = await import('@/actions/academic');
+    const { setActiveSemester } = await import("@/actions/academic");
     await setActiveSemester(String(id));
   }
 
@@ -115,7 +115,7 @@ function SemesterActions({ id, name, academicYear, isActive }: SemesterItem) {
               <Input
                 id={`sem-year-${id}`}
                 name="academicYear"
-                defaultValue={academicYear ?? ''}
+                defaultValue={academicYear ?? ""}
                 required
               />
             </div>

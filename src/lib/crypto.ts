@@ -1,15 +1,15 @@
-import { randomBytes, createCipheriv, createDecipheriv } from 'crypto';
+import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
 
-const ALGORITHM = 'aes-256-gcm';
+const ALGORITHM = "aes-256-gcm";
 const IV_LENGTH = 12;
 const AUTH_TAG_LENGTH = 16;
 const KEY_LENGTH = 32;
 
 const key = process.env.DOCUMENT_ENCRYPTION_KEY;
 if (!key) {
-  throw new Error('DOCUMENT_ENCRYPTION_KEY environment variable is not set');
+  throw new Error("DOCUMENT_ENCRYPTION_KEY environment variable is not set");
 }
-const keyBuffer = Buffer.from(key, 'utf8');
+const keyBuffer = Buffer.from(key, "utf8");
 if (keyBuffer.length !== KEY_LENGTH) {
   throw new Error(
     `DOCUMENT_ENCRYPTION_KEY must be exactly ${KEY_LENGTH} bytes (32 characters for UTF-8), got ${keyBuffer.length} bytes`
@@ -36,7 +36,7 @@ export function encryptBlob(data: Buffer): Buffer {
  */
 export function decryptBlob(data: Buffer): Buffer {
   if (data.length < IV_LENGTH + AUTH_TAG_LENGTH) {
-    throw new Error('Encrypted data is too short');
+    throw new Error("Encrypted data is too short");
   }
   const iv = data.subarray(0, IV_LENGTH);
   const authTag = data.subarray(data.length - AUTH_TAG_LENGTH);
