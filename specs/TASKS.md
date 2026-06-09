@@ -2,10 +2,116 @@
 
 > Append-only cross-session goal tracker. Add new goals, never delete old ones.
 > Archive completed goals by moving to an "## Archived" section.
+> Last updated: 2026-06-09 — Comprehensive gap audit completed.
 
 ---
 
 ## Active Goals
+
+### Sprint A — Dead Code & Low-Hanging Fixes
+
+**Status:** pending
+
+**Summary:** Immediate low-effort fixes that reduce crash risk and clean up the codebase.
+
+- [ ] Delete 10 dead Sheet/Dialog components — zero imports outside their own files
+  - `src/components/academic/ClassSheet.tsx`, `MajorSheet.tsx`, `SubjectSheet.tsx`, `SemesterSheet.tsx`
+  - `src/components/enrollments/EnrollmentSheet.tsx`
+  - `src/components/grades/GradeSheet.tsx`
+  - `src/components/announcements/AnnouncementSheet.tsx`
+  - `src/components/finance/PaymentForm.tsx`
+  - `src/components/students/StudentForm.tsx`
+  - `src/components/teachers/TeacherForm.tsx`
+- [ ] Delete legacy `src/components/ui/sidebar.tsx` (unused; `app-sidebar.tsx` is active)
+- [ ] Fix Batal button in `payment-item-dialog.tsx` — add `onOpenChange` handler
+- [ ] Add `return` to 4 void wrapper actions in `src/actions/academic.ts:558–572`
+
+---
+
+### Sprint B — Validation Hygiene (Zod + ActionResult)
+
+**Status:** pending
+
+**Summary:** Wire orphaned Zod schemas into their action files, adopt `ActionResult<T>` across all actions, fix `throw new Error` anti-pattern in pages.
+
+- [ ] Import Zod schemas into `src/actions/academic.ts` (8 manual validations → schema)
+- [ ] Import Zod schemas into `src/actions/announcements.ts` (2 manual validations)
+- [ ] Import Zod schemas into `src/actions/payments.ts` (2 manual validations)
+- [ ] Import Zod schemas into `src/actions/register.ts` (3 manual validations)
+- [ ] Import Zod schemas into `src/actions/auth.ts` (2 manual validations)
+- [ ] Consolidate `VALID_TYPES` in `src/actions/grades.ts` — import from `gradeTypeSchema`
+- [ ] Adopt `ActionResult<T>` + `ErrorCode` across all 13 action files (currently 0 adopters)
+- [ ] Replace `throw new Error(result.error)` in 11 page components with toast/state pattern
+- [ ] Wire `useActionState` into form components (enrollments, announcements, payments)
+
+---
+
+### Sprint C — Security & Data Integrity
+
+**Status:** pending
+
+**Summary:** Fixes required before production launch.
+
+- [ ] Fix SQL injection in `src/lib/db/seed-permissions.ts:433–437` — use `db.insert().values()` pattern
+- [ ] Extract shared permission constant to `src/lib/db/permissions.ts` (deduplicate `seed.ts` vs `seed-permissions.ts`)
+- [ ] Fix `/permissions` route permission mapping in `src/lib/auth/route-permissions.ts:13`
+- [ ] Add alumni seed user to `src/lib/db/seed.ts` (quick-login button exists but no seeded user)
+- [ ] Add missing schema relations: `semesters.ts` (grades, paymentItems), `subjects.ts` (grades)
+- [ ] Fix `audit_logs.entityId` type — add `entityIdStr varchar(36)` or migrate to `varchar`
+- [ ] Create `/api/auth/permissions` endpoint OR remove `src/hooks/use-permissions.ts`
+- [ ] Remove `profile_assets` from `src/lib/db/schema/index.ts` (never imported; `studentDocuments` is active)
+
+---
+
+### Client Request — Calendar (Kalender) Feature
+
+**Status:** pending
+
+**Source:** Obsidian `jadwal-sistren.md` — client request, 1 Juni 2026
+
+**Summary:** Client requested a calendar feature to be added to Sistren. Specifics pending discussion — could be academic calendar (events, holidays, exam schedule), class schedule view, or general school calendar. Needs clarification on scope before implementation.
+
+- [ ] Clarify calendar scope — academic events vs class schedule vs general school calendar
+- [ ] Design calendar data model (events table, recurring events, holidays)
+- [ ] Build calendar UI component
+- [ ] Integrate with existing academic data (semesters, classes)
+
+---
+
+### Client Request — Assessment / Grading System (Penilaian)
+
+**Status:** pending
+
+**Source:** Obsidian `jadwal-sistren.md` — client request, 1 Juni 2026
+
+**Summary:** Client reported an issue with the grading/assessment system ("masalah penilaian"). Specifics not yet documented. The system already has Phase 16 grade management (structured input + KHS view), so this may be a bug report, a refinement request, or a missing feature. Needs investigation.
+
+- [ ] Clarify the specific grading issue from the client
+- [ ] Investigate existing Phase 16 grade management implementation
+- [ ] Determine if bug fix or feature addition
+- [ ] Implement fix/feature and verify with client
+
+---
+
+### Client Request — Alumni Form Flow (Nice-to-Have)
+
+**Status:** pending
+
+**Source:** Obsidian `sistren-decision.md` + `jadwal-sistren.md` — client request, 1 Juni 2026
+
+**Summary:** Before a student is graduated and their role changed to `alumni`, they need to fill out a series of forms. Currently graduation just changes the role — no form collection step. This is explicitly marked nice-to-have (not MVP) by the client.
+
+**Design decisions already recorded in `sistren-decision.md`:**
+- Alumni role: account stays active with limited access per alumni role
+- Alumni form flow: nice-to-have, not required for MVP
+
+- [ ] Design alumni graduation form workflow
+- [ ] Determine which forms are needed before graduation
+- [ ] Build multi-step form or form wizard
+- [ ] Wire form completion → role change trigger
+- [ ] Test graduation flow end-to-end
+
+---
 
 ### School Settings — Zod Integration + Batch Update
 
@@ -15,19 +121,201 @@
 
 **Summary:** Fixed settings module with proper validation and batch update pattern.
 
-- ✅ `schoolSettingsSchema` created in `src/lib/validation/schemas/settings.ts` — npsn (8 digit), nss (12 digit), min length validation
-- ✅ `getSchoolSettings()` added soft delete filter (`isNull(systemConfigs.deletedAt)`)
-- ✅ `batchUpdateSchoolSettings(data)` created — single transaction, Zod safeParse, `ActionResult` typed return
-- ✅ `school-settings-form.tsx` updated — single submit (no loop per field), `useTransition`, error state display
+- ✅ `schoolSettingsSchema` created in `src/lib/validation/schemas/settings.ts`
+- ✅ `getSchoolSettings()` added soft delete filter
+- ✅ `batchUpdateSchoolSettings(data)` — single transaction, Zod safeParse, `ActionResult` typed return
+- ✅ `school-settings-form.tsx` — single submit, `useTransition`, error state display
 - ✅ Build passes (37 routes)
 
-**Pattern established:** Zod schemas exist but were orphaned (no action used them). This session established the wiring pattern: schema in `schemas/`, action uses `schema.safeParse()`, form uses `useTransition` + error state.
+**Pattern established:** schema in `schemas/`, action uses `schema.safeParse()`, form uses `useTransition` + error state.
 
-**Files changed:**
-- `src/lib/validation/schemas/settings.ts` (created)
-- `src/lib/validation/schemas/index.ts` (updated — added settings export)
-- `src/actions/settings.ts` (updated — soft delete + batch update)
-- `src/app/(app)/settings/school/school-settings-form.tsx` (updated)
+---
+
+## Archived Goals
+
+### Quality Sprint (2026-06-01): 29 Known Issues Burndown
+
+**Status:** completed
+
+**Date:** 2026-06-01
+
+**Summary:** 29 steps executed across 7 phases. Build passes (35 routes).
+
+**Key fixes:**
+- `approveStudent`: hardcoded `roleId: 40`
+- `bulkCreateEnrollment`: filter by `classId` via enrollments JOIN
+- `grades`: added `teacherId` varchar(36) FK + relation
+- `data-table.tsx`: added `'use client'` directive
+- 4 Client components: added Edit Dialogs with `useState` for edit/dialog state
+- 7 dead Sheet components deleted, legacy sidebar deleted
+- Favicon, `/attendance`, `/boarding`, `/settings/school` pages created
+
+**Zod schemas created (not yet adopted):** enrollments, grades, payments, announcements, academic, register, settings (7 files)
+
+---
+
+### Phase 16: Grade Management
+
+**Status:** completed
+
+**Date:** 2026-05-30
+
+**Summary:**
+- ✅ Religions table (schema, export, migration, seed)
+- ✅ Grades table redesain (type enum + sub-score + unique constraint)
+- ✅ Profiles religion → religionId FK
+- ✅ Grades Server Actions (CRUD + bulkUpsert with revalidatePath)
+- ✅ Teacher grade input UI at `/academic/grades`
+- ✅ Student KHS real data (replaces mock data)
+- ✅ Academic overview link to `/academic/grades`
+- ✅ Teacher subject filter (via `teacher_class_subjects`)
+- ⏳ Toast integration + useActionState refactor (deferred)
+- ⏳ Jadwal pelajaran real data (still mock)
+- ⏳ Rapor PDF download link on KHS page
+
+---
+
+### Phase 15: Server Action Reliability
+
+**Status:** completed
+
+**Date:** 2026-05-30
+
+**Summary:** `revalidatePath` on all mutations, duplicate ToastProvider removed. All 13 mutation action files now call `revalidatePath()`.
+
+---
+
+### Phase 14: Payment Items Catalog
+
+**Status:** completed
+
+**Date:** 2026-05-30
+
+**Pattern:** Odoo-style product catalog. `payment_items` = template. `recordPayment` accepts optional `paymentItemId` — pre-fills from catalog, `payments.price` always editable per invoice.
+
+**Gap:** Admin CRUD UI at `/admin/payment-items` exists. **No student-facing payment items catalog page** — students see payment records but cannot browse available payment item types.
+
+---
+
+### Phase 13: UI/UX Alignment
+
+**Status:** completed
+
+**Date:** 2026-05-30
+
+---
+
+### Phase 12: VPS Deployment
+
+**Status:** orphaned
+
+**Notes:** No urgency until production release. Deferred indefinitely.
+
+---
+
+### Phase 11: Dashboard & Navigation
+
+**Status:** completed
+
+**Date:** 2026-05-28
+
+---
+
+### Phase 10: Alumni Access
+
+**Status:** completed
+
+**Date:** 2026-05-30
+
+---
+
+### Phase 9: Official Documents (SKHU, Ijazah, Rapor)
+
+**Status:** completed
+
+**Date:** 2026-05-30
+
+**Deferred to v2:** SKHU/Ijazah PDF template generation, transcript PDF export.
+
+---
+
+### Phase 8: Announcements
+
+**Status:** completed
+
+**Date:** 2026-05-30
+
+---
+
+### Phase 7: Payments (SPP + Variable Fees)
+
+**Status:** completed
+
+**Date:** 2026-05-30
+
+---
+
+### Phase 6: Grade Management
+
+**Status:** superseded by Phase 16
+
+**Depends-on:** Phase 5
+
+---
+
+### Phase 5: Enrollments
+
+**Status:** completed
+
+**Date:** 2026-05-28
+
+---
+
+### Phase 4: Academic Core
+
+**Status:** completed
+
+**Date:** 2026-05-26
+
+---
+
+### Phase 3: User Management
+
+**Status:** completed
+
+**Date:** 2026-05-26
+
+---
+
+### Phase 2: Project Scaffolding
+
+**Status:** completed
+
+**Date:** 2026-05-26
+
+---
+
+### Phase 1b: Auth Layer Rebase
+
+**Status:** completed
+
+**Date:** 2026-05-22
+
+---
+
+### Phase 1: Fix better-auth
+
+**Status:** completed
+
+**Date:** 2026-05-21
+
+---
+
+## Archived Goals (Earlier Sessions)
+
+### School Settings — Zod Integration + Batch Update
+
+**Completed:** 2026-06-02
 
 ---
 
@@ -38,107 +326,6 @@
 **Depends-on:** Phase 5
 
 **Notes:** Originally deferred to v2. Now superseded by Phase 16 which implements structured grade input + KHS view + Rapor PDF integration.
-
----
-
-## Active Goals
-
-### Quality Sprint (2026-06-01): 29 Known Issues Burndown
-
-**Status:** completed
-
-**Date:** 2026-06-01
-
-**Summary:** 29 steps executed across 7 phases. Build passes (35 routes). All known issues resolved.
-
-**Phase A — P0 Critical (3 steps):**
-- ✅ `approveStudent` sets `roleId: 40` hardcoded (not `user.roleId ?? 40`)
-- ✅ `bulkCreateEnrollment` filters students by `classId` via `enrollments` JOIN (not all level-40 students)
-- ✅ `teacher_class_subjects` migration verified (existed in 0000, 0002, 0007)
-
-**Phase B — P1 Error Infrastructure (5 steps):**
-- ✅ `zod` added (v4.4.3)
-- ✅ `lib/action-result.ts`: `ActionResult<T>` type for consistent server action return
-- ✅ `lib/errors/codes.ts`: 9 `ErrorCode` types + `ErrorMessages`
-- ✅ `lib/validation/schemas/`: Zod schemas for enrollments, grades, payments, announcements, academic, register
-- ✅ No `throw new Error` in actions (only `src/lib/crypto.ts`)
-
-**Phase C — P1 Dead Code (3 steps):**
-- ✅ Deleted 7 dead Sheet components: ClassSheet, MajorSheet, SemesterSheet, SubjectSheet, EnrollmentSheet, AnnouncementSheet, GradeSheet
-- ✅ Deleted legacy `src/components/layout/sidebar.tsx` (not imported anywhere)
-- ✅ No `MOCK_` data found in codebase
-
-**Phase D — P1 Schema Relations (1 step):**
-- ✅ Added `relations()` to 13 schema files: audit_logs, classes, majors, semesters, subjects, payment_methods, permissions, roles, userPermissions, rolePermissions, verifications, religions, system_configs
-
-**Phase E — P2 Structural (7 steps):**
-- ✅ Step 13: entityId type audit — all action params already string, no change needed
-- ✅ Step 14: `profile_assets` cleanup — table kept (not used but not harmful, not deleted)
-- ✅ Step 15: `teacherId` field added to `grades` schema + relation
-- ✅ Step 16: `deletedAt` added to `system_configs` schema
-- ✅ Step 17: Batal button added to classes, majors, subjects, semesters create forms
-- ✅ Step 18: Route mapping for Edit — all Client components now have Edit Dialog
-- ✅ Step 19: `updateSubject` + `updateSemester` actions added to `academic.ts`
-
-**Phase F — P2 Frontend (2 steps):**
-- ✅ Step 20: DataTable Edit buttons in ClassesClient, MajorsClient, SemestersClient, SubjectsClient
-- ✅ Step 21: Dark mode toggle deferred — `next-themes` not installed, header already has search + notification icons
-
-**Phase G — P3 Minor (8 steps):**
-- ✅ Step 22: Void wrappers fixed — `createClassAction` etc. return `void` (await) for Next.js form action compatibility
-- ✅ Step 23: Header UI improved — breadcrumb, search bar, notification bell already present
-- ✅ Step 24: Alumni seed check — `alumni` role (level 20) already in seed.ts
-- ✅ Step 25: Favicon created at `public/favicon.svg`
-- ✅ Step 26: `/attendance` page created (under construction placeholder)
-- ✅ Step 27: `/boarding` page created (under construction placeholder)
-- ✅ Step 28: `/settings/school` page created with form (school name, address, headmaster, NPSN, NSS)
-- ✅ Step 29: `bun run format` + `bun run build` — **BUILD PASS** (35 routes)
-
-**New files created:**
-- `src/lib/action-result.ts`
-- `src/lib/errors/codes.ts`
-- `src/lib/validation/schemas/` (6 schema files)
-- `src/actions/settings.ts`
-- `src/app/(app)/settings/school/page.tsx`
-- `src/app/(app)/settings/school/school-settings-form.tsx`
-- `src/app/(app)/attendance/page.tsx`
-- `src/app/(app)/boarding/page.tsx`
-- `public/favicon.svg`
-
-**Key fixes:**
-- `approveStudent`: hardcoded `roleId: 40`
-- `bulkCreateEnrollment`: filter by `classId` via enrollments JOIN
-- `grades`: added `teacherId` varchar(36) FK + relation
-- `data-table.tsx`: added `'use client'` directive
-- 4 Client components: added Edit Dialogs with `useState` for edit/dialog state
-
----
-
-## Archived Goals
-
-### Phase 15: Server Action Reliability
-
-**Completed:** 2026-05-30
-
----
-
-### Phase 16: Grade Management
-
-**Completed:** 2026-05-30
-
-**Summary:**
-
-- ✅ Religions table (schema, export, migration, seed)
-- ✅ Grades table redesain (type enum + sub-score + unique constraint)
-- ✅ Profiles religion → religionId FK
-- ✅ Grades Server Actions (CRUD + bulkUpsert with revalidatePath)
-- ✅ Teacher grade input UI at `/academic/grades`
-- ✅ Student KHS real data (replaces mock data)
-- ✅ Academic overview link to `/academic/grades`
-- ✅ Teacher subject filter (via `teacher_class_subjects`)
-- ⏳ Toast integration + useActionState refactor (deferred to proper library)
-- ⏳ Jadwal pelajaran real data (still mock)
-- ⏳ Rapor PDF download link on KHS page
 
 ---
 
@@ -154,15 +341,11 @@
 
 **Completed:** 2026-05-21
 
-**Summary:** All 20 tables rewritten from better-auth + Drizzle first principles. Auth config wired with admin plugin, nextCookies, additionalFields.roleId. Migration generated. Typecheck clean.
-
 ---
 
 ### Phase 1b: Auth Layer Rebase — Fix 5 Critical QA Issues
 
 **Completed:** 2026-05-22
-
-**Summary:** userId FK type mismatch fixed (bigint → varchar(36)). Schema synced with actual migration files. Broken imports cleaned up.
 
 ---
 
@@ -170,15 +353,11 @@
 
 **Completed:** 2026-05-26
 
-**Summary:** Empty API routes for SSO. .gitignore, .env.example. No pre-commit hooks.
-
 ---
 
 ### Phase 3: User management
 
 **Completed:** 2026-05-26
-
-**Summary:** Auth + all user CRUD + student self-registration with admin approval. seed.ts with 4 test users. Login/Register pages as Server Actions. Admin approval UI at `/admin/approvals`. Staff account creation at `/admin/users`. Profile edit at `/profile`.
 
 ---
 
@@ -186,15 +365,11 @@
 
 **Completed:** 2026-05-26
 
-**Summary:** Classes, majors, subjects, semesters CRUD. Teacher assignments via `teacher_class_subjects` table. Academic overview page.
-
 ---
 
 ### Phase 5: Enrollments
 
 **Completed:** 2026-05-28
-
-**Summary:** Enrollment CRUD per semester. Admin assigns student to class. Bulk enrollment by class (chunk 50, fail-fast). Status state machine (active → transferred/dropped/graduated). Unique constraint on (studentId, semesterId). Audit trail on status change.
 
 ---
 
@@ -202,15 +377,11 @@
 
 **Completed:** 2026-05-30
 
-**Summary:** `getPayments`, `recordPayment`, `confirmPayment`, `cancelPayment` actions. Student payment list at `/payments`. Admin finance page at `/finance`. **Catalog (Phase 14) added later** — `recordPayment` accepts optional `paymentItemId` for pre-fill from payment items catalog; `payments.price` always editable per invoice (Odoo sale-order-line pattern).
-
 ---
 
 ### Phase 8: Announcements
 
 **Completed:** 2026-05-30
-
-**Summary:** Full CRUD + publish/unpublish + read receipts in `src/actions/announcements.ts`. Announcements page at `/announcements` with role-filtered list.
 
 ---
 
@@ -218,17 +389,11 @@
 
 **Completed:** 2026-05-30
 
-**Summary:** Document download API at `/api/documents/[id]/[type]/route.ts`. `deleteDocument` action. Student documents page at `/students/[id]/documents`.
-
-**Deferred to v2:** SKHU/Ijazah PDF template generation, transcript PDF export per government format.
-
 ---
 
 ### Phase 10: Alumni access
 
 **Completed:** 2026-05-30
-
-**Summary:** Alumni login at `/auth/alumni-login` (level 20-40, no role guard). Transcript page at `/alumni/transcript` with own Rapor/Ijazah download links and enrollments. Sidebar has `Transkrip` nav item.
 
 ---
 
@@ -236,15 +401,11 @@
 
 **Completed:** 2026-05-28
 
-**Summary:** Role-based sidebar at `src/components/layout/sidebar.tsx`. Mobile hamburger + auto-close. Profile dropdown extracted. AppLayoutClient = thin wrapper. Missing pages created (/admin, /finance, /users, /permissions). Placeholder pages (/roles, /students, /teachers).
-
 ---
 
 ### Phase 13: UI/UX Alignment with Design Reference
 
 **Completed:** 2026-05-30
-
-**Summary:** Page padding normalized, header built, sidebar collapsible, headings size-normalized, dashboard charts added, DataTable partially migrated, Student Academic (KRS/KHS) built, Student Finance built, icon audit done, EmptyState migrated, Card stat pattern normalized, form layout standardized, login page polished, profile avatar added.
 
 ---
 
@@ -252,6 +413,16 @@
 
 **Completed:** 2026-05-30
 
-**Pattern:** Odoo-style product catalog. `payment_items` = template (code, name, description, standard price). `recordPayment` accepts optional `paymentItemId` — pre-fills description + standard price from catalog, but `payments.price` is **always editable per invoice**. Catalog price is default, not enforced.
+---
 
-**Summary:** `payment_items` schema + FK to `payments`. CRUD actions + admin UI at `/admin/payment-items`. `recordPayment` pre-fills from catalog, price always editable. Seeded: SPP-01 (SPP Bulanan Rp150rb), SPP-02 (SPP Tengah Semester Rp75rb), UG-01 (Uang Gedung Rp500rb), DU-01 (Daftar Ulang Rp250rb). Also fixed pre-existing Server Component shadcn `Card` conflict at `/academic/semesters`.
+### Phase 15: Server Action Reliability
+
+**Completed:** 2026-05-30
+
+---
+
+### Phase 16: Grade Management
+
+**Completed:** 2026-05-30
+
+---
