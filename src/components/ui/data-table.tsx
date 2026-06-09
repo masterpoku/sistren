@@ -13,7 +13,7 @@ import {
   type VisibilityState,
 } from "@tanstack/react-table";
 import Papa from "papaparse";
-import { CaretDown, Export, File, FileCsv, Upload } from "phosphor-react";
+import { CaretDown, Export, File, FileCsv, Upload } from "@phosphor-icons/react";
 import * as React from "react";
 import * as XLSX from "xlsx";
 import { Button } from "@/components/ui/button";

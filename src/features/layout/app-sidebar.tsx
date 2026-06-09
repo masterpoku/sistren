@@ -78,7 +78,7 @@ export function AppSidebar({ user, onLogout }: AppSidebarProps) {
       )}
     >
       <SidebarHeader className="group-data-[collapsible=icon]:p-2">
-        <div className="flex items-center gap-3 px-2">
+        <div className="flex items-center gap-3 px-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
           <div
             className={cn(
               "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg shadow-sm",
@@ -139,7 +139,7 @@ export function AppSidebar({ user, onLogout }: AppSidebarProps) {
                 })
                 .map((item) => {
                   const Icon = item.icon;
-                  const isActive = pathname === item.href;
+                  const isActive = pathname.startsWith(item.href);
                   return (
                     <SidebarMenuItem key={item.href}>
                       <SidebarMenuButton

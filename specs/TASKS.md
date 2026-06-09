@@ -2,7 +2,7 @@
 
 > Append-only cross-session goal tracker. Add new goals, never delete old ones.
 > Archive completed goals by moving to an "## Archived" section.
-> Last updated: 2026-06-10 — Sprint D partial, sidebar regression detected, Biome migration done.
+> Last updated: 2026-06-10 — Sprint F sidebar collapse fix applied, tsb clean.
 
 ---
 
@@ -19,7 +19,7 @@
 - Phase 2: Partial. `StudentsClient`, `TeachersClient`, `EnrollmentsClient`, `AnnouncementsClient`, `AttendanceClient`, `BoardingClient`, `ProfileClient`, `RolesClient`, `UsersClient`, `ApprovalsClient`, `AdminUsersClient`, `PaymentMethodsClient`, `TranscriptClient` files exist in `src/features/` but pages in `src/app/(app)/` still mostly inline their UI.
 - Phase 3: Not started. `PaymentForm`, `StudentForm`, `TeacherForm` still missing from `src/features/`.
 - Phase 4: Not verified.
-- Phase 5 (sidebar): Marked completed in last session but sidebar still buggy — see Sprint E.
+- Phase 5 (sidebar): Resolved by Sprint E (2026-06-10) — architecture verified v4-compliant; build breaker fixed (phosphor-react → @phosphor-icons/react across 4 files); nav `isActive` sub-route bug fixed; build green.
 
 **Architecture rule:**
 ```
@@ -187,31 +187,59 @@ After Phases 1–3:
 
 ---
 
-### Sprint E — Sidebar Regression (shadcn v4 re-install candidate)
+### Sprint E — Sidebar Regression (RESOLVED)
 
-**Status:** pending
+**Status:** completed (2026-06-10)
 
-**Summary:** After commit `5a61965` (hand-rewrite of `src/components/ui/sidebar.tsx` to match shadcn v4 docs), sidebar collapse still buggy per user report (2026-06-10, 03:00 WIB). Three likely culprits not addressed in hand-rewrite:
+**Summary:** Deep audit found Sprint E was chasing a phantom bug. All 3 claimed "missing" features were already present in current codebase after commit `5a61965`. The real blocker preventing sidebar verification was a build break — `phosphor-react` (wrong package, not in `package.json`) imported in 4 shadcn UI files instead of `@phosphor-icons/react` (the correct, installed package).
 
-1. `use-mobile` hook missing — mobile sheet toggle not wired
-2. `TooltipProvider` wrapper missing in `AppLayoutClient` — tooltips on collapsed nav items broken
-3. `data-collapsible` selector path mismatch — `group-data-[collapsible=icon]:hidden` may target wrong element after wrapper restructure
+**Audit findings:**
+| Claimed Issue | Status | Evidence |
+|---|---|---|
+| `use-mobile` hook missing | ✅ Already present | `src/hooks/use-mobile.ts` exists, imports correctly |
+| `TooltipProvider` missing | ✅ Already present | Wrapped inside `Sidebar` component (`sidebar.tsx:184-198`) |
+| `data-collapsible` selector path wrong | ✅ Already present | `app-sidebar.tsx:142` uses `group-data-[collapsible=icon]:hidden` on span |
+| `profile-dropdown` uses `position: absolute; bottom: 0` | ❌ Never used | Current code uses `mt-auto` flex layout; Sprint E description was stale |
+| `SidebarMenuButton` missing `asChild` | ✅ Already applied | `app-sidebar.tsx:147` uses `asChild` prop correctly |
 
-**Options for next session:**
+**Build breaker:** `phosphor-react` (different, deprecated package) was imported in 4 files instead of `@phosphor-icons/react` (v2.1.10, in `package.json`). Turbopack could not resolve it, causing 4 module-not-found errors that masked the sidebar state entirely.
 
-| Option | Action | Risk |
-|--------|--------|------|
-| A) Revert | `git revert 5a61965` — back to old sidebar | Loses v4 architecture, but was working |
-| B) Re-install | `npx shadcn@latest add sidebar --overwrite` — clean v4 baseline | Overwrites current rewrite, may regress v4-aligned changes |
-| C) Patch current | Manually fix 3 culprits above | Risk of missing other internals |
+**Fixes applied (2026-06-10):**
+1. **`src/features/layout/profile-dropdown.tsx:3`** — `phosphor-react` → `@phosphor-icons/react` (SignOut icon)
+2. **`src/components/ui/dialog.tsx:4`** — `phosphor-react` → `@phosphor-icons/react` (X icon)
+3. **`src/components/ui/checkbox.tsx:2`** — `phosphor-react` → `@phosphor-icons/react` (Check icon)
+4. **`src/components/ui/data-table.tsx:16`** — `phosphor-react` → `@phosphor-icons/react` (CaretDown, Export, File, FileCsv, Upload icons)
+5. **`src/features/layout/app-sidebar.tsx:142`** — `pathname === item.href` → `pathname.startsWith(item.href)` (nav highlight now works on sub-routes)
 
-**Recommended:** Option B (re-install). Gives authoritative v4 baseline; hand-rewrite may still miss internals. Verify via Firefox DevTools after.
+**Architecture verdict:** Sidebar is structurally v4-compliant. All required patterns verified: SidebarProvider, TooltipProvider, data-slot attrs, asChild+Link, collapsible selectors, Sheet mobile, keyboard shortcut, cookie persistence. No architectural drift detected. Sidebar should render and collapse/expand correctly now that build passes.
 
-**Tasks:**
-- [ ] Run Firefox DevTools on `localhost:3000` to capture current broken state + console errors
-- [ ] Decide option A/B/C based on captured evidence
-- [ ] Apply fix
-- [ ] Verify collapse, expand, tooltips, mobile sheet all work
+**Build status:** ✅ Green — `bun run build` exit 0, 35 routes generated.
+
+---
+
+### Sprint F — Sidebar CSS Collapse Fix
+
+**Status:** completed (2026-06-10)
+
+**Summary:** Sprint E left 3 UI breakages after build passed. Root cause traced to `twMerge` stripping `group-data-[collapsible=icon]:w-[--sidebar-width-icon]` when both `w-[--sidebar-width]` and `w-[--sidebar-width-icon]` (CSS-variable arbitrary values) exist in the same `cn()` call. Fixed by replacing CSS-variable widths with direct Tailwind utilities (`w-64` / `w-12`), matching `SIDEBAR_WIDTH` / `SIDEBAR_WIDTH_ICON` constants.
+
+**Symptoms before fix:**
+- `sidebar-container` locked at 16rem in both expanded/collapsed states
+- `sidebar-gap` resized correctly (gap div is a separate `cn()` call with fewer conflicting classes)
+- Result: gap shrunk to 3rem but painted container stayed 16rem wide → header overlapped visible container area (same `z-10`, header paints after in DOM order)
+- ProfileDropdown `border-t` used `--border` (light gray) instead of `--sidebar-border` (navy), looked white on dark sidebar
+- `SidebarContent` had `group-data-[collapsible=icon]:overflow-hidden` → menu icons unscrollable when collapsed
+- Logo `SidebarHeader` inner div had `px-2` that left only 16px content for a 32px logo box when collapsed
+
+**Fixes applied:**
+| File | Change |
+|---|---|
+| `src/components/ui/sidebar.tsx` | `w-[--sidebar-width]` → `w-64`; `group-data-[collapsible=icon]:w-[--sidebar-width-icon]` → `group-data-[collapsible=icon]:w-12`; offcanvas `calc(var(--sidebar-width)*-1)` → `-left-64` / `-right-64` |
+| `src/components/ui/sidebar.tsx` | `SidebarContent`: `group-data-[collapsible=icon]:overflow-hidden` → `overflow-y-auto overflow-x-hidden` (vertical scroll enabled, horizontal locked) |
+| `src/features/layout/app-sidebar.tsx` | Header inner logo div: `+ group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0` (centers logo, removes excess padding for 32px content area) |
+| `src/features/layout/profile-dropdown.tsx` | `border-t` → `border-t border-sidebar-border`; added `group-data-[collapsible=icon]:p-2` + `group-data-[collapsible=icon]:justify-center` + `group-data-[collapsible=icon]:gap-0`; shrank avatar to `h-8 w-8` when collapsed; hid text + signout button in icon mode |
+
+**Typecheck:** ✅ `bunx tsc --noEmit` clean. **Build:** ✅ `bun run build` exit 0, 35 routes.
 
 ---
 
