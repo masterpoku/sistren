@@ -8,6 +8,8 @@ import {
   varchar,
 } from "drizzle-orm/mysql-core";
 import { enrollments } from "./enrollments";
+import { grades } from "./grades";
+import { paymentItems } from "./paymentItems";
 
 /**
  * Academic semesters with academic year.
@@ -27,4 +29,6 @@ export const semesters = mysqlTable("semesters", {
 
 export const semestersRelations = relations(semesters, ({ many }) => ({
   enrollments: many(enrollments),
+  grades: many(grades),
+  paymentItems: many(paymentItems),
 }));

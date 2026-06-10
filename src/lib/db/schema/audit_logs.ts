@@ -16,6 +16,7 @@ export const auditLogs = mysqlTable("audit_logs", {
   action: varchar("action", { length: 100 }).notNull(),
   entityType: varchar("entity_type", { length: 100 }),
   entityId: bigint("entity_id", { mode: "number" }),
+  entityIdStr: varchar("entity_id_str", { length: 36 }),
   metadata: json("metadata").$type<{
     ip?: string;
     userAgent?: string;

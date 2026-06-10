@@ -1,6 +1,6 @@
 import { and, eq, isNull } from "drizzle-orm";
 import { db } from "./index";
-import { permissions, roles } from "./schema";
+import { permissions, rolePermissions, roles } from "./schema";
 
 console.log("🌱 Starting permission seed...");
 
@@ -430,11 +430,18 @@ export async function seedPermissions() {
       }
 
       try {
-        await db.execute(
-          `INSERT INTO role_permissions (role_id, permission_id)
-           SELECT ${roleMap[roleName].id}, ${permMap[permName].id}
-           FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM role_permissions WHERE role_id = ${roleMap[roleName].id} AND permission_id = ${permMap[permName].id})`
-        );
+        // Check if role-permission assignment already exists
+        const existing = await db.query.rolePermissions.findFirst({
+          where: (rp, { and }) =>
+            and(eq(rp.roleId, roleMap[roleName].id), eq(rp.permissionId, permMap[permName].id)),
+        });
+
+        if (!existing) {
+          await db.insert(rolePermissions).values({
+            roleId: roleMap[roleName].id,
+            permissionId: permMap[permName].id,
+          });
+        }
       } catch (e: any) {
         console.error(
           `Failed to assign permission '${permName}' to role '${roleName}':`,

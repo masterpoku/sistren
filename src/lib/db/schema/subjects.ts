@@ -8,6 +8,7 @@ import {
   varchar,
 } from "drizzle-orm/mysql-core";
 import { classes, majors } from "./index";
+import { grades } from "./grades";
 import { teacherClassSubjects } from "./teacherClassSubjects";
 
 /**
@@ -41,4 +42,5 @@ export const subjectsRelations = relations(subjects, ({ one, many }) => ({
     references: [majors.id],
   }),
   teacherAssignments: many(teacherClassSubjects),
+  grades: many(grades),
 }));
