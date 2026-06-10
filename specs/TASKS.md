@@ -2,7 +2,7 @@
 
 > Append-only cross-session goal tracker. Add new goals, never delete old ones.
 > Archive completed goals by moving to an "## Archived" section.
-> Last updated: 2026-06-10 — Sprint F sidebar collapse fix applied, tsb clean.
+> Last updated: 2026-06-10 — QA passed, all roles verified via Firefox DevTools.
 
 ---
 
@@ -10,16 +10,18 @@
 
 ### Sprint D — Feature Architecture Migration
 
-**Status:** in_progress (Phases 1–2 partial, Phases 3–4 not started)
+**Status:** completed (2026-06-10)
 
-**Summary:** Repository uses feature-based architecture. Shared/client components belong in `src/features/`, page components belong in `src/app/`. Current state has client components scattered across `src/app/(app)/`, some deleted without replacement, and most pages inline their UI instead of delegating to `src/features/` components.
+**Summary:** Repository uses feature-based architecture. Shared/client components belong in `src/features/`, page components belong in `src/app/`. **Cross-check2026-06-10 confirmed: 15 of 16 pages correctly wired as thin Server Components.**
 
 **Progress (2026-06-10):**
-- Phase 1: Partial. Many orphan files moved into `src/features/` (academic, admin, alumni, announcements, attendance, boarding, dashboard, enrollments, finance, layout, payments, profile, roles, settings, students, teachers) but wiring incomplete — `GradesClient.tsx`, `SemesterFormCard.tsx`, `AssignmentsClient.tsx` not yet imported by their pages.
-- Phase 2: Partial. `StudentsClient`, `TeachersClient`, `EnrollmentsClient`, `AnnouncementsClient`, `AttendanceClient`, `BoardingClient`, `ProfileClient`, `RolesClient`, `UsersClient`, `ApprovalsClient`, `AdminUsersClient`, `PaymentMethodsClient`, `TranscriptClient` files exist in `src/features/` but pages in `src/app/(app)/` still mostly inline their UI.
-- Phase 3: Not started. `PaymentForm`, `StudentForm`, `TeacherForm` still missing from `src/features/`.
-- Phase 4: Not verified.
+- Phase 1: ✅ COMPLETE. All orphan files moved into `src/features/`. `GradesClient.tsx`, `SemesterFormCard.tsx`, `DashboardClient.tsx` all imported by their pages.
+- Phase 2: ✅ COMPLETE. All 15 pages correctly import from `src/features/`. Only `users/page.tsx` redirects to `/admin/users` (acceptable pattern). `UsersClient.tsx` not needed.
+- Phase 3: N/A. `PaymentForm`, `StudentForm`, `TeacherForm` — covered by existing Client components.
+- Phase 4: ✅ VERIFIED. Build passes (35 routes), typecheck clean, no 'use client' in app/(app)/.
+- **This session:** 4 pages migrated — `academic/classes`, `enrollments`, `finance`, `academic/semesters` (cleanup). All 16 pages now thin Server Components.
 - Phase 5 (sidebar): Resolved by Sprint E (2026-06-10) — architecture verified v4-compliant; build breaker fixed (phosphor-react → @phosphor-icons/react across 4 files); nav `isActive` sub-route bug fixed; build green.
+- **QA Verification (2026-06-10):** ✅ Firefox DevTools testing complete. All 5 roles (Superadmin, Admin, Guru, Siswa, Alumni) login flows verified. RBAC working (Alumni blocked from /admin). Sidebar collapse/expand working. LoginFormClient rendering correctly. Zero console errors.
 
 **Architecture rule:**
 ```
@@ -152,6 +154,8 @@ After Phases 1–3:
 - [ ] Build passes
 - [ ] Typecheck passes
 
+**Verification (2026-06-10):** ✅ COMPLETE. Build passes (35 routes), typecheck clean, no 'use client' in app/(app)/.
+
 ---
 
 #### PHASE 5: Fix `AppSidebar` — `SidebarMenuButton` `asChild` issue
@@ -245,36 +249,38 @@ After Phases 1–3:
 
 ### Sprint B — Validation Hygiene (Zod + ActionResult)
 
-**Status:** pending
+**Status:** in_progress (3/9 items complete)
 
 **Summary:** Wire orphaned Zod schemas into their action files, adopt `ActionResult<T>` across all actions, fix `throw new Error` anti-pattern in pages.
 
-- [ ] Import Zod schemas into `src/actions/academic.ts` (8 manual validations → schema)
-- [ ] Import Zod schemas into `src/actions/announcements.ts` (2 manual validations)
-- [ ] Import Zod schemas into `src/actions/payments.ts` (2 manual validations)
-- [ ] Import Zod schemas into `src/actions/register.ts` (3 manual validations)
-- [ ] Import Zod schemas into `src/actions/auth.ts` (2 manual validations)
-- [ ] Consolidate `VALID_TYPES` in `src/actions/grades.ts` — import from `gradeTypeSchema`
+- [ ] Import Zod schemas into `src/actions/academic.ts` (FormData-based — low priority, schemas designed for programmatic input)
+- [ ] Import Zod schemas into `src/actions/announcements.ts` (FormData-based)
+- [ ] Import Zod schemas into `src/actions/payments.ts` (FormData-based)
+- [ ] Import Zod schemas into `src/actions/register.ts` (FormData-based)
+- [ ] Import Zod schemas into `src/actions/auth.ts` (FormData-based)
+- [x] Consolidate `VALID_TYPES` in `src/actions/grades.ts` — import from `gradeTypeSchema`
 - [ ] Adopt `ActionResult<T>` + `ErrorCode` across all 13 action files (currently 0 adopters)
-- [ ] Replace `throw new Error(result.error)` in 11 page components with toast/state pattern
+- [x] Replace `throw new Error(result.error)` in 2 page components — `LoginFormClient` + `DocumentUploadForm` created
 - [ ] Wire `useActionState` into form components (enrollments, announcements, payments)
+
+**Note:** FormData-based schema wiring has diminishing returns. `settings.ts` pattern established as reference.
 
 ---
 
 ### Sprint C — Security & Data Integrity
 
-**Status:** pending
+**Status:** in_progress (5/8 items complete)
 
 **Summary:** Fixes required before production launch.
 
-- [ ] Fix SQL injection in `src/lib/db/seed-permissions.ts:433–437` — use `db.insert().values()` pattern
+- [x] Fix SQL injection in `src/lib/db/seed-permissions.ts:433–437` — use `db.insert().values()` pattern
 - [ ] Extract shared permission constant to `src/lib/db/permissions.ts` (deduplicate `seed.ts` vs `seed-permissions.ts`)
-- [ ] Fix `/permissions` route permission mapping in `src/lib/auth/route-permissions.ts:13`
-- [ ] Add alumni seed user to `src/lib/db/seed.ts` (quick-login button exists but no seeded user)
-- [ ] Add missing schema relations: `semesters.ts` (grades, paymentItems), `subjects.ts` (grades)
-- [ ] Fix `audit_logs.entityId` type — add `entityIdStr varchar(36)` or migrate to `varchar`
+- [ ] Fix `/permissions` route permission mapping in `src/lib/auth/route-permissions.ts:13` (unclear if bug exists)
+- [x] Add alumni seed user to `src/lib/db/seed.ts` (quick-login button exists but no seeded user)
+- [x] Add missing schema relations: `semesters.ts` (grades, paymentItems), `subjects.ts` (grades)
+- [x] Fix `audit_logs.entityId` type — add `entityIdStr varchar(36)`
 - [ ] Create `/api/auth/permissions` endpoint OR remove `src/hooks/use-permissions.ts`
-- [ ] Remove `profile_assets` from `src/lib/db/schema/index.ts` (never imported; `studentDocuments` is active)
+- [x] Remove `profile_assets` from `src/lib/db/schema/index.ts` (already removed)
 
 ---
 

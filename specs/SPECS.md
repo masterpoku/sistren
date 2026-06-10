@@ -280,6 +280,10 @@ Producing UI components without referencing the shared design system. Each agent
 
 | 2026-06-02 | Zod schema integration pattern — settings module as reference                      | Schemas existed but were orphaned (zero actions imported them). Established wiring pattern: `schema.safeParse()` in action, `useTransition` + error state in form. `schoolSettingsSchema` uses npsn (8-digit regex), nss (12-digit, nullable), min lengths. `batchUpdateSchoolSettings` runs single transaction for all fields. |
 | 2026-06-02 | `getSchoolSettings` missing soft delete filter                                     | Added `isNull(systemConfigs.deletedAt)` — without it, deleted config rows would leak into UI. |
+| 2026-06-10 | Feature Architecture Migration — Sprint D COMPLETE                          | All 16 pages verified as thin Server Components. Build passes, typecheck clean. Phase 1-2 complete. |
+| 2026-06-10 | Sprint C Security Fixes — SQL injection, schema relations, audit log        | `seed-permissions.ts`: raw SQL → Drizzle insert pattern. `semesters.ts`: added grades + paymentItems relations. `subjects.ts`: added grades relation. `audit_logs.ts`: added `entityIdStr varchar(36)`. |
+| 2026-06-10 | Sprint B Validation Hygiene — throw Error fix + grades VALID_TYPES           | `grades.ts`: replaced `VALID_TYPES` array with `gradeTypeSchema.safeParse()`. Created `LoginFormClient` + `DocumentUploadForm` Client Components replacing `throw new Error` anti-pattern in 2 pages. |
+| 2026-06-10 | QA Verification — All roles tested via Firefox DevTools                       | Verified: Superadmin, Admin, Guru, Siswa, Alumni login flows. RBAC working (Alumni blocked from /admin). Sidebar collapse/expand working. LoginFormClient rendering correctly. Zero console errors. |
 
 ---
 
