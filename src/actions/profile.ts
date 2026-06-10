@@ -4,7 +4,7 @@ import { and, eq, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { verifySession } from "@/lib/auth/verify-session";
 import { db } from "@/lib/db";
-import { profiles } from "@/lib/db/schema";
+import { profiles, users } from "@/lib/db/schema";
 
 export async function updateProfile(formData: FormData) {
   const session = await verifySession();
@@ -14,7 +14,6 @@ export async function updateProfile(formData: FormData) {
   const fatherName = formData.get("fatherName") as string;
   const motherName = formData.get("motherName") as string;
 
-  // Verify profile exists
   const [existing] = await db
     .select({ id: profiles.id })
     .from(profiles)
@@ -41,5 +40,37 @@ export async function updateProfile(formData: FormData) {
     .where(eq(profiles.userId, session.userId));
 
   revalidatePath("/profile");
+  return { success: true };
+}
+
+export async function uploadAvatar(formData: FormData) {
+  const session = await verifySession();
+  const file = formData.get("avatar") as File | null;
+
+  if (!file) {
+    return { error: "File tidak boleh kosong." };
+  }
+
+  const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+  if (!allowedTypes.includes(file.type)) {
+    return { error: "Format harus JPEG, PNG, atau WebP." };
+  }
+
+  const maxBytes = 1 * 1024 * 1024; // 1MB
+  if (file.size > maxBytes) {
+    return { error: "Ukuran maksimal 1MB." };
+  }
+
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const base64 = buffer.toString("base64");
+  const dataUrl = `data:${file.type};base64,${base64}`;
+
+  await db
+    .update(users)
+    .set({ image: dataUrl })
+    .where(eq(users.id, session.userId));
+
+  revalidatePath("/profile");
+  revalidatePath("/");
   return { success: true };
 }

@@ -3,7 +3,7 @@
 import { Bell, GraduationCap, MagnifyingGlass } from "@phosphor-icons/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -23,6 +23,7 @@ interface AppHeaderProps {
     roleLevel: number;
     studentId?: string;
     employeeId?: string;
+    image?: string;
   };
 }
 
@@ -91,9 +92,11 @@ export function AppHeader({ user }: AppHeaderProps) {
             </span>
           </div>
           <Avatar className="h-9 w-9 border-2 border-primary/10">
-            <AvatarFallback>
-              {user.name.substring(0, 2).toUpperCase()}
-            </AvatarFallback>
+            {user.image ? (
+              <AvatarImage src={user.image} alt={user.name} />
+            ) : (
+              <AvatarFallback>{user.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+            )}
           </Avatar>
         </div>
       </div>

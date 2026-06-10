@@ -11,6 +11,7 @@ interface User {
   role: string;
   roleId: number;
   roleLevel: number;
+  image?: string;
 }
 
 interface AppLayoutClientProps {

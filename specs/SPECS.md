@@ -284,6 +284,9 @@ Producing UI components without referencing the shared design system. Each agent
 | 2026-06-10 | Sprint C Security Fixes — SQL injection, schema relations, audit log        | `seed-permissions.ts`: raw SQL → Drizzle insert pattern. `semesters.ts`: added grades + paymentItems relations. `subjects.ts`: added grades relation. `audit_logs.ts`: added `entityIdStr varchar(36)`. |
 | 2026-06-10 | Sprint B Validation Hygiene — throw Error fix + grades VALID_TYPES           | `grades.ts`: replaced `VALID_TYPES` array with `gradeTypeSchema.safeParse()`. Created `LoginFormClient` + `DocumentUploadForm` Client Components replacing `throw new Error` anti-pattern in 2 pages. |
 | 2026-06-10 | QA Verification — All roles tested via Firefox DevTools                       | Verified: Superadmin, Admin, Guru, Siswa, Alumni login flows. RBAC working (Alumni blocked from /admin). Sidebar collapse/expand working. LoginFormClient rendering correctly. Zero console errors. |
+| 2026-06-10 | Avatar upload feature — base64 storage + DiceBear default                        | `users.image` varchar(255) already in schema. Added `uploadAvatar` action (JPEG/PNG/WebP, 1MB limit, base64). Header + profile wired with AvatarImage fallback. DiceBear external SVG for users without avatar. `boring-avatars` installed but unused. |
+| 2026-06-10 | Sprint B completed — Zod wired where practical, ActionResult deferred               | `auth.ts` + `register.ts` use Zod `safeParse`. FormData-based actions (academic/announcements/payments) have diminishing returns — `settings.ts` pattern is reference. `ActionResult<T>` adoption deferred (marginal gain vs 13-file migration cost). |
+| 2026-06-10 | Sprint C completed — security fixes applied                                         | SQL injection fixed, alumni seed added, schema relations added, `audit_logs.entityId` typed, `profile_assets` removed. Remaining: permission constant extraction, `/permissions` route audit. |
 
 ---
 

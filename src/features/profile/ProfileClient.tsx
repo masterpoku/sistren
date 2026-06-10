@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
-import { updateProfile } from "@/actions/profile";
+import { updateProfile, uploadAvatar } from "@/actions/profile";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -73,19 +73,47 @@ export function ProfileClient({
         <CardContent>
           <div className="flex items-center gap-6">
             <Avatar className="h-20 w-20 border-2 border-primary/10">
-              <AvatarFallback className="text-lg font-semibold">
-                {sessionName.substring(0, 2).toUpperCase()}
-              </AvatarFallback>
+              {sessionEmail ? (
+                <img
+                  src={`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(sessionEmail)}`}
+                  alt={sessionName}
+                  className="size-full rounded-full object-cover"
+                />
+              ) : (
+                <AvatarFallback className="text-lg font-semibold">
+                  {sessionName.substring(0, 2).toUpperCase()}
+                </AvatarFallback>
+              )}
             </Avatar>
             <div className="space-y-1">
               <p className="text-sm font-medium">{sessionName}</p>
               <p className="text-xs text-muted-foreground">{sessionEmail}</p>
-              <Button variant="outline" size="sm" className="mt-2" disabled>
-                Ubah Foto Profil
+              <Button variant="outline" size="sm" className="mt-2" asChild>
+                <label htmlFor="avatar-upload" className="cursor-pointer">
+                  Ubah Foto Profil
+                </label>
               </Button>
-              <p className="text-[10px] text-muted-foreground">
-                Fitur upload belum tersedia.
-              </p>
+              <input
+                id="avatar-upload"
+                name="avatar"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  const formData = new FormData();
+                  formData.append("avatar", file);
+                  startTransition(async () => {
+                    const result = await uploadAvatar(formData);
+                    if (result && "error" in result) {
+                      alert(result.error);
+                    } else {
+                      router.refresh();
+                    }
+                  });
+                }}
+              />
             </div>
           </div>
         </CardContent>

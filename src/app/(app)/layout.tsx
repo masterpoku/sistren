@@ -38,6 +38,7 @@ export default async function ProtectedLayout({
           role: ctx.roleName,
           roleId: ctx.roleId,
           roleLevel: ctx.roleLevel,
+          image: session.user.image ?? undefined,
         }}
         onLogout={handleLogout}
       >
