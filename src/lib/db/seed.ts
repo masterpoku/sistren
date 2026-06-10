@@ -603,6 +603,12 @@ async function seed() {
       name: "Siswa Demo",
       role: "siswa",
     },
+    {
+      email: "alumni@sister.com",
+      password: "Password123!",
+      name: "Alumni Demo",
+      role: "alumni",
+    },
   ];
 
   for (const { email, password, name, role } of testUsers) {

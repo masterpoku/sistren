@@ -6,18 +6,12 @@ import { getAuthContext } from "@/lib/auth/permissions";
 import { verifyRoleLevel, verifySession } from "@/lib/auth/verify-session";
 import { db } from "@/lib/db";
 import { classes, enrollments, grades, subjects, users } from "@/lib/db/schema";
+import { gradeTypeSchema } from "@/lib/validation/schemas/grades";
 
 type GradeType = "knowledge" | "skill" | "attitude" | "extracurricular";
 
-const VALID_TYPES: GradeType[] = [
-  "knowledge",
-  "skill",
-  "attitude",
-  "extracurricular",
-];
-
 function isValidGradeType(s: string): s is GradeType {
-  return VALID_TYPES.includes(s as GradeType);
+  return gradeTypeSchema.safeParse(s).success;
 }
 
 // ─── Query ───────────────────────────────────────────────────

@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { loginAction } from "@/actions/auth";
-import { Button } from "@/components/ui/button";
+import { LoginFormClient } from "@/features/auth/LoginFormClient";
 import {
   Card,
   CardContent,
@@ -8,8 +7,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 
 export default async function AlumniLoginPage() {
   return (
@@ -23,40 +20,7 @@ export default async function AlumniLoginPage() {
           <CardDescription>Akses transkrip nilai海外 graduate</CardDescription>
         </CardHeader>
         <CardContent>
-          <form
-            action={async (formData: FormData) => {
-              "use server";
-              const result = await loginAction(formData);
-              if (result && "error" in result) {
-                throw new Error(result.error);
-              }
-            }}
-            className="space-y-4"
-          >
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="nama@email.com"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                placeholder="••••••••"
-                required
-              />
-            </div>
-            <Button type="submit" className="w-full">
-              Masuk
-            </Button>
-          </form>
+          <LoginFormClient />
           <div className="mt-4 text-center text-sm text-muted-foreground">
             <Link href="/login" className="underline underline-offset-4">
               Login sebagai siswa/guru
