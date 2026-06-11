@@ -61,6 +61,7 @@ export const ROUTE_PERMISSIONS: Record<string, string> = {
 
   // Payments
   "/finance": "payments.read_any",
+  "/payments/catalog": "payments.read_own",
   "/payments/create": "payments.create",
   "/payments/:id/edit": "payments.update",
   "/payments/:id/approve": "payments.approve",
@@ -78,6 +79,9 @@ export const ROUTE_PERMISSIONS: Record<string, string> = {
   // Academic
   "/academic/enrollments": "enrollments.read",
   "/academic/grades": "grades.read_any",
+
+  // Calendar
+  "/calendar": "calendar.read",
 };
 
 /**
@@ -108,6 +112,7 @@ export const ROLE_LEVEL_REQUIREMENTS: Record<string, number> = {
   "/permissions": 100, // superadmin only
   "/settings": 100, // superadmin only
   "/system-configs": 100, // superadmin only
+  "/calendar": 40,
 };
 
 /**
@@ -119,7 +124,6 @@ export const PERMISSION_GROUPS = {
     "users.read",
     "users.update",
     "users.delete",
-    "users.impersonate",
   ],
   STUDENT_MANAGEMENT: [
     "students.create",
@@ -174,4 +178,5 @@ export const PERMISSION_GROUPS = {
   ],
   CONFIG: ["payment_methods.manage", "system_configs.manage"],
   PROFILE: ["profile.edit_own", "profile.edit_any", "profile.assets.upload"],
+  CALENDAR: ["calendar.read", "calendar.manage"],
 } as const;

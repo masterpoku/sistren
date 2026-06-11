@@ -1,292 +1,12 @@
 import { and, eq, isNull } from "drizzle-orm";
 import { db } from "./index";
+import { PERMISSIONS, ROLE_PERMISSIONS } from "./permissions";
 import { permissions, rolePermissions, roles } from "./schema";
 
 console.log("🌱 Starting permission seed...");
 
 export async function seedPermissions() {
-  // ==================== PERMISSIONS ====================
-  // Permissions follow {resource}.{action} convention: parse from name
-  const permEntries = [
-    {
-      name: "users.create",
-      description: "Create users",
-      resource: "users",
-      action: "create",
-    },
-    {
-      name: "users.read",
-      description: "Read users",
-      resource: "users",
-      action: "read",
-    },
-    {
-      name: "users.update",
-      description: "Update users",
-      resource: "users",
-      action: "update",
-    },
-    {
-      name: "users.delete",
-      description: "Delete users",
-      resource: "users",
-      action: "delete",
-    },
-    {
-      name: "students.create",
-      description: "Create student records",
-      resource: "students",
-      action: "create",
-    },
-    {
-      name: "students.read",
-      description: "Read student records",
-      resource: "students",
-      action: "read",
-    },
-    {
-      name: "students.update",
-      description: "Update student records",
-      resource: "students",
-      action: "update",
-    },
-    {
-      name: "students.delete",
-      description: "Delete student records",
-      resource: "students",
-      action: "delete",
-    },
-    {
-      name: "students.promote",
-      description: "Promote students",
-      resource: "students",
-      action: "promote",
-    },
-    {
-      name: "students.graduate",
-      description: "Graduate students",
-      resource: "students",
-      action: "graduate",
-    },
-    {
-      name: "students.import",
-      description: "Import students",
-      resource: "students",
-      action: "import",
-    },
-    {
-      name: "teachers.create",
-      description: "Create teacher records",
-      resource: "teachers",
-      action: "create",
-    },
-    {
-      name: "teachers.read",
-      description: "Read teacher records",
-      resource: "teachers",
-      action: "read",
-    },
-    {
-      name: "teachers.update",
-      description: "Update teacher records",
-      resource: "teachers",
-      action: "update",
-    },
-    {
-      name: "teachers.delete",
-      description: "Delete teacher records",
-      resource: "teachers",
-      action: "delete",
-    },
-    {
-      name: "teachers.assign_class",
-      description: "Assign teachers to classes",
-      resource: "teachers",
-      action: "assign_class",
-    },
-    {
-      name: "teachers.assign_subject",
-      description: "Assign teachers to subjects",
-      resource: "teachers",
-      action: "assign_subject",
-    },
-    {
-      name: "classes.manage",
-      description: "Manage classes",
-      resource: "classes",
-      action: "manage",
-    },
-    {
-      name: "majors.manage",
-      description: "Manage majors",
-      resource: "majors",
-      action: "manage",
-    },
-    {
-      name: "subjects.manage",
-      description: "Manage subjects",
-      resource: "subjects",
-      action: "manage",
-    },
-    {
-      name: "semesters.manage",
-      description: "Manage semesters",
-      resource: "semesters",
-      action: "manage",
-    },
-    {
-      name: "enrollments.create",
-      description: "Create enrollments",
-      resource: "enrollments",
-      action: "create",
-    },
-    {
-      name: "enrollments.read",
-      description: "Read enrollments",
-      resource: "enrollments",
-      action: "read",
-    },
-    {
-      name: "enrollments.update",
-      description: "Update enrollments",
-      resource: "enrollments",
-      action: "update",
-    },
-    {
-      name: "enrollments.delete",
-      description: "Delete enrollments",
-      resource: "enrollments",
-      action: "delete",
-    },
-    {
-      name: "grades.input",
-      description: "Input grades",
-      resource: "grades",
-      action: "input",
-    },
-    {
-      name: "grades.read_any",
-      description: "Read any grades",
-      resource: "grades",
-      action: "read_any",
-    },
-    {
-      name: "grades.read_own",
-      description: "Read own grades",
-      resource: "grades",
-      action: "read_own",
-    },
-    {
-      name: "grades.print",
-      description: "Print grade reports",
-      resource: "grades",
-      action: "print",
-    },
-    {
-      name: "grades.read",
-      description: "Read grades",
-      resource: "grades",
-      action: "read",
-    },
-    {
-      name: "announcements.create",
-      description: "Create announcements",
-      resource: "announcements",
-      action: "create",
-    },
-    {
-      name: "announcements.read",
-      description: "Read announcements",
-      resource: "announcements",
-      action: "read",
-    },
-    {
-      name: "announcements.update",
-      description: "Update announcements",
-      resource: "announcements",
-      action: "update",
-    },
-    {
-      name: "announcements.delete",
-      description: "Delete announcements",
-      resource: "announcements",
-      action: "delete",
-    },
-    {
-      name: "announcements.publish",
-      description: "Publish announcements",
-      resource: "announcements",
-      action: "publish",
-    },
-    {
-      name: "payments.create",
-      description: "Create payments",
-      resource: "payments",
-      action: "create",
-    },
-    {
-      name: "payments.read_any",
-      description: "Read any payments",
-      resource: "payments",
-      action: "read_any",
-    },
-    {
-      name: "payments.read_own",
-      description: "Read own payments",
-      resource: "payments",
-      action: "read_own",
-    },
-    {
-      name: "payments.update",
-      description: "Update payments",
-      resource: "payments",
-      action: "update",
-    },
-    {
-      name: "payments.approve",
-      description: "Approve payments",
-      resource: "payments",
-      action: "approve",
-    },
-    {
-      name: "payments.generate_report",
-      description: "Generate payment reports",
-      resource: "payments",
-      action: "generate_report",
-    },
-    {
-      name: "payment_methods.manage",
-      description: "Manage payment methods",
-      resource: "payment_methods",
-      action: "manage",
-    },
-    {
-      name: "system_configs.manage",
-      description: "Manage system configs",
-      resource: "system_configs",
-      action: "manage",
-    },
-    {
-      name: "profile.edit_own",
-      description: "Edit own profile",
-      resource: "profile",
-      action: "edit_own",
-    },
-    {
-      name: "profile.edit_any",
-      description: "Edit any profile",
-      resource: "profile",
-      action: "edit_any",
-    },
-    {
-      name: "profile.assets.upload",
-      description: "Upload profile assets",
-      resource: "profile",
-      action: "assets_upload",
-    },
-  ];
-
-  for (const entry of permEntries) {
+  for (const entry of PERMISSIONS) {
     const [existing] = await db
       .select({ id: permissions.id })
       .from(permissions)
@@ -317,8 +37,6 @@ export async function seedPermissions() {
     }
   }
 
-  // ==================== ROLE_PERMISSIONS ====================
-  // Get all roles and permissions (active only)
   const allRoles = await db.select().from(roles).where(isNull(roles.deletedAt));
   const allPerms = await db
     .select()
@@ -333,88 +51,12 @@ export async function seedPermissions() {
   const roleMap = Object.fromEntries(allRoles.map((r) => [r.name, r]));
   const permMap = Object.fromEntries(allPerms.map((p) => [p.name, p]));
 
-  // Administrator permissions
-  const adminPermNames = [
-    "users.create",
-    "users.read",
-    "users.update",
-    "students.create",
-    "students.read",
-    "students.update",
-    "students.delete",
-    "students.promote",
-    "students.graduate",
-    "students.import",
-    "teachers.create",
-    "teachers.read",
-    "teachers.update",
-    "teachers.delete",
-    "teachers.assign_class",
-    "teachers.assign_subject",
-    "classes.manage",
-    "majors.manage",
-    "subjects.manage",
-    "semesters.manage",
-    "enrollments.create",
-    "enrollments.read",
-    "enrollments.update",
-    "enrollments.delete",
-    "grades.input",
-    "grades.read_any",
-    "grades.read_own",
-    "grades.print",
-    "announcements.create",
-    "announcements.read",
-    "announcements.update",
-    "announcements.delete",
-    "announcements.publish",
-    "payments.create",
-    "payments.read_any",
-    "payments.read_own",
-    "payments.update",
-    "payments.approve",
-    "payments.generate_report",
-    "payment_methods.manage",
-    "system_configs.manage",
-    "profile.edit_own",
-    "profile.edit_any",
-    "profile.assets.upload",
-  ];
-
-  // Guru permissions
-  const guruPermNames = [
-    "grades.input",
-    "grades.read_any",
-    "students.read",
-    "announcements.read",
-    "profile.edit_own",
-    "subjects.manage",
-    "teachers.read",
-    "classes.manage",
-    "majors.manage",
-    "semesters.manage",
-    "enrollments.read",
-  ];
-
-  // Siswa permissions
-  const siswaPermNames = [
-    "grades.read_own",
-    "announcements.read",
-    "profile.edit_own",
-    "students.read",
-    "payments.read_own",
-    "enrollments.read",
-  ];
-
-  // Alumni permissions
-  const alumniPermNames = ["grades.read_own", "profile.edit_own"];
-
   const assignments = [
     { roleName: "superadmin", perms: allPerms.map((p) => p.name) },
-    { roleName: "administrator", perms: adminPermNames },
-    { roleName: "guru", perms: guruPermNames },
-    { roleName: "siswa", perms: siswaPermNames },
-    { roleName: "alumni", perms: alumniPermNames },
+    { roleName: "administrator", perms: ROLE_PERMISSIONS.administrator },
+    { roleName: "guru", perms: ROLE_PERMISSIONS.guru },
+    { roleName: "siswa", perms: ROLE_PERMISSIONS.siswa },
+    { roleName: "alumni", perms: ROLE_PERMISSIONS.alumni },
   ];
 
   for (const { roleName, perms } of assignments) {
@@ -430,10 +72,12 @@ export async function seedPermissions() {
       }
 
       try {
-        // Check if role-permission assignment already exists
         const existing = await db.query.rolePermissions.findFirst({
           where: (rp, { and }) =>
-            and(eq(rp.roleId, roleMap[roleName].id), eq(rp.permissionId, permMap[permName].id)),
+            and(
+              eq(rp.roleId, roleMap[roleName].id),
+              eq(rp.permissionId, permMap[permName].id)
+            ),
         });
 
         if (!existing) {

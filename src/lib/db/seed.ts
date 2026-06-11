@@ -13,15 +13,15 @@
 import { and, eq, isNull } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "./index";
+import { PERMISSIONS, ROLE_ENTRIES, ROLE_PERMISSIONS } from "./permissions";
 import {
+  calendarEvents,
   permissions,
   religions,
   rolePermissions,
   roles,
   users,
 } from "./schema";
-
-// ==================== REFERENCE DATA ====================
 
 const religionNames = [
   "Islam",
@@ -50,371 +50,16 @@ async function seedReligions() {
     console.log(`✅ Seeded religion: ${name}`);
   }
 }
-const roleEntries = [
-  { name: "superadmin", description: "Full system access", level: 100 },
-  { name: "administrator", description: "Admin staff (TU)", level: 80 },
-  { name: "guru", description: "Teacher", level: 60 },
-  { name: "siswa", description: "Student", level: 40 },
-  { name: "alumni", description: "Alumni (read-only)", level: 20 },
-];
-
-// ==================== PERMISSIONS ====================
-const permEntries = [
-  {
-    name: "users.create",
-    description: "Create users",
-    resource: "users",
-    action: "create",
-  },
-  {
-    name: "users.read",
-    description: "Read users",
-    resource: "users",
-    action: "read",
-  },
-  {
-    name: "users.update",
-    description: "Update users",
-    resource: "users",
-    action: "update",
-  },
-  {
-    name: "users.delete",
-    description: "Delete users",
-    resource: "users",
-    action: "delete",
-  },
-  {
-    name: "students.create",
-    description: "Create student records",
-    resource: "students",
-    action: "create",
-  },
-  {
-    name: "students.read",
-    description: "Read student records",
-    resource: "students",
-    action: "read",
-  },
-  {
-    name: "students.update",
-    description: "Update student records",
-    resource: "students",
-    action: "update",
-  },
-  {
-    name: "students.delete",
-    description: "Delete student records",
-    resource: "students",
-    action: "delete",
-  },
-  {
-    name: "students.promote",
-    description: "Promote students",
-    resource: "students",
-    action: "promote",
-  },
-  {
-    name: "students.graduate",
-    description: "Graduate students",
-    resource: "students",
-    action: "graduate",
-  },
-  {
-    name: "students.import",
-    description: "Import students",
-    resource: "students",
-    action: "import",
-  },
-  {
-    name: "teachers.create",
-    description: "Create teacher records",
-    resource: "teachers",
-    action: "create",
-  },
-  {
-    name: "teachers.read",
-    description: "Read teacher records",
-    resource: "teachers",
-    action: "read",
-  },
-  {
-    name: "teachers.update",
-    description: "Update teacher records",
-    resource: "teachers",
-    action: "update",
-  },
-  {
-    name: "teachers.delete",
-    description: "Delete teacher records",
-    resource: "teachers",
-    action: "delete",
-  },
-  {
-    name: "teachers.assign_class",
-    description: "Assign teachers to classes",
-    resource: "teachers",
-    action: "assign_class",
-  },
-  {
-    name: "teachers.assign_subject",
-    description: "Assign teachers to subjects",
-    resource: "teachers",
-    action: "assign_subject",
-  },
-  {
-    name: "classes.manage",
-    description: "Manage classes",
-    resource: "classes",
-    action: "manage",
-  },
-  {
-    name: "majors.manage",
-    description: "Manage majors",
-    resource: "majors",
-    action: "manage",
-  },
-  {
-    name: "subjects.manage",
-    description: "Manage subjects",
-    resource: "subjects",
-    action: "manage",
-  },
-  {
-    name: "semesters.manage",
-    description: "Manage semesters",
-    resource: "semesters",
-    action: "manage",
-  },
-  {
-    name: "enrollments.create",
-    description: "Create enrollments",
-    resource: "enrollments",
-    action: "create",
-  },
-  {
-    name: "enrollments.read",
-    description: "Read enrollments",
-    resource: "enrollments",
-    action: "read",
-  },
-  {
-    name: "enrollments.update",
-    description: "Update enrollments",
-    resource: "enrollments",
-    action: "update",
-  },
-  {
-    name: "enrollments.delete",
-    description: "Delete enrollments",
-    resource: "enrollments",
-    action: "delete",
-  },
-  {
-    name: "grades.input",
-    description: "Input grades",
-    resource: "grades",
-    action: "input",
-  },
-  {
-    name: "grades.read_any",
-    description: "Read any grades",
-    resource: "grades",
-    action: "read_any",
-  },
-  {
-    name: "grades.read_own",
-    description: "Read own grades",
-    resource: "grades",
-    action: "read_own",
-  },
-  {
-    name: "grades.print",
-    description: "Print grade reports",
-    resource: "grades",
-    action: "print",
-  },
-  {
-    name: "announcements.create",
-    description: "Create announcements",
-    resource: "announcements",
-    action: "create",
-  },
-  {
-    name: "announcements.read",
-    description: "Read announcements",
-    resource: "announcements",
-    action: "read",
-  },
-  {
-    name: "announcements.update",
-    description: "Update announcements",
-    resource: "announcements",
-    action: "update",
-  },
-  {
-    name: "announcements.delete",
-    description: "Delete announcements",
-    resource: "announcements",
-    action: "delete",
-  },
-  {
-    name: "announcements.publish",
-    description: "Publish announcements",
-    resource: "announcements",
-    action: "publish",
-  },
-  {
-    name: "payments.create",
-    description: "Create payments",
-    resource: "payments",
-    action: "create",
-  },
-  {
-    name: "payments.read_any",
-    description: "Read any payments",
-    resource: "payments",
-    action: "read_any",
-  },
-  {
-    name: "payments.read_own",
-    description: "Read own payments",
-    resource: "payments",
-    action: "read_own",
-  },
-  {
-    name: "payments.update",
-    description: "Update payments",
-    resource: "payments",
-    action: "update",
-  },
-  {
-    name: "payments.approve",
-    description: "Approve payments",
-    resource: "payments",
-    action: "approve",
-  },
-  {
-    name: "payments.generate_report",
-    description: "Generate payment reports",
-    resource: "payments",
-    action: "generate_report",
-  },
-  {
-    name: "payment_methods.manage",
-    description: "Manage payment methods",
-    resource: "payment_methods",
-    action: "manage",
-  },
-  {
-    name: "system_configs.manage",
-    description: "Manage system configs",
-    resource: "system_configs",
-    action: "manage",
-  },
-  {
-    name: "profile.edit_own",
-    description: "Edit own profile",
-    resource: "profile",
-    action: "edit_own",
-  },
-  {
-    name: "profile.edit_any",
-    description: "Edit any profile",
-    resource: "profile",
-    action: "edit_any",
-  },
-  {
-    name: "profile.assets.upload",
-    description: "Upload profile assets",
-    resource: "profile",
-    action: "assets_upload",
-  },
-];
-
-// ==================== ROLE PERMISSION ASSIGNMENTS ====================
-const rolePermAssignments: Record<string, string[]> = {
-  superadmin: permEntries.map((p) => p.name),
-  administrator: [
-    "users.create",
-    "users.read",
-    "users.update",
-    "students.create",
-    "students.read",
-    "students.update",
-    "students.delete",
-    "students.promote",
-    "students.graduate",
-    "students.import",
-    "teachers.create",
-    "teachers.read",
-    "teachers.update",
-    "teachers.delete",
-    "teachers.assign_class",
-    "teachers.assign_subject",
-    "classes.manage",
-    "majors.manage",
-    "subjects.manage",
-    "semesters.manage",
-    "enrollments.create",
-    "enrollments.read",
-    "enrollments.update",
-    "enrollments.delete",
-    "grades.input",
-    "grades.read_any",
-    "grades.read_own",
-    "grades.print",
-    "announcements.create",
-    "announcements.read",
-    "announcements.update",
-    "announcements.delete",
-    "announcements.publish",
-    "payments.create",
-    "payments.read_any",
-    "payments.read_own",
-    "payments.update",
-    "payments.approve",
-    "payments.generate_report",
-    "payment_methods.manage",
-    "system_configs.manage",
-    "profile.edit_own",
-    "profile.edit_any",
-    "profile.assets.upload",
-  ],
-  guru: [
-    "grades.input",
-    "grades.read_any",
-    "students.read",
-    "announcements.read",
-    "profile.edit_own",
-    "subjects.manage",
-    "teachers.read",
-    "classes.manage",
-    "majors.manage",
-    "semesters.manage",
-    "enrollments.read",
-  ],
-  siswa: [
-    "grades.read_own",
-    "announcements.read",
-    "profile.edit_own",
-    "students.read",
-    "payments.read_own",
-    "enrollments.read",
-  ],
-  alumni: ["grades.read_own", "profile.edit_own"],
-};
 
 async function seed() {
   console.log("🌱 Starting main seed...");
 
-  // ==================== RELIGIONS ====================
   await seedReligions();
+  await seedCalendarEvents();
 
-  // ==================== ROLES ====================
   console.log("\n--- Seeding roles ---");
   const roleMap: Record<string, number> = {};
-  for (const entry of roleEntries) {
+  for (const entry of ROLE_ENTRIES) {
     const [existing] = await db
       .select({ id: roles.id })
       .from(roles)
@@ -425,7 +70,6 @@ async function seed() {
       console.log(`⏭️  Role '${entry.name}' already exists`);
       roleMap[entry.name] = Number(existing.id);
     } else {
-      // Check soft-deleted
       const [softDeleted] = await db
         .select({ id: roles.id })
         .from(roles)
@@ -440,29 +84,21 @@ async function seed() {
         console.log(`♻️  Role '${entry.name}' restored from soft-delete`);
       } else {
         await db.insert(roles).values(entry);
-        // Re-fetch for mapping
-        const [fetched] = await db
-          .select({ id: roles.id })
-          .from(roles)
-          .where(eq(roles.name, entry.name))
-          .limit(1);
-        console.log(`✅ Seeded role: ${entry.name} (id=${fetched.id})`);
       }
 
-      // Re-fetch for mapping
       const [fetched] = await db
         .select({ id: roles.id })
         .from(roles)
         .where(eq(roles.name, entry.name))
         .limit(1);
+      console.log(`✅ Seeded role: ${entry.name} (id=${fetched.id})`);
       roleMap[entry.name] = Number(fetched.id);
     }
   }
 
-  // ==================== PERMISSIONS ====================
   console.log("\n--- Seeding permissions ---");
   const permMap: Record<string, number> = {};
-  for (const entry of permEntries) {
+  for (const entry of PERMISSIONS) {
     const [existing] = await db
       .select({ id: permissions.id })
       .from(permissions)
@@ -501,9 +137,8 @@ async function seed() {
     }
   }
 
-  // ==================== ROLE_PERMISSIONS ====================
   console.log("\n--- Assigning permissions to roles ---");
-  for (const [roleName, permNames] of Object.entries(rolePermAssignments)) {
+  for (const [roleName, permNames] of Object.entries(ROLE_PERMISSIONS)) {
     const roleId = roleMap[roleName];
     if (!roleId) {
       console.log(`⏭️  Role '${roleName}' not found, skipping`);
@@ -517,7 +152,6 @@ async function seed() {
         continue;
       }
 
-      // Check if already assigned (non-deleted)
       const [existing] = await db
         .select({ roleId: rolePermissions.roleId })
         .from(rolePermissions)
@@ -541,7 +175,6 @@ async function seed() {
         continue;
       }
 
-      // Check soft-deleted assignment
       const [softDel] = await db
         .select({ roleId: rolePermissions.roleId })
         .from(rolePermissions)
@@ -575,7 +208,6 @@ async function seed() {
     }
   }
 
-  // ==================== TEST USERS ====================
   console.log("\n--- Creating test users ---");
 
   const testUsers = [
@@ -612,7 +244,6 @@ async function seed() {
   ];
 
   for (const { email, password, name, role } of testUsers) {
-    // Check if user already exists
     const [existingUser] = await db
       .select({ id: users.id })
       .from(users)
@@ -624,7 +255,6 @@ async function seed() {
       continue;
     }
 
-    // Create user via better-auth signUpEmail endpoint
     const user = await auth.api.signUpEmail({
       body: { email, password, name },
     });
@@ -632,7 +262,6 @@ async function seed() {
     const userId = ("id" in user ? user.id : user.user.id) as string;
     console.log(`✅ Created user: ${email} (id=${userId})`);
 
-    // Now set roleId via Drizzle update — signUpEmail cannot set additionalFields
     const roleId = roleMap[role];
     if (roleId) {
       await db.update(users).set({ roleId }).where(eq(users.id, userId));
@@ -645,7 +274,88 @@ async function seed() {
   console.log("\n🎉 Seed completed");
 }
 
-// Only run if executed directly (not imported)
+async function seedCalendarEvents() {
+  console.log("\n--- Seeding sample calendar events ---");
+
+  const sampleEvents = [
+    {
+      title: "Awal Semester Genap 2025/2026",
+      description: "Hari pertama semester genap tahun ajaran 2025/2026",
+      startAt: new Date("2026-01-15T00:00:00"),
+      endAt: null,
+      allDay: true,
+      category: "academic" as const,
+      isPublic: true,
+    },
+    {
+      title: "Ujian Tengah Semester",
+      description: "Minggu ujian tengah semester genap",
+      startAt: new Date("2026-03-10T00:00:00"),
+      endAt: new Date("2026-03-15T23:59:59"),
+      allDay: false,
+      category: "exam" as const,
+      isPublic: true,
+    },
+    {
+      title: "Libur Hari Raya Idul Fitri",
+      description: "Libur nasional Hari Raya Indah",
+      startAt: new Date("2026-03-20T00:00:00"),
+      endAt: new Date("2026-03-25T23:59:59"),
+      allDay: true,
+      category: "holiday" as const,
+      isPublic: true,
+    },
+    {
+      title: "Rapat Guru",
+      description: "Rapat koordinasi bulanan guru dan staff",
+      startAt: new Date("2026-06-15T13:00:00"),
+      endAt: new Date("2026-06-15T15:00:00"),
+      allDay: false,
+      category: "meeting" as const,
+      isPublic: false,
+    },
+    {
+      title: "Pentas Seni",
+      description: "Pentas seni tahunan sekolah",
+      startAt: new Date("2026-07-20T00:00:00"),
+      endAt: null,
+      allDay: true,
+      category: "event" as const,
+      isPublic: true,
+    },
+    {
+      title: "Ujian Akhir Semester",
+      description: "Minggu ujian akhir semester genap",
+      startAt: new Date("2026-06-25T00:00:00"),
+      endAt: new Date("2026-06-30T23:59:59"),
+      allDay: false,
+      category: "exam" as const,
+      isPublic: true,
+    },
+  ];
+
+  for (const event of sampleEvents) {
+    const [existing] = await db
+      .select({ id: calendarEvents.id })
+      .from(calendarEvents)
+      .where(
+        and(
+          eq(calendarEvents.title, event.title),
+          isNull(calendarEvents.deletedAt)
+        )
+      )
+      .limit(1);
+
+    if (existing) {
+      console.log(`⏭️  Event '${event.title}' already exists`);
+      continue;
+    }
+
+    await db.insert(calendarEvents).values(event);
+    console.log(`✅ Seeded event: ${event.title}`);
+  }
+}
+
 seed()
   .then(() => process.exit(0))
   .catch((err) => {
