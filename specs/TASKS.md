@@ -2,7 +2,7 @@
 
 > Append-only cross-session goal tracker. Add new goals, never delete old ones.
 > Archive completed goals by moving to an "## Archived" section.
-> Last updated: 2026-06-12 — Sprints A/B/F/G complete; sidebar order adjusted (Kalender below Dashboard, Katalog Bayar below Keuangan).
+> Last updated: 2026-06-12 — Sprints H/I/J added for tomorrow; A/B/F/G complete; sidebar order adjusted.
 
 ---
 
@@ -38,6 +38,117 @@
 - [ ] Build multi-step form wizard
 - [ ] Wire form completion → role change
 - [ ] Test end-to-end
+
+---
+
+### Sprint H — DataTable Migration (Shared Component Adoption)
+
+**Status:** pending
+
+**Summary:** A generic `src/components/ui/data-table.tsx` exists (TanStack Table v8, 310 lines) with sorting, filtering, pagination, row selection, column visibility, Excel/CSV export, import, and empty state. Only 4 of 18 table implementations use it. Migrate the remaining 14 features to the shared component for consistency and reduced duplication.
+
+**Audit (2026-06-12):**
+- Shared DataTable users (4): `subjects`, `classes`, `majors`, `semesters` — academic only
+- Raw shadcn table users (14): `students`, `teachers`, `finance`, `roles`, `enrollments`, `admin-users`, `approvals`, `payment-methods`, `assignments`, `grades`, `transcript`, `announcements`, `payment-items` (admin), `documents`
+
+- [ ] Audit each of the 14 raw implementations — document column definitions, status badge maps, currency formatting used
+- [ ] Migrate `StudentsClient.tsx` — add columns config, wire to shared DataTable
+- [ ] Migrate `TeachersClient.tsx`
+- [ ] Migrate `FinanceClient.tsx` — extract `STATUS_LABELS` to shared config
+- [ ] Migrate `RolesClient.tsx`
+- [ ] Migrate `EnrollmentsClient.tsx`
+- [ ] Migrate `AdminUsersClient.tsx`
+- [ ] Migrate `ApprovalsClient.tsx`
+- [ ] Migrate `PaymentMethodsClient.tsx`
+- [ ] Migrate `AssignmentsClient.tsx`
+- [ ] Migrate `GradesClient.tsx`
+- [ ] Migrate `TranscriptClient.tsx`
+- [ ] Migrate `AnnouncementsClient.tsx`
+- [ ] Migrate `payment-items` (admin page)
+- [ ] Migrate `documents` page
+- [ ] Create shared status badge + currency formatter utilities
+- [ ] Verify build passes after each migration batch
+
+---
+
+### Sprint I — Dashboard Real Data Wiring
+
+**Status:** pending
+
+**Summary:** Dashboard stats (counts) are real DB queries. All charts, schedule displays, activity feeds, and per-role stat cards use hardcoded mock data. Wire all mock data to real queries or Server Actions.
+
+**Audit (2026-06-12):**
+
+**Admin dashboard mock data:**
+- Registration chart: `mockRegistrationData` (DashboardClient.tsx:58-63)
+- Activity feed: hardcoded `.map((i) => ...)` (DashboardClient.tsx:315-332)
+
+**Student dashboard mock data:**
+- GPA, subjects count, SPP status: hardcoded strings (DashboardClient.tsx:130-132)
+- GPA chart: `mockAcademicRecords` (DashboardClient.tsx:50-56, 149)
+- Today's schedule: hardcoded 3-item array (DashboardClient.tsx:197-216)
+- Date: "Kamis, 2 April 2026" (DashboardClient.tsx:193)
+
+**Teacher dashboard mock data:**
+- "4 sesi" today, "18 tugas belum dinilai": hardcoded (DashboardClient.tsx:359-362)
+- Class average chart: `mockAcademicRecords` (DashboardClient.tsx:379)
+- Activity feed: hardcoded `.map((i) => ...)` (DashboardClient.tsx:404-418)
+
+- [ ] Create `src/actions/dashboard.ts` — server actions for all mock data sources
+- [ ] Wire admin registration chart → real enrollment stats by month
+- [ ] Wire admin activity feed → real recent announcements/enrollments/approvals
+- [ ] Wire student GPA chart → real grade averages from DB
+- [ ] Wire student subjects count → real enrollment count
+- [ ] Wire student SPP status → real payment status query
+- [ ] Wire student schedule → real calendar events for today
+- [ ] Wire student date → dynamic date formatting
+- [ ] Wire teacher "sesi hari ini" → real schedule query for today
+- [ ] Wire teacher "tugas belum dinilai" → real grades pending count
+- [ ] Wire teacher class average chart → real grade averages per class
+- [ ] Wire teacher activity feed → real recent actions (grading, attendance)
+- [ ] Verify all 3 role dashboards (admin/guru/siswa) show real data end-to-end
+
+---
+
+### Sprint J — Header & Breadcrumb Responsive Fix
+
+**Status:** pending
+
+**Summary:** Header at `src/features/layout/header.tsx:43` uses `shrink-0` + no `flex-wrap` + no overflow handling on breadcrumb. On medium screens (<768px), breadcrumb overflows horizontally. Search and user info correctly hide at `md:` breakpoint but breadcrumb gets no space management.
+
+**Root cause:**
+- `header.tsx:43` — `shrink-0` prevents header compression
+- `header.tsx:44` — breadcrumb wrapper `flex items-center gap-4` lacks `min-w-0` and `flex-shrink`
+- `header.tsx:71` — search input fixed `w-[300px]` (hidden at md, but no transition)
+- No `truncate`, `overflow-hidden`, or `overflow-x-auto` on breadcrumb path
+
+- [ ] Add `flex-wrap` to header container
+- [ ] Add `min-w-0` + `flex-shrink` to breadcrumb wrapper div
+- [ ] Add `truncate` or `overflow-hidden` on breadcrumb breadcrumb page
+- [ ] Ensure search input transition is smooth when hiding at md
+- [ ] Test on 320px, 375px, 768px viewport widths
+- [ ] Verify no horizontal scroll on any page with long breadcrumb chains
+
+---
+
+### Sprint K — Sidebar Gap Polish & Visual Consistency
+
+**Status:** pending
+
+**Summary:** Small spacing/consistency fixes across sidebar and layout components. No structural changes — polish only.
+
+**Issues identified (2026-06-12):**
+- Menu button gap conflict: shadcn default `gap-2` vs app-sidebar override `gap-3` on Link (app-sidebar.tsx:171)
+- Avatar size mismatch: sidebar profile `h-10 w-10` vs header avatar `h-9 w-9`
+- Border radius inconsistency: logo icon `rounded-lg` (8px) vs menu buttons `rounded-md` (6px)
+- Sidebar trigger: component default `h-7 w-7` but header overrides to `h-9 w-9`
+
+- [ ] Fix menu button gap — remove `gap-3` override on Link, use shadcn default `gap-2`
+- [ ] Standardize sidebar avatar size to `h-9 w-9` (match header)
+- [ ] Standardize collapsed avatar to `h-7 w-7`
+- [ ] Align logo icon and logout button border radius to `rounded-md` (match menu buttons)
+- [ ] Visual inspection: expanded + collapsed states
+- [ ] `bun run build`
 
 ---
 
