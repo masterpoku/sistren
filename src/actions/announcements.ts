@@ -2,10 +2,19 @@
 
 import { and, desc, eq, isNotNull, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { getAuthContext } from "@/lib/auth/permissions";
 import { verifyRoleLevel, verifySession } from "@/lib/auth/verify-session";
 import { db } from "@/lib/db";
 import { announcementRecipients, announcements, users } from "@/lib/db/schema";
+
+const announcementSchema = z.object({
+  title: z.string().min(1, "Judul wajib diisi").max(255),
+  content: z.string().min(1, "Konten wajib diisi"),
+  description: z.string().max(500).optional().nullable(),
+  category: z.string().max(50).optional().nullable(),
+  priority: z.enum(["normal", "important", "urgent"]).default("normal"),
+});
 
 export async function getAnnouncements(limit?: number) {
   const session = await verifySession();
@@ -49,24 +58,24 @@ export async function createAnnouncement(formData: FormData) {
     return { error: "Anda tidak memiliki izin." };
   }
 
-  const title = formData.get("title") as string;
-  const content = formData.get("content") as string;
-  const description = formData.get("description") as string;
-  const category = formData.get("category") as string;
-  const priority = formData.get("priority") as string;
-
-  if (!title?.trim() || !content?.trim()) {
-    return { error: "Judul dan konten wajib diisi." };
+  const parsed = announcementSchema.safeParse({
+    title: formData.get("title"),
+    content: formData.get("content"),
+    description: formData.get("description") || null,
+    category: formData.get("category") || null,
+    priority: formData.get("priority") || "normal",
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Data tidak valid" };
   }
+  const { title, content, description, category, priority } = parsed.data;
 
   await db.insert(announcements).values({
     title: title.trim(),
     content: content.trim(),
     description: description?.trim() || null,
     category: category?.trim() || null,
-    priority: (["normal", "important", "urgent"].includes(priority)
-      ? priority
-      : "normal") as "normal" | "important" | "urgent",
+    priority,
     authorId: session.userId,
     publishedAt: new Date(),
   });
@@ -137,15 +146,17 @@ export async function updateAnnouncement(
     return { error: "Pengumuman tidak ditemukan." };
   }
 
-  const title = formData.get("title") as string;
-  const content = formData.get("content") as string;
-  const description = formData.get("description") as string;
-  const category = formData.get("category") as string;
-  const priority = formData.get("priority") as string;
-
-  if (!title?.trim() || !content?.trim()) {
-    return { error: "Judul dan konten wajib diisi." };
+  const parsed = announcementSchema.safeParse({
+    title: formData.get("title"),
+    content: formData.get("content"),
+    description: formData.get("description") || null,
+    category: formData.get("category") || null,
+    priority: formData.get("priority") || "normal",
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Data tidak valid" };
   }
+  const { title, content, description, category, priority } = parsed.data;
 
   await db
     .update(announcements)
@@ -154,9 +165,7 @@ export async function updateAnnouncement(
       content: content.trim(),
       description: description?.trim() || null,
       category: category?.trim() || null,
-      priority: (["normal", "important", "urgent"].includes(priority)
-        ? priority
-        : "normal") as "normal" | "important" | "urgent",
+      priority,
     })
     .where(eq(announcements.id, Number(announcementId)));
 

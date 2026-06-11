@@ -3,30 +3,53 @@
 import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { profiles, users } from "@/lib/db/schema";
 
+const registerSchema = z
+  .object({
+    name: z.string().min(2, "Nama minimal 2 karakter").max(100),
+    email: z.string().email("Email tidak valid"),
+    password: z.string().min(6, "Password minimal 6 karakter"),
+    confirmPassword: z.string().min(6, "Konfirmasi password wajib diisi"),
+    nisn: z.string().max(20).optional().or(z.literal("")),
+    birthPlace: z.string().max(100).optional().or(z.literal("")),
+    birthDate: z.string().optional().or(z.literal("")),
+    gender: z.enum(["male", "female"]).optional().or(z.literal("")),
+    religionId: z.string().optional().or(z.literal("")),
+    address: z.string().max(500).optional().or(z.literal("")),
+    fatherName: z.string().max(100).optional().or(z.literal("")),
+    motherName: z.string().max(100).optional().or(z.literal("")),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Password dan konfirmasi password tidak cocok",
+    path: ["confirmPassword"],
+  });
+
 export async function registerAction(formData: FormData) {
-  const name = formData.get("name") as string;
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
-  const confirmPassword = formData.get("confirmPassword") as string;
+  const raw = {
+    name: formData.get("name") ?? "",
+    email: formData.get("email") ?? "",
+    password: formData.get("password") ?? "",
+    confirmPassword: formData.get("confirmPassword") ?? "",
+    nisn: formData.get("nisn") ?? "",
+    birthPlace: formData.get("birthPlace") ?? "",
+    birthDate: formData.get("birthDate") ?? "",
+    gender: formData.get("gender") ?? "",
+    religionId: formData.get("religionId") ?? "",
+    address: formData.get("address") ?? "",
+    fatherName: formData.get("fatherName") ?? "",
+    motherName: formData.get("motherName") ?? "",
+  };
 
-  // Basic validation
-  if (!name || !email || !password || !confirmPassword) {
-    return { error: "Semua field wajib diisi." };
+  const parsed = registerSchema.safeParse(raw);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Data tidak valid" };
   }
+  const { name, email, password } = parsed.data;
 
-  if (password.length < 6) {
-    return { error: "Password minimal 6 karakter." };
-  }
-
-  if (password !== confirmPassword) {
-    return { error: "Password dan konfirmasi password tidak cocok." };
-  }
-
-  // Check if email already exists
   const [existing] = await db
     .select({ id: users.id })
     .from(users)
@@ -37,13 +60,6 @@ export async function registerAction(formData: FormData) {
     return { error: "Email sudah terdaftar." };
   }
 
-  // Gender validation — reject malformed values
-  const gender = formData.get("gender") as string;
-  if (gender && !["male", "female"].includes(gender)) {
-    return { error: "Jenis kelamin tidak valid." };
-  }
-
-  // Prepare profile values — only non-empty fields
   const profileValues: {
     userId: string;
     type: "siswa";
@@ -56,42 +72,33 @@ export async function registerAction(formData: FormData) {
     fatherName?: string;
     motherName?: string;
   } = {
-    userId: "", // placeholder, set in transaction
+    userId: "",
     type: "siswa",
   };
 
-  // birthDate — check for empty/invalid before inserting
-  const birthDateRaw = formData.get("birthDate") as string;
-  if (birthDateRaw && birthDateRaw.trim() !== "") {
-    const date = new Date(birthDateRaw);
+  if (parsed.data.birthDate && parsed.data.birthDate.trim() !== "") {
+    const date = new Date(parsed.data.birthDate);
     if (!Number.isNaN(date.getTime())) {
       profileValues.birthDate = date;
     }
   }
 
-  // Optional fields — only add if non-empty
-  const nisn = formData.get("nisn") as string;
-  if (nisn?.trim()) profileValues.nisn = nisn;
-
-  const birthPlace = formData.get("birthPlace") as string;
-  if (birthPlace?.trim()) profileValues.birthPlace = birthPlace;
-
-  if (gender) profileValues.gender = gender as "male" | "female";
-
-  const religionId = formData.get("religionId") as string;
-  if (religionId?.trim()) {
-    const parsed = parseInt(religionId, 10);
-    if (!Number.isNaN(parsed)) profileValues.religionId = parsed;
+  if (parsed.data.nisn?.trim()) profileValues.nisn = parsed.data.nisn;
+  if (parsed.data.birthPlace?.trim())
+    profileValues.birthPlace = parsed.data.birthPlace;
+  if (parsed.data.gender)
+    profileValues.gender = parsed.data.gender as "male" | "female";
+  if (parsed.data.religionId?.trim()) {
+    const religionIdNum = parseInt(parsed.data.religionId, 10);
+    if (!Number.isNaN(religionIdNum)) profileValues.religionId = religionIdNum;
   }
-
-  const address = formData.get("address") as string;
-  if (address?.trim()) profileValues.address = address;
-
-  const fatherName = formData.get("fatherName") as string;
-  if (fatherName?.trim()) profileValues.fatherName = fatherName;
-
-  const motherName = formData.get("motherName") as string;
-  if (motherName?.trim()) profileValues.motherName = motherName;
+  if (parsed.data.address?.trim()) profileValues.address = parsed.data.address;
+  if (parsed.data.fatherName?.trim())
+    profileValues.fatherName = parsed.data.fatherName;
+  if (parsed.data.fatherName?.trim())
+    profileValues.fatherName = parsed.data.fatherName;
+  if (parsed.data.motherName?.trim())
+    profileValues.motherName = parsed.data.motherName;
 
   // Transaction: create user + profile atomically
   try {

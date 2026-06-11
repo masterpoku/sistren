@@ -2,6 +2,7 @@
 
 import { and, eq, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { verifyRoleLevel } from "@/lib/auth/verify-session";
 import { db } from "@/lib/db";
 import {
@@ -13,6 +14,46 @@ import {
   teacherClassSubjects,
   users,
 } from "@/lib/db/schema";
+
+const classSchema = z.object({
+  name: z.string().min(1, "Nama wajib diisi").max(255),
+  code: z.string().min(1, "Kode wajib diisi").max(50),
+});
+const updateClassSchema = classSchema.extend({
+  classId: z.coerce.number().positive(),
+});
+const majorSchema = z.object({
+  name: z.string().min(1, "Nama wajib diisi").max(255),
+  description: z.string().max(500).optional().nullable(),
+});
+const updateMajorSchema = majorSchema.extend({
+  majorId: z.coerce.number().positive(),
+});
+const subjectSchema = z.object({
+  name: z.string().min(1, "Nama wajib diisi").max(255),
+  code: z.string().max(50).optional().nullable(),
+  classId: z.coerce.number().positive("Kelas wajib dipilih"),
+  majorId: z.coerce.number().positive().optional().nullable(),
+  credits: z.coerce.number().int().min(0).max(20),
+});
+const updateSubjectSchema = subjectSchema.extend({
+  subjectId: z.coerce.number().positive(),
+});
+const semesterSchema = z.object({
+  name: z.string().min(1, "Nama wajib diisi").max(100),
+  academicYear: z.string().min(1, "Tahun ajaran wajib diisi").max(20),
+  isActive: z.coerce.boolean(),
+});
+const updateSemesterSchema = semesterSchema.extend({
+  semesterId: z.coerce.number().positive(),
+});
+const assignTeacherSchema = z.object({
+  teacherId: z.string().min(1, "Guru wajib dipilih"),
+  classId: z.coerce.number().positive(),
+  subjectId: z.coerce.number().positive(),
+  semesterId: z.coerce.number().positive(),
+});
+const idSchema = z.coerce.number().positive();
 
 // Classes CRUD
 
@@ -28,14 +69,15 @@ export async function getClasses() {
 export async function createClass(formData: FormData) {
   await verifyRoleLevel(60);
 
-  const name = formData.get("name") as string;
-  const code = formData.get("code") as string;
-
-  if (!name?.trim() || !code?.trim()) {
-    return { error: "Nama dan kode wajib diisi." };
+  const parsed = classSchema.safeParse({
+    name: formData.get("name"),
+    code: formData.get("code"),
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Data tidak valid" };
   }
+  const { name, code } = parsed.data;
 
-  // Check duplicate code
   const [existing] = await db
     .select({ id: classes.id })
     .from(classes)
@@ -58,28 +100,30 @@ export async function createClass(formData: FormData) {
 export async function updateClass(classId: string, formData: FormData) {
   await verifyRoleLevel(60);
 
-  const name = formData.get("name") as string;
-  const code = formData.get("code") as string;
-
-  if (!name?.trim() || !code?.trim()) {
-    return { error: "Nama dan kode wajib diisi." };
+  const parsed = updateClassSchema.safeParse({
+    classId,
+    name: formData.get("name"),
+    code: formData.get("code"),
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Data tidak valid" };
   }
+  const { name, code } = parsed.data;
 
-  // Check duplicate code (excluding self)
   const [existing] = await db
     .select({ id: classes.id })
     .from(classes)
     .where(and(eq(classes.code, code.trim()), isNull(classes.deletedAt)))
     .limit(1);
 
-  if (existing && existing.id !== Number(classId)) {
+  if (existing && existing.id !== parsed.data.classId) {
     return { error: "Kode kelas sudah digunakan kelas lain." };
   }
 
   await db
     .update(classes)
     .set({ name: name.trim(), code: code.trim() })
-    .where(eq(classes.id, Number(classId)));
+    .where(eq(classes.id, parsed.data.classId));
 
   revalidatePath("/academic/classes");
   return { success: true };
@@ -122,12 +166,14 @@ export async function getMajors() {
 export async function createMajor(formData: FormData) {
   await verifyRoleLevel(60);
 
-  const name = formData.get("name") as string;
-  const description = formData.get("description") as string;
-
-  if (!name?.trim()) {
-    return { error: "Nama jurusan wajib diisi." };
+  const parsed = majorSchema.safeParse({
+    name: formData.get("name"),
+    description: formData.get("description"),
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Data tidak valid" };
   }
+  const { name, description } = parsed.data;
 
   const [existing] = await db
     .select({ id: majors.id })
@@ -141,7 +187,7 @@ export async function createMajor(formData: FormData) {
 
   await db.insert(majors).values({
     name: name.trim(),
-    description: description?.trim() || undefined,
+    description: description?.trim() || null,
   });
 
   revalidatePath("/academic/majors");
@@ -151,12 +197,15 @@ export async function createMajor(formData: FormData) {
 export async function updateMajor(majorId: string, formData: FormData) {
   await verifyRoleLevel(60);
 
-  const name = formData.get("name") as string;
-  const description = formData.get("description") as string;
-
-  if (!name?.trim()) {
-    return { error: "Nama jurusan wajib diisi." };
+  const parsed = updateMajorSchema.safeParse({
+    majorId,
+    name: formData.get("name"),
+    description: formData.get("description"),
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Data tidak valid" };
   }
+  const { name, description } = parsed.data;
 
   const [existing] = await db
     .select({ id: majors.id })
@@ -164,14 +213,14 @@ export async function updateMajor(majorId: string, formData: FormData) {
     .where(and(eq(majors.name, name.trim()), isNull(majors.deletedAt)))
     .limit(1);
 
-  if (existing && existing.id !== Number(majorId)) {
+  if (existing && existing.id !== parsed.data.majorId) {
     return { error: "Nama jurusan sudah digunakan jurusan lain." };
   }
 
   await db
     .update(majors)
-    .set({ name: name.trim(), description: description?.trim() || undefined })
-    .where(eq(majors.id, Number(majorId)));
+    .set({ name: name.trim(), description: description?.trim() || null })
+    .where(eq(majors.id, parsed.data.majorId));
 
   revalidatePath("/academic/majors");
   return { success: true };
@@ -223,15 +272,17 @@ export async function getSubjects() {
 export async function createSubject(formData: FormData) {
   await verifyRoleLevel(60);
 
-  const name = formData.get("name") as string;
-  const code = formData.get("code") as string;
-  const classId = formData.get("classId") as string;
-  const majorId = formData.get("majorId") as string;
-  const creditsStr = formData.get("credits") as string;
-
-  if (!name?.trim() || !classId) {
-    return { error: "Nama dan kelas wajib diisi." };
+  const parsed = subjectSchema.safeParse({
+    name: formData.get("name"),
+    code: formData.get("code") || null,
+    classId: formData.get("classId"),
+    majorId: formData.get("majorId") || null,
+    credits: formData.get("credits") || 0,
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Data tidak valid" };
   }
+  const { name, code, classId, majorId, credits } = parsed.data;
 
   if (code?.trim()) {
     const [existing] = await db
@@ -247,9 +298,9 @@ export async function createSubject(formData: FormData) {
   await db.insert(subjects).values({
     name: name.trim(),
     code: code?.trim() || null,
-    classId: Number(classId),
-    majorId: majorId ? Number(majorId) : null,
-    credits: creditsStr ? Number(creditsStr) : 0,
+    classId,
+    majorId: majorId ?? null,
+    credits,
   });
 
   revalidatePath("/academic/subjects");
@@ -259,15 +310,18 @@ export async function createSubject(formData: FormData) {
 export async function updateSubject(subjectId: string, formData: FormData) {
   await verifyRoleLevel(60);
 
-  const name = formData.get("name") as string;
-  const code = formData.get("code") as string;
-  const classId = formData.get("classId") as string;
-  const majorId = formData.get("majorId") as string;
-  const creditsStr = formData.get("credits") as string;
-
-  if (!name?.trim() || !classId) {
-    return { error: "Nama dan kelas wajib diisi." };
+  const parsed = updateSubjectSchema.safeParse({
+    subjectId,
+    name: formData.get("name"),
+    code: formData.get("code") || null,
+    classId: formData.get("classId"),
+    majorId: formData.get("majorId") || null,
+    credits: formData.get("credits") || 0,
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Data tidak valid" };
   }
+  const { name, code, classId, majorId, credits } = parsed.data;
 
   if (code?.trim()) {
     const [existing] = await db
@@ -275,7 +329,7 @@ export async function updateSubject(subjectId: string, formData: FormData) {
       .from(subjects)
       .where(and(eq(subjects.code, code.trim()), isNull(subjects.deletedAt)))
       .limit(1);
-    if (existing && existing.id !== Number(subjectId)) {
+    if (existing && existing.id !== parsed.data.subjectId) {
       return { error: "Kode mapel sudah digunakan mapel lain." };
     }
   }
@@ -285,11 +339,11 @@ export async function updateSubject(subjectId: string, formData: FormData) {
     .set({
       name: name.trim(),
       code: code?.trim() || null,
-      classId: Number(classId),
-      majorId: majorId ? Number(majorId) : null,
-      credits: creditsStr ? Number(creditsStr) : 0,
+      classId,
+      majorId: majorId ?? null,
+      credits,
     })
-    .where(eq(subjects.id, Number(subjectId)));
+    .where(eq(subjects.id, parsed.data.subjectId));
 
   revalidatePath("/academic/subjects");
   return { success: true };
@@ -331,17 +385,17 @@ export async function getSemesters() {
 export async function createSemester(formData: FormData) {
   await verifyRoleLevel(60);
 
-  const name = formData.get("name") as string;
-  const academicYear = formData.get("academicYear") as string;
-  const isActiveStr = formData.get("isActive") as string;
-
-  if (!name?.trim() || !academicYear?.trim()) {
-    return { error: "Nama dan tahun ajaran wajib diisi." };
+  const parsed = semesterSchema.safeParse({
+    name: formData.get("name"),
+    academicYear: formData.get("academicYear"),
+    isActive:
+      formData.get("isActive") === "true" || formData.get("isActive") === "on",
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Data tidak valid" };
   }
+  const { name, academicYear, isActive } = parsed.data;
 
-  const isActive = isActiveStr === "true";
-
-  // If setting as active, deactivate all others first
   if (isActive) {
     await db
       .update(semesters)
@@ -362,17 +416,20 @@ export async function createSemester(formData: FormData) {
 export async function setActiveSemester(semesterId: string) {
   await verifyRoleLevel(60);
 
+  const parsed = idSchema.safeParse(semesterId);
+  if (!parsed.success) {
+    return { error: "ID semester tidak valid" };
+  }
+
   await db.transaction(async (tx) => {
-    // Deactivate all
     await tx
       .update(semesters)
       .set({ isActive: false })
       .where(isNull(semesters.deletedAt));
-    // Activate selected
     await tx
       .update(semesters)
       .set({ isActive: true })
-      .where(eq(semesters.id, Number(semesterId)));
+      .where(eq(semesters.id, parsed.data));
   });
 
   revalidatePath("/academic/semesters");
@@ -382,17 +439,18 @@ export async function setActiveSemester(semesterId: string) {
 export async function updateSemester(semesterId: string, formData: FormData) {
   await verifyRoleLevel(60);
 
-  const name = formData.get("name") as string;
-  const academicYear = formData.get("academicYear") as string;
-  const isActiveStr = formData.get("isActive") as string;
-
-  if (!name?.trim() || !academicYear?.trim()) {
-    return { error: "Nama dan tahun ajaran wajib diisi." };
+  const parsed = updateSemesterSchema.safeParse({
+    semesterId,
+    name: formData.get("name"),
+    academicYear: formData.get("academicYear"),
+    isActive:
+      formData.get("isActive") === "true" || formData.get("isActive") === "on",
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Data tidak valid" };
   }
+  const { name, academicYear, isActive } = parsed.data;
 
-  const isActive = isActiveStr === "true";
-
-  // If setting as active, deactivate all others first
   if (isActive) {
     await db
       .update(semesters)
@@ -407,7 +465,7 @@ export async function updateSemester(semesterId: string, formData: FormData) {
       academicYear: academicYear.trim(),
       isActive,
     })
-    .where(eq(semesters.id, Number(semesterId)));
+    .where(eq(semesters.id, parsed.data.semesterId));
 
   revalidatePath("/academic/semesters");
   return { success: true };
@@ -484,18 +542,19 @@ export async function getAssignments() {
 }
 
 export async function assignTeacher(formData: FormData) {
-  await verifyRoleLevel(80); // admin only
+  await verifyRoleLevel(80);
 
-  const teacherId = formData.get("teacherId") as string;
-  const classId = formData.get("classId") as string;
-  const subjectId = formData.get("subjectId") as string;
-  const semesterId = formData.get("semesterId") as string;
-
-  if (!teacherId || !classId || !subjectId || !semesterId) {
-    return { error: "Semua field wajib diisi." };
+  const parsed = assignTeacherSchema.safeParse({
+    teacherId: formData.get("teacherId"),
+    classId: formData.get("classId"),
+    subjectId: formData.get("subjectId"),
+    semesterId: formData.get("semesterId"),
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Data tidak valid" };
   }
+  const { teacherId, classId, subjectId, semesterId } = parsed.data;
 
-  // Verify teacher has guru role (roleId = 60)
   const [teacher] = await db
     .select({ id: users.id, roleId: users.roleId })
     .from(users)
@@ -510,16 +569,15 @@ export async function assignTeacher(formData: FormData) {
     return { error: "Hanya guru yang bisa ditugaskan." };
   }
 
-  // Check for duplicate
   const [existing] = await db
     .select({ id: teacherClassSubjects.id })
     .from(teacherClassSubjects)
     .where(
       and(
         eq(teacherClassSubjects.teacherId, teacherId),
-        eq(teacherClassSubjects.classId, Number(classId)),
-        eq(teacherClassSubjects.subjectId, Number(subjectId)),
-        eq(teacherClassSubjects.semesterId, Number(semesterId)),
+        eq(teacherClassSubjects.classId, classId),
+        eq(teacherClassSubjects.subjectId, subjectId),
+        eq(teacherClassSubjects.semesterId, semesterId),
         isNull(teacherClassSubjects.deletedAt)
       )
     )
@@ -531,9 +589,9 @@ export async function assignTeacher(formData: FormData) {
 
   await db.insert(teacherClassSubjects).values({
     teacherId,
-    classId: Number(classId),
-    subjectId: Number(subjectId),
-    semesterId: Number(semesterId),
+    classId,
+    subjectId,
+    semesterId,
   });
 
   revalidatePath("/academic/assignments");
@@ -543,10 +601,15 @@ export async function assignTeacher(formData: FormData) {
 export async function removeAssignment(assignmentId: string) {
   await verifyRoleLevel(80);
 
+  const parsed = idSchema.safeParse(assignmentId);
+  if (!parsed.success) {
+    return { error: "ID tugas tidak valid" };
+  }
+
   await db
     .update(teacherClassSubjects)
     .set({ deletedAt: new Date() })
-    .where(eq(teacherClassSubjects.id, Number(assignmentId)));
+    .where(eq(teacherClassSubjects.id, parsed.data));
 
   revalidatePath("/academic/assignments");
   return { success: true };

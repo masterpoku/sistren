@@ -2,10 +2,27 @@
 
 import { and, desc, eq, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { getAuthContext } from "@/lib/auth/permissions";
 import { verifyRoleLevel, verifySession } from "@/lib/auth/verify-session";
 import { db } from "@/lib/db";
 import { paymentMethods, payments, users } from "@/lib/db/schema";
+
+const paymentMethodSchema = z.object({
+  name: z.string().min(1, "Nama wajib diisi").max(255),
+  accountNumber: z.string().max(50).optional().nullable(),
+  accountName: z.string().max(255).optional().nullable(),
+  provider: z.string().max(100).optional().nullable(),
+  instructions: z.string().max(1000).optional().nullable(),
+});
+const recordPaymentSchema = z.object({
+  studentId: z.string().min(1, "Siswa wajib dipilih"),
+  paymentItemId: z.coerce.number().positive().optional().nullable(),
+  description: z.string().min(1, "Deskripsi wajib diisi").max(500),
+  price: z.string().regex(/^\d+(\.\d{1,2})?$/, "Harga tidak valid"),
+  quantity: z.coerce.number().int().min(1).default(1),
+});
+const idSchema = z.coerce.number().positive();
 
 export async function getPaymentMethods() {
   await verifyRoleLevel(80);
@@ -20,15 +37,18 @@ export async function getPaymentMethods() {
 export async function createPaymentMethod(formData: FormData) {
   await verifyRoleLevel(80);
 
-  const name = formData.get("name") as string;
-  const accountNumber = formData.get("accountNumber") as string;
-  const accountName = formData.get("accountName") as string;
-  const provider = formData.get("provider") as string;
-  const instructions = formData.get("instructions") as string;
-
-  if (!name?.trim()) {
-    return { error: "Nama metode pembayaran wajib diisi." };
+  const parsed = paymentMethodSchema.safeParse({
+    name: formData.get("name"),
+    accountNumber: formData.get("accountNumber") || null,
+    accountName: formData.get("accountName") || null,
+    provider: formData.get("provider") || null,
+    instructions: formData.get("instructions") || null,
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Data tidak valid" };
   }
+  const { name, accountNumber, accountName, provider, instructions } =
+    parsed.data;
 
   const [existing] = await db
     .select({ id: paymentMethods.id })
@@ -63,22 +83,30 @@ export async function updatePaymentMethod(
 ) {
   await verifyRoleLevel(80);
 
-  const name = formData.get("name") as string;
-  const accountNumber = formData.get("accountNumber") as string;
-  const accountName = formData.get("accountName") as string;
-  const provider = formData.get("provider") as string;
-  const instructions = formData.get("instructions") as string;
-
-  if (!name?.trim()) {
-    return { error: "Nama metode pembayaran wajib diisi." };
+  const idParsed = idSchema.safeParse(methodId);
+  if (!idParsed.success) {
+    return { error: "ID metode tidak valid" };
   }
+
+  const parsed = paymentMethodSchema.safeParse({
+    name: formData.get("name"),
+    accountNumber: formData.get("accountNumber") || null,
+    accountName: formData.get("accountName") || null,
+    provider: formData.get("provider") || null,
+    instructions: formData.get("instructions") || null,
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Data tidak valid" };
+  }
+  const { name, accountNumber, accountName, provider, instructions } =
+    parsed.data;
 
   const [existing] = await db
     .select({ id: paymentMethods.id })
     .from(paymentMethods)
     .where(
       and(
-        eq(paymentMethods.id, Number(methodId)),
+        eq(paymentMethods.id, idParsed.data),
         isNull(paymentMethods.deletedAt)
       )
     )
@@ -97,7 +125,7 @@ export async function updatePaymentMethod(
       provider: provider?.trim() || null,
       instructions: instructions?.trim() || null,
     })
-    .where(eq(paymentMethods.id, Number(methodId)));
+    .where(eq(paymentMethods.id, idParsed.data));
 
   revalidatePath("/payments/methods");
   return { success: true };
@@ -106,12 +134,17 @@ export async function updatePaymentMethod(
 export async function deletePaymentMethod(methodId: string) {
   await verifyRoleLevel(80);
 
+  const idParsed = idSchema.safeParse(methodId);
+  if (!idParsed.success) {
+    return { error: "ID metode tidak valid" };
+  }
+
   const [existing] = await db
     .select({ id: paymentMethods.id })
     .from(paymentMethods)
     .where(
       and(
-        eq(paymentMethods.id, Number(methodId)),
+        eq(paymentMethods.id, idParsed.data),
         isNull(paymentMethods.deletedAt)
       )
     )
@@ -124,7 +157,7 @@ export async function deletePaymentMethod(methodId: string) {
   await db
     .update(paymentMethods)
     .set({ deletedAt: new Date() })
-    .where(eq(paymentMethods.id, Number(methodId)));
+    .where(eq(paymentMethods.id, idParsed.data));
 
   revalidatePath("/payments/methods");
   return { success: true };
@@ -182,39 +215,31 @@ export async function getPayments(opts?: {
 export async function recordPayment(formData: FormData) {
   await verifyRoleLevel(80);
 
-  const studentId = formData.get("studentId") as string;
-  const paymentItemIdStr = formData.get("paymentItemId") as string;
-  const description = formData.get("description") as string;
-  const priceStr = formData.get("price") as string;
-  const quantityStr = formData.get("quantity") as string;
-
-  if (!studentId || !description || !priceStr) {
-    return { error: "Student, deskripsi, dan jumlah wajib diisi." };
+  const parsed = recordPaymentSchema.safeParse({
+    studentId: formData.get("studentId"),
+    paymentItemId: formData.get("paymentItemId") || null,
+    description: formData.get("description"),
+    price: formData.get("price"),
+    quantity: formData.get("quantity") || 1,
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Data tidak valid" };
   }
+  const { studentId, paymentItemId, description, price, quantity } =
+    parsed.data;
 
-  // Optional catalog item — pre-fills description/standardPrice but never enforces
-  const paymentItemId = paymentItemIdStr
-    ? parseInt(paymentItemIdStr, 10)
-    : null;
-
-  const price = parseFloat(priceStr);
-  const quantity = parseInt(quantityStr || "1", 10);
-  if (Number.isNaN(price) || price < 0) {
-    return { error: "Harga tidak valid." };
-  }
-
-  const total = price * quantity;
+  const priceNum = parseFloat(price);
+  const total = priceNum * quantity;
   const code = `SPP-${Date.now()}`;
 
   await db.insert(payments).values({
     studentId,
     code,
-    paymentItemId:
-      paymentItemId && !Number.isNaN(paymentItemId) ? paymentItemId : null,
+    paymentItemId: paymentItemId ?? null,
     description: description.trim(),
-    price: String(price),
+    price,
     quantity,
-    total: String(total),
+    total: total.toFixed(2),
     status: "pending",
   });
 
@@ -225,10 +250,15 @@ export async function recordPayment(formData: FormData) {
 export async function confirmPayment(paymentId: string) {
   await verifyRoleLevel(80);
 
+  const parsed = idSchema.safeParse(paymentId);
+  if (!parsed.success) {
+    return { error: "ID pembayaran tidak valid" };
+  }
+
   const [existing] = await db
     .select({ id: payments.id })
     .from(payments)
-    .where(and(eq(payments.id, Number(paymentId)), isNull(payments.deletedAt)))
+    .where(and(eq(payments.id, parsed.data), isNull(payments.deletedAt)))
     .limit(1);
 
   if (!existing) {
@@ -238,7 +268,7 @@ export async function confirmPayment(paymentId: string) {
   await db
     .update(payments)
     .set({ status: "paid", paidAt: new Date() })
-    .where(eq(payments.id, Number(paymentId)));
+    .where(eq(payments.id, parsed.data));
 
   revalidatePath("/finance");
   return { success: true };
@@ -247,10 +277,15 @@ export async function confirmPayment(paymentId: string) {
 export async function cancelPayment(paymentId: string) {
   await verifyRoleLevel(80);
 
+  const parsed = idSchema.safeParse(paymentId);
+  if (!parsed.success) {
+    return { error: "ID pembayaran tidak valid" };
+  }
+
   const [existing] = await db
     .select({ id: payments.id })
     .from(payments)
-    .where(and(eq(payments.id, Number(paymentId)), isNull(payments.deletedAt)))
+    .where(and(eq(payments.id, parsed.data), isNull(payments.deletedAt)))
     .limit(1);
 
   if (!existing) {
@@ -260,7 +295,7 @@ export async function cancelPayment(paymentId: string) {
   await db
     .update(payments)
     .set({ status: "cancelled" })
-    .where(eq(payments.id, Number(paymentId)));
+    .where(eq(payments.id, parsed.data));
 
   revalidatePath("/finance");
   return { success: true };
