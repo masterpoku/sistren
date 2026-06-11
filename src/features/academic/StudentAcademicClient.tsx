@@ -4,10 +4,8 @@ import {
   BookOpen,
   Calendar,
   CalendarCheck,
-  Clock,
   DownloadSimple,
   MagnifyingGlass,
-  MapPin,
 } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import { getStudentGrades } from "@/actions/grades";
@@ -16,56 +14,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-const MOCK_SCHEDULE = [
-  {
-    day: "Senin",
-    time: "07:30-10:00",
-    subject: "Sistem Terdistribusi",
-    room: "Lab. Komputer 1",
-  },
-  {
-    day: "Senin",
-    time: "10:30-13:00",
-    subject: "Kecerdasan Buatan",
-    room: "Ruang XII-TKJ",
-  },
-  {
-    day: "Selasa",
-    time: "07:30-10:00",
-    subject: "Jaringan Komputer",
-    room: "Lab. Jaringan",
-  },
-  {
-    day: "Selasa",
-    time: "10:30-13:00",
-    subject: "Basis Data",
-    room: "Ruang XII-TKJ",
-  },
-  {
-    day: "Rabu",
-    time: "07:30-10:00",
-    subject: "Praktikum Jaringan",
-    room: "Lab. Komputer 2",
-  },
-  {
-    day: "Rabu",
-    time: "10:30-13:00",
-    subject: "Pemrograman Web",
-    room: "Lab. Komputer 1",
-  },
-  {
-    day: "Kamis",
-    time: "07:30-10:00",
-    subject: "Sistem Terdistribusi",
-    room: "Ruang XII-TKJ",
-  },
-  {
-    day: "Jum'at",
-    time: "07:30-09:00",
-    subject: "Bimbingan Karir",
-    room: "Aula",
-  },
-];
+interface CalendarEventItem {
+  id: number;
+  title: string;
+  startAt: Date;
+  endAt: Date | null;
+  allDay: boolean | null;
+  category: string | null;
+}
 
 interface GradeItem {
   subjectName: string;
@@ -81,9 +37,10 @@ interface GradeItem {
 
 interface Props {
   userId: string;
+  calendarEvents?: CalendarEventItem[];
 }
 
-export function StudentAcademicClient({ userId }: Props) {
+export function StudentAcademicClient({ userId, calendarEvents = [] }: Props) {
   const [search, setSearch] = useState("");
   const [grades, setGrades] = useState<GradeItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -488,62 +445,69 @@ export function StudentAcademicClient({ userId }: Props) {
           <TabsContent value="jadwal" className="space-y-4 mt-4">
             <Card>
               <CardHeader>
-                <CardTitle>Jadwal Pembelajaran</CardTitle>
+                <CardTitle>Acara Mendatang</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-border text-muted-foreground text-xs uppercase tracking-wider">
-                        <th className="text-left px-4 py-3 font-medium">
-                          Hari
-                        </th>
-                        <th className="text-left px-4 py-3 font-medium">
-                          Waktu
-                        </th>
-                        <th className="text-left px-4 py-3 font-medium">
-                          Mata Pelajaran
-                        </th>
-                        <th className="text-left px-4 py-3 font-medium">
-                          Ruang
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {["Senin", "Selasa", "Rabu", "Kamis", "Jum'at"].map(
-                        (day) => {
-                          const daySchedules = MOCK_SCHEDULE.filter(
-                            (s) => s.day === day
-                          );
-                          return daySchedules.map((s, i) => (
-                            <tr
-                              key={`${day}-${i}`}
-                              className="border-b border-border/50 hover:bg-muted/30 transition-colors"
-                            >
-                              {i === 0 && (
-                                <td
-                                  rowSpan={daySchedules.length}
-                                  className="px-4 py-3 font-medium"
-                                >
-                                  {day}
-                                </td>
-                              )}
-                              <td className="px-4 py-3">
-                                <Clock className="h-3.5 w-3.5 inline text-muted-foreground mr-1" />
-                                {s.time}
-                              </td>
-                              <td className="px-4 py-3">{s.subject}</td>
-                              <td className="px-4 py-3">
-                                <MapPin className="h-3.5 w-3.5 inline text-muted-foreground mr-1" />
-                                {s.room}
-                              </td>
-                            </tr>
-                          ));
-                        }
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                {calendarEvents.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-4">
+                    Belum ada acara mendatang.
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {calendarEvents.slice(0, 10).map((event) => {
+                      const startDate = new Date(event.startAt);
+                      const endDate = event.endAt
+                        ? new Date(event.endAt)
+                        : null;
+                      const formatTime = (d: Date) =>
+                        d.toLocaleTimeString("id-ID", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        });
+
+                      return (
+                        <div
+                          key={event.id}
+                          className="flex items-start gap-3 p-3 rounded-lg border border-border hover:bg-muted/30 transition-colors"
+                        >
+                          <div className="flex flex-col items-center min-w-[50px]">
+                            <span className="text-xs font-medium text-muted-foreground">
+                              {startDate.toLocaleDateString("id-ID", {
+                                month: "short",
+                              })}
+                            </span>
+                            <span className="text-xl font-bold">
+                              {startDate.getDate()}
+                            </span>
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-medium">{event.title}</h4>
+                            <p className="text-sm text-muted-foreground">
+                              {event.allDay === true
+                                ? "Seharian"
+                                : `${formatTime(startDate)}${
+                                    endDate ? ` - ${formatTime(endDate)}` : ""
+                                  }`}
+                            </p>
+                            <Badge variant="outline" className="mt-1 text-xs">
+                              {event.category === "academic"
+                                ? "Akademik"
+                                : event.category === "holiday"
+                                  ? "Hari Libur"
+                                  : event.category === "event"
+                                    ? "Acara"
+                                    : event.category === "meeting"
+                                      ? "Rapat"
+                                      : event.category === "exam"
+                                        ? "Ujian"
+                                        : "Lainnya"}
+                            </Badge>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
