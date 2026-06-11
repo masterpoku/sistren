@@ -2,6 +2,7 @@
 
 import {
   Bell,
+  Calendar,
   Gear,
   GraduationCap,
   House,
@@ -39,8 +40,20 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { title: "Dashboard", href: "/dashboard", icon: House },
+  {
+    title: "Kalender",
+    href: "/calendar",
+    icon: Calendar,
+    minLevel: 40,
+  },
   { title: "Akademik", href: "/academic", icon: GraduationCap, minLevel: 40 },
   { title: "Keuangan", href: "/finance", icon: Wallet, minLevel: 80 },
+  {
+    title: "Katalog Bayar",
+    href: "/payments/catalog",
+    icon: Wallet,
+    minLevel: 40,
+  },
   { title: "Siswa", href: "/students", icon: Student, minLevel: 60 },
   { title: "Guru", href: "/teachers", icon: Users, minLevel: 60 },
   { title: "Pengguna", href: "/users", icon: UserCircle, minLevel: 80 },
