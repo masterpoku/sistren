@@ -57,6 +57,28 @@ export async function getPaymentItems(opts?: {
   return rows;
 }
 
+export async function getActivePaymentItems() {
+  const rows = await db
+    .select({
+      id: paymentItems.id,
+      code: paymentItems.code,
+      name: paymentItems.name,
+      description: paymentItems.description,
+      standardPrice: paymentItems.standardPrice,
+      type: paymentItems.type,
+      semesterId: paymentItems.semesterId,
+      semesterName: semesters.name,
+      isActive: paymentItems.isActive,
+      createdAt: paymentItems.createdAt,
+    })
+    .from(paymentItems)
+    .leftJoin(semesters, eq(paymentItems.semesterId, semesters.id))
+    .where(and(eq(paymentItems.isActive, true), isNull(paymentItems.deletedAt)))
+    .orderBy(paymentItems.code);
+
+  return rows;
+}
+
 export async function createPaymentItem(formData: FormData) {
   await verifyRoleLevel(80);
 
