@@ -1,5 +1,4 @@
 import { getDocuments } from "@/actions/documents";
-import { DocumentUploadForm } from "@/features/students/DocumentUploadForm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -10,6 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { DocumentUploadForm } from "@/features/students/DocumentUploadForm";
 import { getAuthContext } from "@/lib/auth/permissions";
 import { verifySession } from "@/lib/auth/verify-session";
 

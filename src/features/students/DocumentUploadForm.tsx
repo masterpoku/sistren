@@ -44,7 +44,10 @@ export function DocumentUploadForm({ studentId }: DocumentUploadFormProps) {
   }
 
   return (
-    <form action={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <form
+      action={handleSubmit}
+      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+    >
       <input type="hidden" name="studentId" value={studentId} />
 
       <div className="space-y-2">

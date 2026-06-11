@@ -95,7 +95,9 @@ export function AppHeader({ user }: AppHeaderProps) {
             {user.image ? (
               <AvatarImage src={user.image} alt={user.name} />
             ) : (
-              <AvatarFallback>{user.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+              <AvatarFallback>
+                {user.name.substring(0, 2).toUpperCase()}
+              </AvatarFallback>
             )}
           </Avatar>
         </div>

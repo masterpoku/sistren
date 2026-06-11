@@ -1,7 +1,7 @@
-import { verifyRoleLevel } from "@/lib/auth/verify-session";
-import { getAvailableStudents, getEnrollments } from "@/actions/enrollments";
 import { getClasses, getSemesters } from "@/actions/academic";
+import { getAvailableStudents, getEnrollments } from "@/actions/enrollments";
 import { EnrollmentsClient } from "@/features/enrollments/EnrollmentsClient";
+import { verifyRoleLevel } from "@/lib/auth/verify-session";
 
 export default async function EnrollmentsPage() {
   await verifyRoleLevel(60);

@@ -2,9 +2,6 @@
 
 import { useState, useTransition } from "react";
 import { createEnrollment, deleteEnrollment } from "@/actions/enrollments";
-import { BulkEnrollmentForm } from "@/features/enrollments/BulkEnrollmentForm";
-import { EnrollmentStatusBadge } from "@/features/enrollments/EnrollmentStatusBadge";
-import { StatusChangeForm } from "@/features/enrollments/StatusChangeForm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -23,6 +20,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { BulkEnrollmentForm } from "@/features/enrollments/BulkEnrollmentForm";
+import { EnrollmentStatusBadge } from "@/features/enrollments/EnrollmentStatusBadge";
+import { StatusChangeForm } from "@/features/enrollments/StatusChangeForm";
 
 interface Enrollment {
   id: number;

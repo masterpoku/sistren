@@ -7,8 +7,8 @@ import {
   timestamp,
   varchar,
 } from "drizzle-orm/mysql-core";
-import { classes, majors } from "./index";
 import { grades } from "./grades";
+import { classes, majors } from "./index";
 import { teacherClassSubjects } from "./teacherClassSubjects";
 
 /**

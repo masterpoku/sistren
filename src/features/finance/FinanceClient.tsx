@@ -2,7 +2,6 @@
 
 import { useTransition } from "react";
 import { confirmPayment } from "@/actions/payments";
-import { RecordPaymentForm } from "@/features/finance/RecordPaymentForm";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,6 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { RecordPaymentForm } from "@/features/finance/RecordPaymentForm";
 
 const STATUS_LABELS: Record<
   string,
@@ -46,7 +46,9 @@ interface FinanceClientProps {
     description: string | null;
     standardPrice: string;
   }>;
-  recordPayment: (formData: FormData) => Promise<{ error?: string } | { success: boolean }>;
+  recordPayment: (
+    formData: FormData
+  ) => Promise<{ error?: string } | { success: boolean }>;
 }
 
 export function FinanceClient({

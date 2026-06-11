@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { LoginFormClient } from "@/features/auth/LoginFormClient";
 import {
   Card,
   CardContent,
@@ -7,6 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { LoginFormClient } from "@/features/auth/LoginFormClient";
 
 export default async function AlumniLoginPage() {
   return (
