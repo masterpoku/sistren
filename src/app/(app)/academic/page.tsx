@@ -4,6 +4,7 @@ import {
   getSemesters,
   getSubjects,
 } from "@/actions/academic";
+import { getPublicEvents } from "@/actions/calendar";
 import { AcademicOverviewClient } from "@/features/academic/AcademicOverviewClient";
 import { StudentAcademicClient } from "@/features/academic/StudentAcademicClient";
 import { getAuthContext } from "@/lib/auth/permissions";
@@ -17,7 +18,13 @@ export default async function AcademicOverviewPage() {
 
   // Siswa (level 40) — student academic view
   if (roleLevel === 40) {
-    return <StudentAcademicClient userId={session.userId} />;
+    const calendarEvents = await getPublicEvents({});
+    return (
+      <StudentAcademicClient
+        userId={session.userId}
+        calendarEvents={calendarEvents}
+      />
+    );
   }
 
   // Guru/Admin (level >= 60) — admin overview
