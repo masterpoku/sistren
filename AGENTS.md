@@ -39,4 +39,6 @@ Env: `DATABASE_URL` `BETTER_AUTH_SECRET` `BETTER_AUTH_URL` `DOCUMENT_ENCRYPTION_
 
 ## Perms
 
-`users.{c,r,u,d}` `students.{c,r,u,d,promote,graduate,import}` `teachers.{c,r,u,d,assign_class,assign_subject}` `enrollments.{c,r,u,d}` `announcements.{c,r,u,d,publish}` `payments.{c,read_any,read_own,u,approve,generate_report}` `classes|majors|subjects|semesters|payment_methods|system_configs.manage` `grades.{input,read_any,read_own,approve,print}` `profile.{edit_own,edit_any}` `assets.upload`
+`users.{c,r,u,d}` `students.{c,r,u,d,promote,graduate,import}` `teachers.{c,r,u,d,assign_class,assign_subject}` `enrollments.{c,r,u,d}` `announcements.{c,r,u,d,publish}` `payments.{r,record,confirm,refund}` `grades.{c,r,u,d,approve}` `classes.{c,r,u,d}` `subjects.{c,r,u,d}` `majors.{c,r,u,d}` `semesters.{c,r,u,d}` `settings.{r,school}` `profile.{r,edit_own}` `documents.{c,r,u,d}` `boarding.{r}` `attendance.{r}` `finance.{r}` `roles.{c,r,u,d}` `permissions.{c,r,u,d}` `system_configs.{c,r,u,d,manage}` `payment_methods.{c,r,u,d}` `payment_items.{c,r,u,d}` `admin.{approvals,users}`
+
+Referenced by: [CLAUDE.md](./CLAUDE.md) → [MEMORY.md](./MEMORY.md) → [specs/TASKS.md](./specs/TASKS.md)
