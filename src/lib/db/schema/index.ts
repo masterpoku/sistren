@@ -3,6 +3,7 @@ export * from "./announcement_recipients";
 export * from "./announcements";
 export * from "./attachments";
 export * from "./audit_logs";
+export * from "./calendarEvents";
 export * from "./classes";
 export * from "./enrollments";
 export * from "./grades";
