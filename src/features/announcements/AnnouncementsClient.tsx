@@ -2,15 +2,19 @@
 
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
-import {
-  createAnnouncement,
-  deleteAnnouncement,
-  publishAnnouncement,
-  unpublishAnnouncement,
-} from "@/actions/announcements";
+import type { ColumnDef } from "@tanstack/react-table";
+import { createAnnouncement } from "@/actions/announcements";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DataTable } from "@/components/ui/data-table";
+import { ActionCell } from "@/components/ui/data-table";
+import {
+  CATEGORY_LABELS,
+  PRIORITY_LABELS,
+  formatDate,
+  type StatusConfig,
+} from "@/components/ui/data-table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -20,14 +24,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 
 type Announcement = {
@@ -37,38 +33,110 @@ type Announcement = {
   category: string | null;
   priority: string | null;
   publishedAt: Date | null;
+  createdAt: Date | null;
 };
+
+const CATEGORY_COLORS: Record<string, string> = {
+  umum: "bg-blue-100 text-blue-800",
+  akademik: "bg-green-100 text-green-800",
+  keuangan: "bg-yellow-100 text-yellow-800",
+  kegiatan: "bg-purple-100 text-purple-800",
+};
+
+export function createAnnouncementColumns(roleLevel: number): ColumnDef<Announcement>[] {
+  return [
+    {
+      accessorKey: "title",
+      header: "Judul",
+    },
+    {
+      accessorKey: "description",
+      header: "Deskripsi",
+      cell: ({ row }) => row.getValue("description") ?? "-",
+    },
+    {
+      accessorKey: "category",
+      header: "Kategori",
+      cell: ({ row }) => {
+        const category = row.getValue("category") as string;
+        const colorClass = CATEGORY_COLORS[category] ?? "bg-gray-100 text-gray-800";
+        const label = CATEGORY_LABELS[category] ?? category ?? "-";
+        return (
+          <span className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-medium ${colorClass}`}>
+            {label}
+          </span>
+        );
+      },
+    },
+    {
+      accessorKey: "priority",
+      header: "Prioritas",
+      cell: ({ row }) => {
+        const priority = row.getValue("priority") as string;
+        const config: StatusConfig = PRIORITY_LABELS[priority ?? "normal"] ?? PRIORITY_LABELS.normal;
+        return (
+          <Badge variant={config.variant}>
+            {config.label}
+          </Badge>
+        );
+      },
+    },
+    {
+      accessorKey: "publishedAt",
+      header: "Status",
+      cell: ({ row }) => {
+        const publishedAt = row.getValue("publishedAt");
+        return publishedAt ? (
+          <Badge variant="default">Published</Badge>
+        ) : (
+          <Badge variant="secondary">Draft</Badge>
+        );
+      },
+    },
+    {
+      accessorKey: "createdAt",
+      header: "Tanggal",
+      cell: ({ row }) => formatDate(row.original.createdAt),
+    },
+    {
+      id: "actions",
+      header: "Aksi",
+      cell: ({ row }) => {
+        const isPublished = !!row.original.publishedAt;
+        return (
+          <ActionCell
+            onCustom={
+              roleLevel >= 80
+                ? [
+                    {
+                      label: isPublished ? "Unpublish" : "Publish",
+                      variant: "outline" as const,
+                      onClick: async () => {
+                        const mod = await import("@/actions/announcements");
+                        if (isPublished) {
+                          await mod.unpublishAnnouncement(String(row.original.id));
+                        } else {
+                          await mod.publishAnnouncement(String(row.original.id));
+                        }
+                      },
+                    },
+                  ]
+                : undefined
+            }
+            onDelete={async () => {
+              const { deleteAnnouncement } = await import("@/actions/announcements");
+              await deleteAnnouncement(String(row.original.id));
+            }}
+          />
+        );
+      },
+    },
+  ];
+}
 
 interface AnnouncementsClientProps {
   data: Announcement[];
   roleLevel: number;
-}
-
-function priorityBadge(priority: string | null | undefined) {
-  switch (priority) {
-    case "urgent":
-      return <Badge variant="destructive">Urgent</Badge>;
-    case "important":
-      return <Badge variant="default">Penting</Badge>;
-    default:
-      return <Badge variant="secondary">Normal</Badge>;
-  }
-}
-
-function categoryBadge(category: string | null | undefined) {
-  const colors: Record<string, string> = {
-    umum: "bg-blue-100 text-blue-800",
-    akademik: "bg-green-100 text-green-800",
-    keuangan: "bg-yellow-100 text-yellow-800",
-    kegiatan: "bg-purple-100 text-purple-800",
-  };
-  return (
-    <span
-      className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-medium ${colors[category ?? ""] ?? "bg-gray-100 text-gray-800"}`}
-    >
-      {category ?? "-"}
-    </span>
-  );
 }
 
 export function AnnouncementsClient({
@@ -86,27 +154,6 @@ export function AnnouncementsClient({
       } else {
         router.refresh();
       }
-    });
-  }
-
-  function handlePublish(id: number) {
-    startTransition(async () => {
-      await publishAnnouncement(String(id));
-      router.refresh();
-    });
-  }
-
-  function handleUnpublish(id: number) {
-    startTransition(async () => {
-      await unpublishAnnouncement(String(id));
-      router.refresh();
-    });
-  }
-
-  function handleDelete(id: number) {
-    startTransition(async () => {
-      await deleteAnnouncement(String(id));
-      router.refresh();
     });
   }
 
@@ -190,89 +237,14 @@ export function AnnouncementsClient({
         </Card>
       )}
 
-      {data.length === 0 ? (
-        <Card>
-          <CardContent className="py-8">
-            <p className="text-center text-muted-foreground">
-              Belum ada pengumuman.
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle>Daftar Pengumuman</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Judul</TableHead>
-                  <TableHead>Deskripsi</TableHead>
-                  <TableHead>Kategori</TableHead>
-                  <TableHead>Prioritas</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Tanggal</TableHead>
-                  {roleLevel >= 80 && <TableHead>Aksi</TableHead>}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {data.map((a) => (
-                  <TableRow key={a.id}>
-                    <TableCell className="font-medium">{a.title}</TableCell>
-                    <TableCell className="text-muted-foreground text-sm max-w-[200px] truncate">
-                      {a.description ?? "-"}
-                    </TableCell>
-                    <TableCell>{categoryBadge(a.category)}</TableCell>
-                    <TableCell>{priorityBadge(a.priority)}</TableCell>
-                    <TableCell>
-                      {a.publishedAt ? (
-                        <Badge variant="default">Published</Badge>
-                      ) : (
-                        <Badge variant="secondary">Draft</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {a.publishedAt
-                        ? new Date(a.publishedAt).toLocaleDateString("id-ID")
-                        : "-"}
-                    </TableCell>
-                    {roleLevel >= 80 && (
-                      <TableCell>
-                        <div className="flex gap-2 flex-wrap">
-                          {!a.publishedAt ? (
-                            <Button
-                              size="sm"
-                              onClick={() => handlePublish(a.id)}
-                            >
-                              Publish
-                            </Button>
-                          ) : (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleUnpublish(a.id)}
-                            >
-                              Unpublish
-                            </Button>
-                          )}
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => handleDelete(a.id)}
-                          >
-                            Hapus
-                          </Button>
-                        </div>
-                      </TableCell>
-                    )}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      )}
+      <DataTable
+        columns={createAnnouncementColumns(roleLevel)}
+        data={data}
+        searchKey="title"
+        searchPlaceholder="Cari judul..."
+        exportFilename="pengumuman"
+        emptyMessage="Belum ada pengumuman."
+      />
     </div>
   );
 }
