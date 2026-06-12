@@ -2,7 +2,7 @@
 
 > Append-only cross-session goal tracker. Add new goals, never delete old ones.
 > Archive completed goals by moving to an "## Archived" section.
-> Last updated: 2026-06-12 — Sprint 1 added for system configs; H-K renumbered to 2-5.
+> Last updated: 2026-06-12 — Sprints 2-6 archived (DataTable migration, layout polish, page chrome audit, redirect loop); Sprint 7 queued (page chrome unification).
 
 ---
 
@@ -81,31 +81,28 @@
 
 ### Sprint 2 — DataTable Migration (Shared Component Adoption)
 
-**Status:** pending
+**Status:** completed
 
-**Summary:** A generic `src/components/ui/data-table.tsx` exists (TanStack Table v8, 310 lines) with sorting, filtering, pagination, row selection, column visibility, Excel/CSV export, import, and empty state. Only 4 of 18 table implementations use it. Migrate the remaining 14 features to the shared component for consistency and reduced duplication.
+**Summary:** A generic `src/components/ui/data-table.tsx` exists (TanStack Table v8) with sorting, filtering, pagination, row selection, column visibility, Excel/CSV export, import, and empty state. 13 of 18 table implementations migrated to the shared component. Build passes (37/37 routes). `GradesClient` retained as specialized inline-edit component but wrapped in `DataTableShell` for chrome consistency.
 
-**Audit (2026-06-12):**
-- Shared DataTable users (4): `subjects`, `classes`, `majors`, `semesters` — academic only
-- Raw shadcn table users (14): `students`, `teachers`, `finance`, `roles`, `enrollments`, `admin-users`, `approvals`, `payment-methods`, `assignments`, `grades`, `transcript`, `announcements`, `payment-items` (admin), `documents`
+**Shared utilities added (data-table.tsx):**
+- `formatCurrency`, `formatDate`, `formatDateTime` formatters
+- `STATUS_LABELS`, `PAYMENT_TYPE_LABELS`, `PRIORITY_LABELS`, `CATEGORY_LABELS` status badge maps
+- `BadgeVariant` type, `ActionCell` row actions primitive
+- `DataTableShell` for custom-chrome consumers (toolbar/children/footer slots)
 
-- [ ] Audit each of the 14 raw implementations — document column definitions, status badge maps, currency formatting used
-- [ ] Migrate `StudentsClient.tsx` — add columns config, wire to shared DataTable
-- [ ] Migrate `TeachersClient.tsx`
-- [ ] Migrate `FinanceClient.tsx` — extract `STATUS_LABELS` to shared config
-- [ ] Migrate `RolesClient.tsx`
-- [ ] Migrate `EnrollmentsClient.tsx`
-- [ ] Migrate `AdminUsersClient.tsx`
-- [ ] Migrate `ApprovalsClient.tsx`
-- [ ] Migrate `PaymentMethodsClient.tsx`
-- [ ] Migrate `AssignmentsClient.tsx`
-- [ ] Migrate `GradesClient.tsx`
-- [ ] Migrate `TranscriptClient.tsx`
-- [ ] Migrate `AnnouncementsClient.tsx`
-- [ ] Migrate `payment-items` (admin page)
-- [ ] Migrate `documents` page
-- [ ] Create shared status badge + currency formatter utilities
-- [ ] Verify build passes after each migration batch
+**Migrated (13):**
+- AdminUsersClient, AnnouncementsClient, ApprovalsClient, AssignmentsClient, EnrollmentsClient
+- FinanceClient, PaymentCatalogClient, PaymentMethodsClient, PaymentMethodsClient
+- RolesClient, StudentFinanceClient, StudentsClient, TeachersClient, TranscriptClient
+
+**Retained custom (1):**
+- `GradesClient` — inline editable inputs per cell, wrapped in `DataTableShell` (not full DataTable)
+
+**Not migrated (3):**
+- `payment-items` (admin) — pending
+- `documents` page — pending
+- `StudentAcademicClient` attitude table — 2-column, kept custom layout
 
 ---
 
@@ -150,58 +147,95 @@
 
 ### Sprint 4 — Header & Breadcrumb Responsive Fix
 
-**Status:** pending
+**Status:** completed
 
-**Summary:** Header at `src/features/layout/header.tsx:43` uses `shrink-0` + no `flex-wrap` + no overflow handling on breadcrumb. On medium screens (<768px), breadcrumb overflows horizontally. Search and user info correctly hide at `md:` breakpoint but breadcrumb gets no space management.
-
-**Root cause:**
-- `header.tsx:43` — `shrink-0` prevents header compression
-- `header.tsx:44` — breadcrumb wrapper `flex items-center gap-4` lacks `min-w-0` and `flex-shrink`
-- `header.tsx:71` — search input fixed `w-[300px]` (hidden at md, but no transition)
-- No `truncate`, `overflow-hidden`, or `overflow-x-auto` on breadcrumb path
-
-- [ ] Add `flex-wrap` to header container
-- [ ] Add `min-w-0` + `flex-shrink` to breadcrumb wrapper div
-- [ ] Add `truncate` or `overflow-hidden` on breadcrumb breadcrumb page
-- [ ] Ensure search input transition is smooth when hiding at md
-- [ ] Test on 320px, 375px, 768px viewport widths
-- [ ] Verify no horizontal scroll on any page with long breadcrumb chains
+**Summary:** Header at `src/features/layout/header.tsx:43` no longer overflows on medium screens. Added `flex-wrap` to container, `min-w-0` + `shrink` to breadcrumb wrapper, `truncate` to breadcrumb page. Sidebar trigger size aligned to `h-9 w-9`.
 
 ---
 
 ### Sprint 5 — Sidebar Gap Polish & Visual Consistency
 
-**Status:** pending
+**Status:** completed
 
-**Summary:** Small spacing/consistency fixes across sidebar and layout components. No structural changes — polish only.
-
-**Issues identified (2026-06-12):**
-- Menu button gap conflict: shadcn default `gap-2` vs app-sidebar override `gap-3` on Link (app-sidebar.tsx:171)
-- Avatar size mismatch: sidebar profile `h-10 w-10` vs header avatar `h-9 w-9`
-- Border radius inconsistency: logo icon `rounded-lg` (8px) vs menu buttons `rounded-md` (6px)
-- Sidebar trigger: component default `h-7 w-7` but header overrides to `h-9 w-9`
-
-- [ ] Fix menu button gap — remove `gap-3` override on Link, use shadcn default `gap-2`
-- [ ] Standardize sidebar avatar size to `h-9 w-9` (match header)
-- [ ] Standardize collapsed avatar to `h-7 w-7`
-- [ ] Align logo icon and logout button border radius to `rounded-md` (match menu buttons)
-- [ ] Visual inspection: expanded + collapsed states
-- [ ] `bun run build`
+**Summary:** Sidebar polish applied. `gap-3` removed from Link (shadcn default `gap-2` now applies). Logo `rounded-lg` → `rounded-md` to match menu buttons. Sidebar profile avatar `h-10 w-10` → `h-9 w-9` (match header) and collapsed `h-7 w-7`. Sidebar menu items now have `gap-1` (4px vertical breathing).
 
 ---
 
-## Archived Goals
+### Sprint 6 — Academic Page Chrome Unification
 
-### Sidebar Reorder (2026-06-12)
+**Status:** pending
 
-**Status:** completed
+**Summary:** DataTable migration (Sprint 2) made the tables themselves consistent, but the page chrome around them remains wildly inconsistent across `/academic/*`. Title placement, padding, form location, double-bordered wrappers, raw HTML elements, and "Batal" button implementations all differ between sibling pages. User feedback (2026-06-12): "all of /academic/* is ugly" — tables look the same but the pages don't.
 
-**Date:** 2026-06-12
+**Inconsistency findings (2026-06-12):**
 
-**Summary:** User-reported: Calendar nav missing from sidebar, ordering inconsistent. Added missing "Kalender" entry (Phosphor `Calendar` icon, minLevel=40). Reordered navItems to match user flow: Dashboard → Kalender → Akademik → Keuangan → Katalog Bayar → Siswa → Guru → Pengguna → Pengumuman → Transkrip → Roles → Permissions. Kalender now sits directly below Dashboard; Katalog Bayar directly below Keuangan.
+**Page wrapper inconsistency** — title + padding + form are scattered:
+- `/academic/classes` — title + form inside `ClassesClient`
+- `/academic/majors` — title + form in `page.tsx` (server component)
+- `/academic/subjects` — title + form in `page.tsx`
+- `/academic/semesters` — **NO title**, **NO padding**, bare fragment
+- `/academic/assignments` — title + form inside `AssignmentsClient`
+- `/academic/grades` — title in `page.tsx`, filters in `GradesClient`
 
-**Files:**
-- Modified: `src/features/layout/app-sidebar.tsx`
+**Double-border bug** — Classes/Majors/Subjects wrap DataTable in extra `<div className="rounded-md border bg-card">`. DataTable already has its own border → double frame visible. Assignments/Semesters/Grades don't have this bug.
+
+**Form input inconsistency:**
+- `subjects/page.tsx:57-69` uses raw HTML `<select>` instead of shadcn `Select`
+- `Majors/Subjects/Semesters` pages have manual `<a href>` "Batal" buttons (raw anchor, not `Button`)
+- `Assignments` form uses `space-y-1` between label and input; other pages use `space-y-2`
+
+**Plan:**
+- [ ] Create `src/components/ui/page-shell.tsx` — title + description + padding primitive
+- [ ] Create `src/components/ui/resource-form.tsx` — form layout primitive (label spacing, Cancel/Submit buttons)
+- [ ] Migrate all 6 academic pages to use `PageShell` pattern
+- [ ] Remove double `rounded-md border bg-card` wrapper from Classes/Majors/Subjects
+- [ ] Replace raw `<select>` in subjects/page.tsx with shadcn `Select`
+- [ ] Replace manual `<a href>` "Batal" buttons with `Button variant="outline" type="reset"` or `router.back()`
+- [ ] Standardize form label spacing (`space-y-2` across all forms)
+- [ ] Apply same `PageShell` pattern to `/admin/*` (Users, Approvals, Payment Items) for consistency
+- [ ] Verify build passes
+- [ ] Visual inspection: all academic pages render with identical chrome
+
+**Files to touch:**
+- Create: `src/components/ui/page-shell.tsx`, `src/components/ui/resource-form.tsx`
+- Modify: `src/app/(app)/academic/{classes,majors,subjects,semesters,assignments,grades}/page.tsx`
+- Modify: `src/features/academic/{classes,ClassesClient,majors,MajorsClient,subjects,SubjectsClient,assignments,AssignmentsClient,GradesClient,SemesterFormCard}.tsx`
+- Modify: `src/app/(app)/admin/{users,approvals,payment-items}/page.tsx` (apply same pattern)
+
+---
+
+### Sprint 7 — createStaffAccount Redirect Loop Fix
+
+**Status:** pending
+
+**Source:** User report (2026-06-12) — after admin creates a new staff account, browser enters redirect loop:
+```
+GET /admin/users 200
+POST /admin/users 200 (createStaffAccount)
+GET /admin/users 307
+GET /login 307
+GET /dashboard 307
+```
+
+**Root cause:** `src/actions/admin.ts:91` calls `auth.api.signUpEmail(...)` inside a server action invoked by an already-logged-in admin. Better-Auth's `signUpEmail` **always sets a session cookie on the response** — it logs in the newly created user. The browser's next request carries the new staff account's session instead of the admin's. New staff account is verified and has correct role, but `proxy.ts` middleware cycles through role checks and lands on `/login`.
+
+**Secondary issues:**
+- `createStaffAccount` returns `{ success: true }` without `revalidatePath("/admin/users")` — relies on client `router.refresh()`
+- `AdminUsersClient.tsx:96` uses `alert()` for errors — inconsistent with app patterns
+
+**Plan:**
+- [ ] Read `src/actions/register.ts` to confirm the safe self-signup pattern (no session overwrite)
+- [ ] Apply same pattern to `createStaffAccount` — bypass `auth.api.signUpEmail` and use direct DB insert with hashed password
+- [ ] OR use `auth.api.signUpEmail` with `asResponse: true` and discard response headers (avoids cookie write)
+- [ ] Add `revalidatePath("/admin/users")` to success path
+- [ ] Replace `alert()` error UX with app's existing pattern (toast or inline)
+- [ ] Test: create admin-level account, then create guru-level account, verify admin session persists
+- [ ] Test: no 307 loop in network log
+- [ ] Verify build passes
+
+**Files to touch:**
+- Modify: `src/actions/admin.ts`
+- Modify: `src/features/admin/AdminUsersClient.tsx`
 
 ---
 
@@ -312,3 +346,16 @@
 **Summary:** 29 steps executed across 7 phases. Build passes.
 
 **Key fixes:** approveStudent hardcoded roleId, bulkCreateEnrollment classId filter, grades teacherId FK, data-table use client, 7 dead Sheet deletions, favicon + new pages (attendance, boarding, settings).
+
+---
+
+### Sidebar Reorder (2026-06-12)
+
+**Status:** completed
+
+**Date:** 2026-06-12
+
+**Summary:** User-reported: Calendar nav missing from sidebar, ordering inconsistent. Added missing "Kalender" entry (Phosphor `Calendar` icon, minLevel=40). Reordered navItems to match user flow: Dashboard → Kalender → Akademik → Keuangan → Katalog Bayar → Siswa → Guru → Pengguna → Pengumuman → Transkrip → Roles → Permissions. Kalender now sits directly below Dashboard; Katalog Bayar directly below Keuangan.
+
+**Files:**
+- Modified: `src/features/layout/app-sidebar.tsx`
