@@ -1,15 +1,9 @@
 "use client";
 
-import Link from "next/link";
+import type { ColumnDef } from "@tanstack/react-table";
+import { DataTable } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import Link from "next/link";
 
 type Student = {
   id: string;
@@ -17,6 +11,33 @@ type Student = {
   email: string;
   nisn: string | null;
 };
+
+export const columns: ColumnDef<Student>[] = [
+  {
+    accessorKey: "name",
+    header: "Nama",
+  },
+  {
+    accessorKey: "email",
+    header: "Email",
+  },
+  {
+    accessorKey: "nisn",
+    header: "NISN",
+    cell: ({ row }) => row.getValue("nisn") ?? "-",
+  },
+  {
+    id: "actions",
+    header: "Dokumen",
+    cell: ({ row }) => (
+      <Link href={`/students/${row.original.id}/documents`}>
+        <Button size="sm" variant="outline">
+          Dokumen
+        </Button>
+      </Link>
+    ),
+  },
+];
 
 interface StudentsClientProps {
   data: Student[];
@@ -30,38 +51,13 @@ export function StudentsClient({ data }: StudentsClientProps) {
         <p className="text-muted-foreground">Daftar siswa ter-register.</p>
       </div>
 
-      {data.length === 0 ? (
-        <p className="text-muted-foreground">Belum ada siswa.</p>
-      ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nama</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>NISN</TableHead>
-              <TableHead>Dokumen</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {data.map((student) => (
-              <TableRow key={student.id}>
-                <TableCell className="font-medium">{student.name}</TableCell>
-                <TableCell className="text-muted-foreground">
-                  {student.email}
-                </TableCell>
-                <TableCell>{student.nisn ?? "-"}</TableCell>
-                <TableCell>
-                  <Link href={`/students/${student.id}/documents`}>
-                    <Button size="sm" variant="outline">
-                      Dokumen
-                    </Button>
-                  </Link>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      )}
+      <DataTable
+        columns={columns}
+        data={data}
+        searchKey="name"
+        searchPlaceholder="Cari nama siswa..."
+        exportFilename="siswa"
+      />
     </div>
   );
 }

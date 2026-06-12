@@ -1,14 +1,8 @@
 "use client";
 
+import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable } from "@/components/ui/data-table";
 
 type Teacher = {
   id: string;
@@ -16,6 +10,26 @@ type Teacher = {
   email: string;
   roleName: string | null;
 };
+
+export const columns: ColumnDef<Teacher>[] = [
+  {
+    accessorKey: "name",
+    header: "Nama",
+  },
+  {
+    accessorKey: "email",
+    header: "Email",
+  },
+  {
+    accessorKey: "roleName",
+    header: "Role",
+    cell: ({ row }) => (
+      <Badge variant="secondary" className="capitalize">
+        {row.getValue("roleName") ?? "guru"}
+      </Badge>
+    ),
+  },
+];
 
 interface TeachersClientProps {
   data: Teacher[];
@@ -29,34 +43,13 @@ export function TeachersClient({ data }: TeachersClientProps) {
         <p className="text-muted-foreground">Daftar guru ter-register.</p>
       </div>
 
-      {data.length === 0 ? (
-        <p className="text-muted-foreground">Belum ada guru.</p>
-      ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nama</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Role</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {data.map((teacher) => (
-              <TableRow key={teacher.id}>
-                <TableCell className="font-medium">{teacher.name}</TableCell>
-                <TableCell className="text-muted-foreground">
-                  {teacher.email}
-                </TableCell>
-                <TableCell>
-                  <Badge variant="secondary" className="capitalize">
-                    {teacher.roleName ?? "guru"}
-                  </Badge>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      )}
+      <DataTable
+        columns={columns}
+        data={data}
+        searchKey="name"
+        searchPlaceholder="Cari nama guru..."
+        exportFilename="guru"
+      />
     </div>
   );
 }

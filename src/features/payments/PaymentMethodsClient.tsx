@@ -2,19 +2,14 @@
 
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
-import { createPaymentMethod, deletePaymentMethod } from "@/actions/payments";
+import type { ColumnDef } from "@tanstack/react-table";
+import { createPaymentMethod } from "@/actions/payments";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DataTable } from "@/components/ui/data-table";
+import { ActionCell } from "@/components/ui/data-table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 
 type PaymentMethod = {
   id: number;
@@ -23,6 +18,40 @@ type PaymentMethod = {
   accountNumber: string | null;
   accountName: string | null;
 };
+
+export const columns: ColumnDef<PaymentMethod>[] = [
+  {
+    accessorKey: "name",
+    header: "Nama",
+  },
+  {
+    accessorKey: "provider",
+    header: "Provider",
+    cell: ({ row }) => row.getValue("provider") ?? "-",
+  },
+  {
+    accessorKey: "accountNumber",
+    header: "Nomor Rekening",
+    cell: ({ row }) => row.getValue("accountNumber") ?? "-",
+  },
+  {
+    accessorKey: "accountName",
+    header: "Nama Pemilik",
+    cell: ({ row }) => row.getValue("accountName") ?? "-",
+  },
+  {
+    id: "actions",
+    header: "Aksi",
+    cell: ({ row }) => (
+      <ActionCell
+        onDelete={() => {
+          const { deletePaymentMethod } = require("@/actions/payments");
+          deletePaymentMethod(String(row.original.id));
+        }}
+      />
+    ),
+  },
+];
 
 interface PaymentMethodsClientProps {
   data: PaymentMethod[];
@@ -40,13 +69,6 @@ export function PaymentMethodsClient({ data }: PaymentMethodsClientProps) {
       } else {
         router.refresh();
       }
-    });
-  }
-
-  function handleDelete(id: number) {
-    startTransition(async () => {
-      await deletePaymentMethod(String(id));
-      router.refresh();
     });
   }
 
@@ -101,41 +123,14 @@ export function PaymentMethodsClient({ data }: PaymentMethodsClientProps) {
         </CardContent>
       </Card>
 
-      {data.length === 0 ? (
-        <p className="text-muted-foreground">Belum ada metode pembayaran.</p>
-      ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nama</TableHead>
-              <TableHead>Provider</TableHead>
-              <TableHead>Nomor Rekening</TableHead>
-              <TableHead>Nama Pemilik</TableHead>
-              <TableHead>Aksi</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {data.map((m) => (
-              <TableRow key={m.id}>
-                <TableCell className="font-medium">{m.name}</TableCell>
-                <TableCell>{m.provider ?? "-"}</TableCell>
-                <TableCell>{m.accountNumber ?? "-"}</TableCell>
-                <TableCell>{m.accountName ?? "-"}</TableCell>
-                <TableCell>
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => handleDelete(m.id)}
-                    disabled={isPending}
-                  >
-                    Hapus
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      )}
+      <DataTable
+        columns={columns}
+        data={data}
+        searchKey="name"
+        searchPlaceholder="Cari metode..."
+        exportFilename="metode-pembayaran"
+        emptyMessage="Belum ada metode pembayaran."
+      />
     </div>
   );
 }

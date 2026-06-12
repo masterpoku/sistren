@@ -1,14 +1,8 @@
 "use client";
 
+import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { DataTable } from "@/components/ui/data-table";
 
 const ROLES = [
   { name: "Superadmin", level: 100, description: "Full system access" },
@@ -16,6 +10,26 @@ const ROLES = [
   { name: "Guru", level: 60, description: "Teacher" },
   { name: "Siswa", level: 40, description: "Student" },
   { name: "Alumni", level: 20, description: "Read-only graduate access" },
+];
+
+export const columns: ColumnDef<(typeof ROLES)[number]>[] = [
+  {
+    accessorKey: "name",
+    header: "Nama Role",
+    cell: ({ row }) => (
+      <Badge variant="secondary" className="capitalize">
+        {row.getValue("name")}
+      </Badge>
+    ),
+  },
+  {
+    accessorKey: "level",
+    header: "Level",
+  },
+  {
+    accessorKey: "description",
+    header: "Deskripsi",
+  },
 ];
 
 export function RolesClient() {
@@ -26,30 +40,13 @@ export function RolesClient() {
         <p className="text-muted-foreground">Daftar role dan level akses.</p>
       </div>
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Nama Role</TableHead>
-            <TableHead>Level</TableHead>
-            <TableHead>Deskripsi</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {ROLES.map((role) => (
-            <TableRow key={role.level}>
-              <TableCell className="font-medium">
-                <Badge variant="secondary" className="capitalize">
-                  {role.name}
-                </Badge>
-              </TableCell>
-              <TableCell>{role.level}</TableCell>
-              <TableCell className="text-muted-foreground">
-                {role.description}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      <DataTable
+        columns={columns}
+        data={ROLES}
+        searchKey="name"
+        searchPlaceholder="Cari role..."
+        exportFilename="roles"
+      />
     </div>
   );
 }

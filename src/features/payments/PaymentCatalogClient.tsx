@@ -1,8 +1,14 @@
 "use client";
 
+import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { EmptyState } from "@/components/ui/empty-state";
+import { DataTable } from "@/components/ui/data-table";
+import {
+  PAYMENT_TYPE_LABELS,
+  PAYMENT_TYPE_VARIANTS,
+  formatCurrency,
+  type BadgeVariant,
+} from "@/components/ui/data-table";
 
 export interface PaymentCatalogItem {
   id: number;
@@ -15,87 +21,86 @@ export interface PaymentCatalogItem {
   isActive: boolean | null;
 }
 
-const TYPE_VARIANTS: Record<
-  NonNullable<PaymentCatalogItem["type"]>,
-  "default" | "secondary" | "outline"
-> = {
-  recurring: "secondary",
-  one_time: "outline",
-  variable: "default",
-};
-
-const TYPE_LABELS: Record<NonNullable<PaymentCatalogItem["type"]>, string> = {
-  recurring: "Berulang",
-  one_time: "Sekali Bayar",
-  variable: "Variabel",
-};
+export const columns: ColumnDef<PaymentCatalogItem>[] = [
+  {
+    accessorKey: "code",
+    header: "Kode",
+    cell: ({ row }) => (
+      <span className="font-mono text-sm">{row.getValue("code")}</span>
+    ),
+  },
+  {
+    accessorKey: "name",
+    header: "Nama",
+  },
+  {
+    accessorKey: "description",
+    header: "Deskripsi",
+    cell: ({ row }) => row.getValue("description") ?? "-",
+  },
+  {
+    accessorKey: "type",
+    header: "Tipe",
+    cell: ({ row }) => {
+      const type = row.getValue("type") as string;
+      if (!type) return "-";
+      return (
+        <Badge variant={PAYMENT_TYPE_VARIANTS[type] as BadgeVariant}>
+          {PAYMENT_TYPE_LABELS[type]}
+        </Badge>
+      );
+    },
+  },
+  {
+    accessorKey: "semesterName",
+    header: "Semester",
+    cell: ({ row }) => row.getValue("semesterName") ?? "-",
+  },
+  {
+    accessorKey: "standardPrice",
+    header: "Harga",
+    cell: ({ row }) => (
+      <span className="font-medium">
+        {formatCurrency(row.getValue("standardPrice"))}
+      </span>
+    ),
+  },
+  {
+    accessorKey: "isActive",
+    header: "Status",
+    cell: ({ row }) => {
+      const isActive = row.getValue("isActive") as boolean;
+      return (
+        <Badge variant={isActive === false ? "destructive" : "default"}>
+          {isActive === false ? "Non-aktif" : "Aktif"}
+        </Badge>
+      );
+    },
+  },
+];
 
 interface PaymentCatalogClientProps {
   items: PaymentCatalogItem[];
 }
 
 export function PaymentCatalogClient({ items }: PaymentCatalogClientProps) {
-  if (items.length === 0) {
-    return (
-      <div className="p-6">
-        <h1 className="text-3xl font-bold tracking-tight">
-          Katalog Pembayaran
-        </h1>
+  return (
+    <div className="flex flex-col gap-6 p-4 md:p-6">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Katalog Pembayaran</h1>
         <p className="text-muted-foreground">
           Daftar item pembayaran yang tersedia di sekolah.
         </p>
-        <EmptyState
-          icon="inbox"
-          title="Belum ada item pembayaran tersedia"
-          description="Item pembayaran akan ditampilkan di sini setelah admin menambahkannya."
-        />
       </div>
-    );
-  }
 
-  return (
-    <div className="p-6">
-      <h1 className="text-3xl font-bold tracking-tight">Katalog Pembayaran</h1>
-      <p className="text-muted-foreground">
-        Daftar item pembayaran yang tersedia di sekolah.
-      </p>
-      <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {items.map((item) => (
-          <Card key={item.id}>
-            <CardHeader>
-              <code className="text-xs text-muted-foreground font-mono">
-                {item.code}
-              </code>
-              <CardTitle className="text-base">{item.name}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {item.description && (
-                <p className="text-sm text-muted-foreground">
-                  {item.description}
-                </p>
-              )}
-              <div className="flex flex-wrap gap-2">
-                {item.type && (
-                  <Badge variant={TYPE_VARIANTS[item.type]}>
-                    {TYPE_LABELS[item.type]}
-                  </Badge>
-                )}
-                {item.semesterName && (
-                  <Badge variant="outline">{item.semesterName}</Badge>
-                )}
-                <Badge
-                  variant={item.isActive === false ? "destructive" : "default"}
-                >
-                  {item.isActive === false ? "Non-aktif" : "Aktif"}
-                </Badge>
-              </div>
-              <p className="text-lg font-semibold">
-                Rp {Number(item.standardPrice).toLocaleString("id-ID")}
-              </p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <DataTable
+        columns={columns}
+        data={items}
+        searchKey="name"
+        searchPlaceholder="Cari item..."
+        exportFilename="katalog-pembayaran"
+        emptyMessage="Belum ada item pembayaran tersedia."
+      />
     </div>
   );
 }

@@ -1,9 +1,12 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { createEnrollment, deleteEnrollment } from "@/actions/enrollments";
+import type { ColumnDef } from "@tanstack/react-table";
+import { createEnrollment } from "@/actions/enrollments";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DataTable } from "@/components/ui/data-table";
+import { ActionCell } from "@/components/ui/data-table";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -12,19 +15,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { BulkEnrollmentForm } from "@/features/enrollments/BulkEnrollmentForm";
-import { EnrollmentStatusBadge } from "@/features/enrollments/EnrollmentStatusBadge";
 import { StatusChangeForm } from "@/features/enrollments/StatusChangeForm";
 
-interface Enrollment {
+type Enrollment = {
   id: number;
   studentName: string;
   studentEmail: string;
@@ -32,7 +26,69 @@ interface Enrollment {
   semesterName: string;
   academicYear: string;
   status: string;
-}
+};
+
+const STATUS_COLORS: Record<string, string> = {
+  active: "bg-green-100 text-green-800",
+  inactive: "bg-gray-100 text-gray-800",
+  graduated: "bg-blue-100 text-blue-800",
+  dropped: "bg-red-100 text-red-800",
+};
+
+export const columns: ColumnDef<Enrollment>[] = [
+  {
+    accessorKey: "studentName",
+    header: "Siswa",
+  },
+  {
+    accessorKey: "studentEmail",
+    header: "Email",
+  },
+  {
+    accessorKey: "className",
+    header: "Kelas",
+  },
+  {
+    accessorKey: "semesterName",
+    header: "Semester",
+    cell: ({ row }) =>
+      `${row.original.semesterName} (${row.original.academicYear})`,
+  },
+  {
+    accessorKey: "status",
+    header: "Status",
+    cell: ({ row }) => {
+      const status = row.getValue("status") as string;
+      const colorClass = STATUS_COLORS[status] ?? "bg-gray-100 text-gray-800";
+      return (
+        <span className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-medium ${colorClass}`}>
+          {status}
+        </span>
+      );
+    },
+  },
+  {
+    id: "actions",
+    header: "Aksi",
+    cell: ({ row }) => (
+      <div className="flex items-center gap-2">
+        {row.original.status === "active" ? (
+          <StatusChangeForm enrollmentId={row.original.id} />
+        ) : (
+          <span className="text-xs text-muted-foreground">
+            Tidak dapat diubah
+          </span>
+        )}
+        <ActionCell
+          onDelete={async () => {
+            const { deleteEnrollment } = await import("@/actions/enrollments");
+            await deleteEnrollment(String(row.original.id));
+          }}
+        />
+      </div>
+    ),
+  },
+];
 
 interface EnrollmentsClientProps {
   enrollmentList: Enrollment[];
@@ -57,13 +113,6 @@ export function EnrollmentsClient({
       if (result && "error" in result && result.error) {
         setError(result.error);
       }
-    });
-  }
-
-  function handleDeleteEnrollment(enrollmentId: number) {
-    setError(null);
-    startTransition(async () => {
-      await deleteEnrollment(String(enrollmentId));
     });
   }
 
@@ -156,58 +205,14 @@ export function EnrollmentsClient({
       </Card>
 
       {/* Enrollment List */}
-      {enrollmentList.length === 0 ? (
-        <p className="text-muted-foreground">Belum ada pendaftaran.</p>
-      ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Siswa</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Kelas</TableHead>
-              <TableHead>Semester</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Aksi</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {enrollmentList.map((e) => (
-              <TableRow key={e.id}>
-                <TableCell className="font-medium">{e.studentName}</TableCell>
-                <TableCell className="text-muted-foreground">
-                  {e.studentEmail}
-                </TableCell>
-                <TableCell>{e.className}</TableCell>
-                <TableCell>
-                  {e.semesterName} ({e.academicYear})
-                </TableCell>
-                <TableCell>
-                  <EnrollmentStatusBadge status={e.status} />
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    {e.status === "active" ? (
-                      <StatusChangeForm enrollmentId={e.id} />
-                    ) : (
-                      <span className="text-xs text-muted-foreground">
-                        Tidak dapat diubah
-                      </span>
-                    )}
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      disabled={isPending}
-                      onClick={() => handleDeleteEnrollment(e.id)}
-                    >
-                      Hapus
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      )}
+      <DataTable
+        columns={columns}
+        data={enrollmentList}
+        searchKey="studentName"
+        searchPlaceholder="Cari siswa..."
+        exportFilename="pendaftaran"
+        emptyMessage="Belum ada pendaftaran."
+      />
     </div>
   );
 }

@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import type { ColumnDef } from "@tanstack/react-table";
 import {
   Bank,
   Building,
@@ -9,7 +11,6 @@ import {
   Wallet,
   WarningCircle,
 } from "@phosphor-icons/react";
-import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,7 +28,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { DataTable } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
+import {
+  STATUS_LABELS,
+  formatCurrency,
+  formatDate,
+  type StatusConfig,
+} from "@/components/ui/data-table";
 
 interface Payment {
   id: number;
@@ -38,23 +46,89 @@ interface Payment {
   createdAt: Date | null;
 }
 
+const STATUS_ICONS: Record<string, React.ElementType> = {
+  draft: Clock,
+  pending: Clock,
+  paid: CheckCircle,
+  cancelled: WarningCircle,
+};
+
+const INVOICE_COLUMNS: ColumnDef<Payment>[] = [
+  {
+    accessorKey: "code",
+    header: "Kode",
+    cell: ({ row }) => (
+      <span className="font-mono text-sm">{row.getValue("code")}</span>
+    ),
+  },
+  {
+    accessorKey: "description",
+    header: "Deskripsi",
+  },
+  {
+    accessorKey: "total",
+    header: "Jumlah",
+    cell: ({ row }) => (
+      <span className="font-medium">
+        {formatCurrency(row.getValue("total") ?? 0)}
+      </span>
+    ),
+  },
+  {
+    accessorKey: "status",
+    header: "Status",
+    cell: ({ row }) => {
+      const status = row.getValue("status") as string;
+      const config: StatusConfig = STATUS_LABELS[status ?? "draft"] ?? STATUS_LABELS.draft;
+      const StatusIcon = STATUS_ICONS[status ?? "draft"] ?? Clock;
+      return (
+        <Badge variant={config.variant}>
+          <span className="flex items-center gap-1">
+            <StatusIcon className="h-3 w-3" />
+            {config.label}
+          </span>
+        </Badge>
+      );
+    },
+  },
+  {
+    accessorKey: "createdAt",
+    header: "Tanggal",
+    cell: ({ row }) => formatDate(row.getValue("createdAt")),
+  },
+];
+
+const PAID_COLUMNS: ColumnDef<Payment>[] = [
+  {
+    accessorKey: "code",
+    header: "Kode",
+    cell: ({ row }) => (
+      <span className="font-mono text-sm">{row.getValue("code")}</span>
+    ),
+  },
+  {
+    accessorKey: "description",
+    header: "Deskripsi",
+  },
+  {
+    accessorKey: "total",
+    header: "Jumlah",
+    cell: ({ row }) => (
+      <span className="font-medium">
+        {formatCurrency(row.getValue("total") ?? 0)}
+      </span>
+    ),
+  },
+  {
+    accessorKey: "createdAt",
+    header: "Tanggal",
+    cell: ({ row }) => formatDate(row.getValue("createdAt")),
+  },
+];
+
 interface StudentFinanceClientProps {
   payments: Payment[];
 }
-
-const STATUS_MAP: Record<
-  string,
-  {
-    label: string;
-    variant: "default" | "secondary" | "destructive" | "outline";
-    icon: React.ElementType;
-  }
-> = {
-  draft: { label: "Draft", variant: "secondary", icon: Clock },
-  pending: { label: "Menunggu", variant: "outline", icon: Clock },
-  paid: { label: "Lunas", variant: "default", icon: CheckCircle },
-  cancelled: { label: "Batal", variant: "destructive", icon: WarningCircle },
-};
 
 export function StudentFinanceClient({ payments }: StudentFinanceClientProps) {
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
@@ -71,6 +145,9 @@ export function StudentFinanceClient({ payments }: StudentFinanceClientProps) {
   const pendingCount = payments.filter(
     (p) => p.status === "pending" || p.status === "draft"
   ).length;
+
+  const unpaidPayments = payments.filter((p) => p.status !== "paid");
+  const paidPayments = payments.filter((p) => p.status === "paid");
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6">
@@ -91,7 +168,7 @@ export function StudentFinanceClient({ payments }: StudentFinanceClientProps) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              Rp {totalTagihan.toLocaleString("id-ID")}
+              {formatCurrency(totalTagihan)}
             </div>
           </CardContent>
         </Card>
@@ -211,124 +288,40 @@ export function StudentFinanceClient({ payments }: StudentFinanceClientProps) {
           </div>
         </CardHeader>
         <CardContent>
-          {payments.length === 0 ? (
+          {unpaidPayments.length === 0 ? (
             <EmptyState
               icon="inbox"
               title="Belum ada tagihan"
               description="Tidak ada tagihan SPP atau biaya lainnya saat ini."
             />
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border text-muted-foreground text-xs uppercase tracking-wider">
-                    <th className="text-left px-4 py-3 font-medium">Kode</th>
-                    <th className="text-left px-4 py-3 font-medium">
-                      Deskripsi
-                    </th>
-                    <th className="text-left px-4 py-3 font-medium">Jumlah</th>
-                    <th className="text-left px-4 py-3 font-medium">Status</th>
-                    <th className="text-left px-4 py-3 font-medium">Tanggal</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {payments.map((p) => {
-                    const statusInfo =
-                      STATUS_MAP[p.status ?? "draft"] ?? STATUS_MAP.draft;
-                    const StatusIcon = statusInfo.icon;
-                    return (
-                      <tr
-                        key={p.id}
-                        className="border-b border-border/50 hover:bg-muted/30 transition-colors"
-                      >
-                        <td className="px-4 py-3 font-mono text-sm">
-                          {p.code}
-                        </td>
-                        <td className="px-4 py-3">{p.description}</td>
-                        <td className="px-4 py-3 font-medium">
-                          Rp {Number(p.total).toLocaleString("id-ID")}
-                        </td>
-                        <td className="px-4 py-3">
-                          <Badge variant={statusInfo.variant}>
-                            <span className="flex items-center gap-1">
-                              <StatusIcon className="h-3 w-3" />
-                              {statusInfo.label}
-                            </span>
-                          </Badge>
-                        </td>
-                        <td className="px-4 py-3 text-muted-foreground">
-                          {p.createdAt
-                            ? new Date(p.createdAt).toLocaleDateString(
-                                "id-ID",
-                                {
-                                  day: "2-digit",
-                                  month: "short",
-                                  year: "numeric",
-                                }
-                              )
-                            : "-"}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+            <DataTable
+              columns={INVOICE_COLUMNS}
+              data={unpaidPayments}
+              searchKey="description"
+              searchPlaceholder="Cari tagihan..."
+              exportFilename="tagihan"
+              emptyMessage="Tidak ada tagihan aktif."
+            />
           )}
         </CardContent>
       </Card>
 
-      {payments.filter((p) => p.status === "paid").length > 0 && (
+      {paidPayments.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle>Riwayat Pembayaran</CardTitle>
             <CardDescription>Pembayaran yang sudah lunas.</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border text-muted-foreground text-xs uppercase tracking-wider">
-                    <th className="text-left px-4 py-3 font-medium">Kode</th>
-                    <th className="text-left px-4 py-3 font-medium">
-                      Deskripsi
-                    </th>
-                    <th className="text-left px-4 py-3 font-medium">Jumlah</th>
-                    <th className="text-left px-4 py-3 font-medium">Tanggal</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {payments
-                    .filter((p) => p.status === "paid")
-                    .map((p) => (
-                      <tr
-                        key={p.id}
-                        className="border-b border-border/50 hover:bg-muted/30 transition-colors"
-                      >
-                        <td className="px-4 py-3 font-mono text-sm">
-                          {p.code}
-                        </td>
-                        <td className="px-4 py-3">{p.description}</td>
-                        <td className="px-4 py-3 font-medium">
-                          Rp {Number(p.total).toLocaleString("id-ID")}
-                        </td>
-                        <td className="px-4 py-3 text-muted-foreground">
-                          {p.createdAt
-                            ? new Date(p.createdAt).toLocaleDateString(
-                                "id-ID",
-                                {
-                                  day: "2-digit",
-                                  month: "short",
-                                  year: "numeric",
-                                }
-                              )
-                            : "-"}
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            </div>
+            <DataTable
+              columns={PAID_COLUMNS}
+              data={paidPayments}
+              searchKey="description"
+              searchPlaceholder="Cari riwayat..."
+              exportFilename="riwayat-pembayaran"
+              emptyMessage="Belum ada pembayaran lunas."
+            />
           </CardContent>
         </Card>
       )}
