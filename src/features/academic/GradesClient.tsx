@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { bulkUpsertGrades, getGrades } from "@/actions/grades";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DataTableShell } from "@/components/ui/data-table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -268,191 +269,211 @@ export function GradesClient({
       </Card>
 
       {selectedClass && selectedSubject && selectedSemester && (
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Daftar Nilai</CardTitle>
-            <Button
-              onClick={handleSave}
-              disabled={isSaving || Object.keys(editedRows).length === 0}
-            >
-              {isSaving ? "Menyimpan..." : "Simpan Nilai"}
-            </Button>
-          </CardHeader>
-          <CardContent>
-            {message && (
-              <p
-                className={`mb-4 text-sm ${message.type === "error" ? "text-red-600" : "text-green-600"}`}
-              >
-                {message.text}
-              </p>
-            )}
-            {isLoading ? (
-              <p className="text-sm text-muted-foreground">Memuat...</p>
-            ) : rows.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Tidak ada data.</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[30px]">No</TableHead>
-                      <TableHead>Nama Siswa</TableHead>
-                      <TableHead className="text-center">Harian 1</TableHead>
-                      <TableHead className="text-center">Harian 2</TableHead>
-                      <TableHead className="text-center">Harian 3</TableHead>
-                      <TableHead className="text-center">Harian 4</TableHead>
-                      <TableHead className="text-center">UTS</TableHead>
-                      <TableHead className="text-center">UAS</TableHead>
-                      <TableHead className="text-center">Praktek</TableHead>
-                      <TableHead className="text-center">Projek</TableHead>
-                      <TableHead className="text-center">Porto</TableHead>
-                      <TableHead className="text-center">Akhir</TableHead>
-                      <TableHead className="text-center">Grade</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {rows.map((row, idx) => {
-                      const score = computeScore(row);
-                      const grade = computePredicate(parseFloat(score));
-                      const edited = editedRows[row.enrollmentId];
-                      return (
-                        <TableRow key={row.enrollmentId}>
-                          <TableCell>{idx + 1}</TableCell>
-                          <TableCell className="font-medium">
-                            {row.studentName}
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              className="w-[60px] text-center"
-                              value={edited?.dailyTest1 ?? row.dailyTest1}
-                              onChange={(e) =>
-                                handleScoreChange(
-                                  row.enrollmentId,
-                                  "dailyTest1",
-                                  e.target.value
-                                )
-                              }
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              className="w-[60px] text-center"
-                              value={edited?.dailyTest2 ?? row.dailyTest2}
-                              onChange={(e) =>
-                                handleScoreChange(
-                                  row.enrollmentId,
-                                  "dailyTest2",
-                                  e.target.value
-                                )
-                              }
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              className="w-[60px] text-center"
-                              value={edited?.dailyTest3 ?? row.dailyTest3}
-                              onChange={(e) =>
-                                handleScoreChange(
-                                  row.enrollmentId,
-                                  "dailyTest3",
-                                  e.target.value
-                                )
-                              }
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              className="w-[60px] text-center"
-                              value={edited?.dailyTest4 ?? row.dailyTest4}
-                              onChange={(e) =>
-                                handleScoreChange(
-                                  row.enrollmentId,
-                                  "dailyTest4",
-                                  e.target.value
-                                )
-                              }
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              className="w-[60px] text-center"
-                              value={edited?.midterm ?? row.midterm}
-                              onChange={(e) =>
-                                handleScoreChange(
-                                  row.enrollmentId,
-                                  "midterm",
-                                  e.target.value
-                                )
-                              }
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              className="w-[60px] text-center"
-                              value={edited?.finalExam ?? row.finalExam}
-                              onChange={(e) =>
-                                handleScoreChange(
-                                  row.enrollmentId,
-                                  "finalExam",
-                                  e.target.value
-                                )
-                              }
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              className="w-[60px] text-center"
-                              value={edited?.practical ?? row.practical}
-                              onChange={(e) =>
-                                handleScoreChange(
-                                  row.enrollmentId,
-                                  "practical",
-                                  e.target.value
-                                )
-                              }
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              className="w-[60px] text-center"
-                              value={edited?.project ?? row.project}
-                              onChange={(e) =>
-                                handleScoreChange(
-                                  row.enrollmentId,
-                                  "project",
-                                  e.target.value
-                                )
-                              }
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              className="w-[60px] text-center"
-                              value={edited?.portfolio ?? row.portfolio}
-                              onChange={(e) =>
-                                handleScoreChange(
-                                  row.enrollmentId,
-                                  "portfolio",
-                                  e.target.value
-                                )
-                              }
-                            />
-                          </TableCell>
-                          <TableCell className="text-center font-medium">
-                            {score}
-                          </TableCell>
-                          <TableCell className="text-center font-bold">
-                            {grade}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
+        <DataTableShell
+          toolbar={
+            <>
+              <div className="flex flex-1 items-center gap-2">
+                {message && (
+                  <p
+                    className={`text-sm ${message.type === "error" ? "text-red-600" : "text-green-600"}`}
+                  >
+                    {message.text}
+                  </p>
+                )}
+                {!message && (
+                  <p className="text-sm text-muted-foreground">
+                    {isLoading
+                      ? "Memuat..."
+                      : `${rows.length} siswa`}
+                  </p>
+                )}
               </div>
-            )}
-          </CardContent>
-        </Card>
+              <div className="flex items-center gap-2">
+                <Button
+                  onClick={handleSave}
+                  disabled={isSaving || Object.keys(editedRows).length === 0}
+                >
+                  {isSaving ? "Menyimpan..." : "Simpan Nilai"}
+                </Button>
+              </div>
+            </>
+          }
+          footer={
+            <div className="flex-1 text-sm text-muted-foreground">
+              Daftar Nilai
+            </div>
+          }
+        >
+          {isLoading ? (
+            <p className="p-8 text-center text-sm text-muted-foreground">
+              Memuat...
+            </p>
+          ) : rows.length === 0 ? (
+            <p className="p-8 text-center text-sm text-muted-foreground">
+              Tidak ada data.
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[30px]">No</TableHead>
+                    <TableHead>Nama Siswa</TableHead>
+                    <TableHead className="text-center">Harian 1</TableHead>
+                    <TableHead className="text-center">Harian 2</TableHead>
+                    <TableHead className="text-center">Harian 3</TableHead>
+                    <TableHead className="text-center">Harian 4</TableHead>
+                    <TableHead className="text-center">UTS</TableHead>
+                    <TableHead className="text-center">UAS</TableHead>
+                    <TableHead className="text-center">Praktek</TableHead>
+                    <TableHead className="text-center">Projek</TableHead>
+                    <TableHead className="text-center">Porto</TableHead>
+                    <TableHead className="text-center">Akhir</TableHead>
+                    <TableHead className="text-center">Grade</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {rows.map((row, idx) => {
+                    const score = computeScore(row);
+                    const grade = computePredicate(parseFloat(score));
+                    const edited = editedRows[row.enrollmentId];
+                    return (
+                      <TableRow key={row.enrollmentId}>
+                        <TableCell>{idx + 1}</TableCell>
+                        <TableCell className="font-medium">
+                          {row.studentName}
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            className="w-[60px] text-center"
+                            value={edited?.dailyTest1 ?? row.dailyTest1}
+                            onChange={(e) =>
+                              handleScoreChange(
+                                row.enrollmentId,
+                                "dailyTest1",
+                                e.target.value
+                              )
+                            }
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            className="w-[60px] text-center"
+                            value={edited?.dailyTest2 ?? row.dailyTest2}
+                            onChange={(e) =>
+                              handleScoreChange(
+                                row.enrollmentId,
+                                "dailyTest2",
+                                e.target.value
+                              )
+                            }
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            className="w-[60px] text-center"
+                            value={edited?.dailyTest3 ?? row.dailyTest3}
+                            onChange={(e) =>
+                              handleScoreChange(
+                                row.enrollmentId,
+                                "dailyTest3",
+                                e.target.value
+                              )
+                            }
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            className="w-[60px] text-center"
+                            value={edited?.dailyTest4 ?? row.dailyTest4}
+                            onChange={(e) =>
+                              handleScoreChange(
+                                row.enrollmentId,
+                                "dailyTest4",
+                                e.target.value
+                              )
+                            }
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            className="w-[60px] text-center"
+                            value={edited?.midterm ?? row.midterm}
+                            onChange={(e) =>
+                              handleScoreChange(
+                                row.enrollmentId,
+                                "midterm",
+                                e.target.value
+                              )
+                            }
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            className="w-[60px] text-center"
+                            value={edited?.finalExam ?? row.finalExam}
+                            onChange={(e) =>
+                              handleScoreChange(
+                                row.enrollmentId,
+                                "finalExam",
+                                e.target.value
+                              )
+                            }
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            className="w-[60px] text-center"
+                            value={edited?.practical ?? row.practical}
+                            onChange={(e) =>
+                              handleScoreChange(
+                                row.enrollmentId,
+                                "practical",
+                                e.target.value
+                              )
+                            }
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            className="w-[60px] text-center"
+                            value={edited?.project ?? row.project}
+                            onChange={(e) =>
+                              handleScoreChange(
+                                row.enrollmentId,
+                                "project",
+                                e.target.value
+                              )
+                            }
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            className="w-[60px] text-center"
+                            value={edited?.portfolio ?? row.portfolio}
+                            onChange={(e) =>
+                              handleScoreChange(
+                                row.enrollmentId,
+                                "portfolio",
+                                e.target.value
+                              )
+                            }
+                          />
+                        </TableCell>
+                        <TableCell className="text-center font-medium">
+                          {score}
+                        </TableCell>
+                        <TableCell className="text-center font-bold">
+                          {grade}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </DataTableShell>
       )}
     </div>
   );

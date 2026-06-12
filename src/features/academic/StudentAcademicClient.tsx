@@ -7,11 +7,13 @@ import {
   DownloadSimple,
   MagnifyingGlass,
 } from "@phosphor-icons/react";
+import type { ColumnDef } from "@tanstack/react-table";
 import { useEffect, useState } from "react";
 import { getStudentGrades } from "@/actions/grades";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DataTable } from "@/components/ui/data-table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface CalendarEventItem {
@@ -39,6 +41,128 @@ interface Props {
   userId: string;
   calendarEvents?: CalendarEventItem[];
 }
+
+const knowledgeColumns: ColumnDef<GradeItem>[] = [
+  {
+    accessorKey: "subjectCode",
+    header: "Kode",
+    cell: ({ row }) => (
+      <span className="font-mono text-xs">
+        {row.getValue("subjectCode") ?? "-"}
+      </span>
+    ),
+  },
+  { accessorKey: "subjectName", header: "Mata Pelajaran" },
+  {
+    accessorKey: "subjectCredits",
+    header: "SKS",
+    cell: ({ row }) => (
+      <span className="block text-center">
+        {row.getValue("subjectCredits") ?? "-"}
+      </span>
+    ),
+  },
+  {
+    accessorKey: "score",
+    header: "Nilai",
+    cell: ({ row }) => (
+      <span className="block text-center font-medium">
+        {row.getValue("score") ?? "-"}
+      </span>
+    ),
+  },
+  {
+    accessorKey: "grade",
+    header: "Huruf",
+    cell: ({ row }) => {
+      const grade = row.getValue("grade") as string | null;
+      if (!grade) return <span className="block text-center">-</span>;
+      const variant = grade.startsWith("A")
+        ? "default"
+        : grade.startsWith("B")
+          ? "secondary"
+          : "outline";
+      return (
+        <span className="block text-center">
+          <Badge variant={variant}>{grade}</Badge>
+        </span>
+      );
+    },
+  },
+];
+
+const skillColumns: ColumnDef<GradeItem>[] = [
+  {
+    accessorKey: "subjectCode",
+    header: "Kode",
+    cell: ({ row }) => (
+      <span className="font-mono text-xs">
+        {row.getValue("subjectCode") ?? "-"}
+      </span>
+    ),
+  },
+  { accessorKey: "subjectName", header: "Mata Pelajaran" },
+  {
+    accessorKey: "score",
+    header: "Nilai",
+    cell: ({ row }) => (
+      <span className="block text-center font-medium">
+        {row.getValue("score") ?? "-"}
+      </span>
+    ),
+  },
+  {
+    accessorKey: "grade",
+    header: "Huruf",
+    cell: ({ row }) => {
+      const grade = row.getValue("grade") as string | null;
+      if (!grade) return <span className="block text-center">-</span>;
+      const variant = grade.startsWith("A")
+        ? "default"
+        : grade.startsWith("B")
+          ? "secondary"
+          : "outline";
+      return (
+        <span className="block text-center">
+          <Badge variant={variant}>{grade}</Badge>
+        </span>
+      );
+    },
+  },
+];
+
+type KrsItem = GradeItem & { status: string };
+
+const krsColumns: ColumnDef<KrsItem>[] = [
+  {
+    accessorKey: "subjectCode",
+    header: "Kode",
+    cell: ({ row }) => (
+      <span className="font-mono text-xs">
+        {row.getValue("subjectCode") ?? "-"}
+      </span>
+    ),
+  },
+  { accessorKey: "subjectName", header: "Mata Pelajaran" },
+  {
+    accessorKey: "subjectCredits",
+    header: "SKS",
+    cell: ({ row }) => (
+      <span className="block text-center">
+        {row.getValue("subjectCredits") ?? "-"}
+      </span>
+    ),
+  },
+  {
+    accessorKey: "status",
+    header: "Status",
+    cell: ({ row }) => (
+      <span className="block text-center">
+        <Badge variant="default">{row.getValue("status")}</Badge>
+      </span>
+    ),
+  },
+];
 
 export function StudentAcademicClient({ userId, calendarEvents = [] }: Props) {
   const [search, setSearch] = useState("");
@@ -194,67 +318,14 @@ export function StudentAcademicClient({ userId, calendarEvents = [] }: Props) {
                         Nilai Pengetahuan — {selectedSemesterLabel}
                       </CardTitle>
                     </CardHeader>
-                    <CardContent>
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                          <thead>
-                            <tr className="border-b border-border text-muted-foreground text-xs uppercase tracking-wider">
-                              <th className="text-left px-4 py-3 font-medium">
-                                Kode
-                              </th>
-                              <th className="text-left px-4 py-3 font-medium">
-                                Mata Pelajaran
-                              </th>
-                              <th className="text-center px-4 py-3 font-medium">
-                                SKS
-                              </th>
-                              <th className="text-center px-4 py-3 font-medium">
-                                Nilai
-                              </th>
-                              <th className="text-center px-4 py-3 font-medium">
-                                Huruf
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {knowledgeGrades.map((g, i) => (
-                              <tr
-                                key={`${g.subjectCode}-${i}`}
-                                className="border-b border-border/50 hover:bg-muted/30 transition-colors"
-                              >
-                                <td className="px-4 py-3 font-mono text-xs">
-                                  {g.subjectCode ?? "-"}
-                                </td>
-                                <td className="px-4 py-3">{g.subjectName}</td>
-                                <td className="px-4 py-3 text-center">
-                                  {g.subjectCredits ?? "-"}
-                                </td>
-                                <td className="px-4 py-3 text-center font-medium">
-                                  {g.score ?? "-"}
-                                </td>
-                                <td className="px-4 py-3 text-center">
-                                  {g.grade ? (
-                                    <Badge
-                                      variant={
-                                        g.grade.startsWith("A")
-                                          ? "default"
-                                          : g.grade.startsWith("B")
-                                            ? "secondary"
-                                            : "outline"
-                                      }
-                                    >
-                                      {g.grade}
-                                    </Badge>
-                                  ) : (
-                                    "-"
-                                  )}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                      <div className="flex items-center gap-6 pt-4 border-t border-border mt-4">
+                    <CardContent className="space-y-4">
+                      <DataTable
+                        columns={knowledgeColumns}
+                        data={knowledgeGrades}
+                        exportFilename={`khs-pengetahuan-${selectedSemesterLabel}`}
+                        emptyMessage="Belum ada nilai pengetahuan."
+                      />
+                      <div className="flex items-center gap-6 pt-4 border-t border-border">
                         <div className="flex items-center gap-2 text-sm">
                           <BookOpen className="h-4 w-4 text-muted-foreground" />
                           <span className="text-muted-foreground">
@@ -287,59 +358,12 @@ export function StudentAcademicClient({ userId, calendarEvents = [] }: Props) {
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                          <thead>
-                            <tr className="border-b border-border text-muted-foreground text-xs uppercase tracking-wider">
-                              <th className="text-left px-4 py-3 font-medium">
-                                Kode
-                              </th>
-                              <th className="text-left px-4 py-3 font-medium">
-                                Mata Pelajaran
-                              </th>
-                              <th className="text-center px-4 py-3 font-medium">
-                                Nilai
-                              </th>
-                              <th className="text-center px-4 py-3 font-medium">
-                                Huruf
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {skillGrades.map((g, i) => (
-                              <tr
-                                key={`skill-${g.subjectCode}-${i}`}
-                                className="border-b border-border/50 hover:bg-muted/30 transition-colors"
-                              >
-                                <td className="px-4 py-3 font-mono text-xs">
-                                  {g.subjectCode ?? "-"}
-                                </td>
-                                <td className="px-4 py-3">{g.subjectName}</td>
-                                <td className="px-4 py-3 text-center font-medium">
-                                  {g.score ?? "-"}
-                                </td>
-                                <td className="px-4 py-3 text-center">
-                                  {g.grade ? (
-                                    <Badge
-                                      variant={
-                                        g.grade.startsWith("A")
-                                          ? "default"
-                                          : g.grade.startsWith("B")
-                                            ? "secondary"
-                                            : "outline"
-                                      }
-                                    >
-                                      {g.grade}
-                                    </Badge>
-                                  ) : (
-                                    "-"
-                                  )}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
+                      <DataTable
+                        columns={skillColumns}
+                        data={skillGrades}
+                        exportFilename={`khs-keterampilan-${selectedSemesterLabel}`}
+                        emptyMessage="Belum ada nilai keterampilan."
+                      />
                     </CardContent>
                   </Card>
                 )}
@@ -398,45 +422,12 @@ export function StudentAcademicClient({ userId, calendarEvents = [] }: Props) {
                     Belum ada data KRS.
                   </p>
                 ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b border-border text-muted-foreground text-xs uppercase tracking-wider">
-                          <th className="text-left px-4 py-3 font-medium">
-                            Kode
-                          </th>
-                          <th className="text-left px-4 py-3 font-medium">
-                            Mata Pelajaran
-                          </th>
-                          <th className="text-center px-4 py-3 font-medium">
-                            SKS
-                          </th>
-                          <th className="text-center px-4 py-3 font-medium">
-                            Status
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {knowledgeGrades.map((g, i) => (
-                          <tr
-                            key={`krs-${g.subjectCode}-${i}`}
-                            className="border-b border-border/50 hover:bg-muted/30 transition-colors"
-                          >
-                            <td className="px-4 py-3 font-mono text-xs">
-                              {g.subjectCode ?? "-"}
-                            </td>
-                            <td className="px-4 py-3">{g.subjectName}</td>
-                            <td className="px-4 py-3 text-center">
-                              {g.subjectCredits ?? "-"}
-                            </td>
-                            <td className="px-4 py-3 text-center">
-                              <Badge variant="default">Aktif</Badge>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                  <DataTable
+                    columns={krsColumns}
+                    data={knowledgeGrades.map((g) => ({ ...g, status: "Aktif" }))}
+                    exportFilename={`krs-${selectedSemesterLabel}`}
+                    emptyMessage="Belum ada data KRS."
+                  />
                 )}
               </CardContent>
             </Card>
