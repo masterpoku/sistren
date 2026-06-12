@@ -2,11 +2,49 @@
 
 > Append-only cross-session goal tracker. Add new goals, never delete old ones.
 > Archive completed goals by moving to an "## Archived" section.
-> Last updated: 2026-06-12 — Sprints H/I/J added for tomorrow; A/B/F/G complete; sidebar order adjusted.
+> Last updated: 2026-06-12 — Sprint 1 added for system configs; H-K renumbered to 2-5.
 
 ---
 
 ## Active Goals
+
+### Sprint 1 — Settings Pages (System Configs Key-Value Management)
+
+**Status:** pending
+
+**Summary:** System configs management is broken and incomplete. `src/actions/settings.ts` has 3 functions (getSchoolSettings, updateSchoolSetting, batchUpdateSchoolSettings) but only 5 hardcoded school settings are exposed via `/settings/school`. The `system_configs` table supports arbitrary key-value pairs but there's no general-purpose CRUD page. A **critical key-mismatch bug** exists: read path uses snake_case (`school_name`), write path uses camelCase (`schoolName`) — data desyncs on first save. Single `updateSchoolSetting` has zero validation (security gap). No seed data. No audit log.
+
+**Exploration findings (2026-06-12):**
+- `system_configs.manage` permission already exists in `src/lib/db/permissions.ts` (assigned to superadmin + administrator)
+- Schema: bigint PK, varchar(100) UNIQUE key, text value, varchar(255) description, timestamps, soft delete
+- Current UI only shows 5 fields at `/settings/school` — no way to add/edit/delete arbitrary configs
+- Single-update action has no Zod validation — any level 80+ can write any key/value
+- Batch update strips unknown Zod keys silently — no error when keys dropped
+- No key enum/constants — magic strings duplicated in page.tsx, action, and schema
+
+**Bugs to fix:**
+- **Key mismatch**: page.tsx reads `school_name` (getSetting("school_name")) but form saves as `schoolName`. After first save, `schoolName` and `schoolAddress` become new rows. Need to normalize to snake_case for DB consistency.
+- **Validation gap**: `updateSchoolSetting(key, value)` accepts any key/value — add Zod validation or deprecate in favor of batch
+- **Silent drop**: batch action strips unknown Zod keys with no warning — need to error on unrecognized keys
+
+- [ ] Ask user for complete list of settings keys needed (school info, academic year, semester, payment config, etc.)
+- [ ] Create `SYSTEM_CONFIG_KEYS` constants file — enum for all known config keys, prevent magic strings
+- [ ] Fix key mismatch bug — normalize read/write to snake_case convention
+- [ ] Add Zod validation to `updateSchoolSetting` (or deprecate it, migrate callers to batch)
+- [ ] Add error on unknown keys in `batchUpdateSchoolSettings` — reject instead of silent strip
+- [ ] Create `src/features/settings/SystemConfigsClient.tsx` — full key-value table with add/edit/delete dialogs
+- [ ] Create `src/app/(app)/settings/system/page.tsx` — server component with role gate, fetch all configs
+- [ ] Add route permission: `"/settings/system": "system_configs.manage"` in route-permissions.ts
+- [ ] Add sidebar nav item: `{ title: "Pengaturan", href: "/settings/system", icon: Gear, minLevel: 80 }` in app-sidebar.tsx
+- [ ] Seed system_configs entries in `src/lib/db/seed.ts` (school name, address, npsn, nss, academic year, semester)
+- [ ] Restructure settings page layout — `/settings/school` stays for school info, `/settings/system` for all key-value configs
+- [ ] Verify build passes
+
+**Files touched:**
+- Modify: `src/actions/settings.ts`, `src/lib/validation/schemas/settings.ts`, `src/lib/auth/route-permissions.ts`, `src/features/layout/app-sidebar.tsx`, `src/lib/db/seed.ts`, `src/app/(app)/settings/school/page.tsx`, `src/features/settings/SchoolSettingsForm.tsx`
+- Create: `src/features/settings/SystemConfigsClient.tsx`, `src/app/(app)/settings/system/page.tsx`, `src/lib/db/system-config-keys.ts`
+
+---
 
 ### Client Request — Assessment / Grading System (Penilaian)
 
@@ -41,7 +79,7 @@
 
 ---
 
-### Sprint H — DataTable Migration (Shared Component Adoption)
+### Sprint 2 — DataTable Migration (Shared Component Adoption)
 
 **Status:** pending
 
@@ -71,7 +109,7 @@
 
 ---
 
-### Sprint I — Dashboard Real Data Wiring
+### Sprint 3 — Dashboard Real Data Wiring
 
 **Status:** pending
 
@@ -110,7 +148,7 @@
 
 ---
 
-### Sprint J — Header & Breadcrumb Responsive Fix
+### Sprint 4 — Header & Breadcrumb Responsive Fix
 
 **Status:** pending
 
@@ -131,7 +169,7 @@
 
 ---
 
-### Sprint K — Sidebar Gap Polish & Visual Consistency
+### Sprint 5 — Sidebar Gap Polish & Visual Consistency
 
 **Status:** pending
 
