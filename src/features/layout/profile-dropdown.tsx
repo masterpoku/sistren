@@ -14,7 +14,7 @@ export function ProfileDropdown({ user, onLogout }: ProfileDropdownProps) {
   return (
     <div className="mt-auto w-full border-t border-sidebar-border p-2 group-data-[collapsible=icon]:p-2">
       <div className="flex items-center gap-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 group-data-[collapsible=icon]:h-7 group-data-[collapsible=icon]:w-7">
           <span className="text-sm font-medium group-data-[collapsible=icon]:text-xs">
             {user.name?.charAt(0)?.toUpperCase() || "U"}
           </span>

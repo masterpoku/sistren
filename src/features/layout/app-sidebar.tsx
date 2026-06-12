@@ -94,7 +94,7 @@ export function AppSidebar({ user, onLogout }: AppSidebarProps) {
         <div className="flex items-center gap-3 px-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
           <div
             className={cn(
-              "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg shadow-sm",
+              "flex h-8 w-8 shrink-0 items-center justify-center rounded-md shadow-sm",
               isAlumni
                 ? "bg-yellow-600 text-white"
                 : "bg-sidebar-primary text-sidebar-primary-foreground"
@@ -135,7 +135,7 @@ export function AppSidebar({ user, onLogout }: AppSidebarProps) {
             Menu Utama
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="gap-1">
               {navItems
                 .filter((item) => {
                   if (
@@ -168,7 +168,7 @@ export function AppSidebar({ user, onLogout }: AppSidebarProps) {
                       >
                         <Link
                           href={item.href}
-                          className="flex items-center gap-3 group-data-[collapsible=icon]:gap-0"
+                          className="flex items-center gap-2 group-data-[collapsible=icon]:gap-0"
                         >
                           <Icon className="h-4 w-4 shrink-0" />
                           <span className="group-data-[collapsible=icon]:hidden">

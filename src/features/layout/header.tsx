@@ -40,23 +40,23 @@ export function AppHeader({ user }: AppHeaderProps) {
   const displayId = user.studentId || user.employeeId || user.email;
 
   return (
-    <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between border-b bg-background/80 px-6 backdrop-blur-md">
-      <div className="flex items-center gap-4">
-        <SidebarTrigger className="h-9 w-9" />
-        <Breadcrumb>
+    <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center justify-between gap-4 border-b bg-background/80 px-6 backdrop-blur-md">
+      <div className="flex items-center gap-4 min-w-0">
+        <SidebarTrigger className="h-9 w-9 shrink-0" />
+        <Breadcrumb className="min-w-0">
           <BreadcrumbList>
             <BreadcrumbItem>
               <Link
                 href="/dashboard"
-                className="flex items-center gap-1.5 transition-colors hover:text-foreground/80"
+                className="flex items-center gap-1.5 transition-colors hover:text-foreground/80 shrink-0"
               >
                 <GraduationCap className="h-4 w-4" />
-                <span className="font-semibold">SISTREN</span>
+                <span className="font-semibold shrink-0">SISTREN</span>
               </Link>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage className="capitalize">{title}</BreadcrumbPage>
+            <BreadcrumbItem className="min-w-0">
+              <BreadcrumbPage className="capitalize truncate">{title}</BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
