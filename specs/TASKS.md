@@ -2,11 +2,83 @@
 
 > Append-only cross-session goal tracker. Add new goals, never delete old ones.
 > Archive completed goals by moving to an "## Archived" section.
-> Last updated: 2026-06-12 — Sprints 2-6 archived (DataTable migration, layout polish, page chrome audit, redirect loop); Sprint 7 queued (page chrome unification).
+> Last updated: 2026-06-13 — Sprints 2-6 archived (DataTable migration, layout polish, page chrome audit, redirect loop); Sprint 7 queued (page chrome unification); Sprints 8-9 added (Boarding page, DataTable migration cleanup); Attendance blocked on client input.
 
 ---
 
 ## Active Goals
+
+### Sprint 8 — Boarding Page (Post-Registration Onboarding)
+
+**Status:** pending
+
+**Source:** Client clarification (2026-06-13) — "Boarding" is NOT asrama/dormitory. Old PHP system (`AuthController.php:42-59` + `boarding.blade.php`): after student self-registration, redirect to `/auth/boarding?rid=<encrypted>` showing:
+- "Pendaftaran Berhasil" (Registration Successful)
+- Registered email displayed
+- NISN = initial password instruction
+- CTA: "Kembali ke halaman Utama"
+
+**Current state:** `BoardingClient.tsx` has wrong title "Asrama" and desc "Kelola data asrama dan kamar". Placeholder shows "Modul Asrama — dalam pengembangan". Wrong label completely.
+
+**Scope:** Static page, no CRUD needed. Single-use success/confirmation display.
+
+**Plan:**
+- [ ] Create encrypted token verification pattern (or simple success page with user ID param)
+- [ ] Fix `BoardingClient.tsx` — title "Pendaftaran Berhasil", remove all "Asrama" references
+- [ ] Show registered user email from session/params
+- [ ] Show login instructions: "Gunakan NISN sebagai kata sandi untuk login pertama"
+- [ ] Add CTA button: "Kembali ke Halaman Login" → `/login`
+- [ ] Route: keep at `/boarding` or move to `/auth/boarding`? Clarify with client
+- [ ] Permission: `boarding.{r}` exists in AGENTS.md — no action needed for static page
+- [ ] Verify build passes
+
+**Files to touch:**
+- Modify: `src/features/boarding/BoardingClient.tsx`
+- Modify: `src/app/(app)/boarding/page.tsx`
+- Optionally create: `src/actions/boarding.ts` (verify encrypted token if needed)
+
+---
+
+### Sprint 9 — DataTable Migration Cleanup
+
+**Status:** pending
+
+**Summary:** Sprint 2 migrated 13 of 16 table-based features to shared DataTable. 2 remain on raw `<Table>` + 1 intentionally kept custom. Migrate the 2 remaining tables for consistency.
+
+**Not migrated (leftovers from Sprint 2):**
+1. `admin/payment-items` — uses raw shadcn `<Table>` with PaymentItemDialog/PaymentItemForm
+2. `students/[id]/documents` — uses raw `<Table>` with document upload form, DocumentUploadForm
+3. `StudentAcademicClient` attitude table — intentionally kept custom 2-column layout (skip)
+
+**Plan:**
+- [ ] Migrate `admin/payment-items page.tsx` — convert raw `<Table>` to DataTable with `STATUS_LABELS`, `formatCurrency`, `ActionCell`
+- [ ] Migrate `students/[id]/documents page.tsx` — convert raw `<Table>` to DataTable
+- [ ] Verify both pages use shared formatters (`formatCurrency`, `STATUS_LABELS` etc.)
+- [ ] Ensure server-rendered pages still work (payment-items = server component, documents = server component)
+- [ ] Verify build passes
+
+**Files to touch:**
+- Modify: `src/app/(app)/admin/payment-items/page.tsx`
+- Modify: `src/app/(app)/students/[id]/documents/page.tsx`
+- Optionally create: `src/features/payments/PaymentItemsClient.tsx` (if extracting to client component)
+- Optionally create: `src/features/students/DocumentsClient.tsx`
+
+---
+
+### Blocked — Attendance Module
+
+**Status:** pending client requirements
+
+**Summary:** `AttendanceClient.tsx` is a placeholder "Modul Absensi — dalam pengembangan". No schema table exists. No server actions exist. Not linked in sidebar.
+
+**Blocked on:** Client needs to define:
+- Type of attendance: per-session? per-day? per-subject?
+- Who records: teacher? admin? homeroom?
+- Frequency: setiap jam pelajaran? setiap hari?
+- Reports needed: recaps? per-student? per-class?
+- Integration with existing `enrollments` or `grades`?
+
+No implementation until client confirms requirements. Add to active sprints when spec is clear.
 
 ### Sprint 1 — Settings Pages (System Configs Key-Value Management)
 
