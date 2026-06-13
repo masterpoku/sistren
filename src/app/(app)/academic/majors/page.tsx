@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PageShell } from "@/components/ui/page-shell";
 import { MajorsClient } from "@/features/academic/majors/MajorsClient";
 import { verifyRoleLevel } from "@/lib/auth/verify-session";
 
@@ -11,16 +12,10 @@ export default async function MajorsPage() {
   const majorList = await getMajors();
 
   return (
-    <div className="flex flex-col gap-6 p-4 md:p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Kelola Jurusan</h1>
-          <p className="text-muted-foreground">
-            Tambah dan kelola jurusan/program keahlian.
-          </p>
-        </div>
-      </div>
-
+    <PageShell
+      title="Kelola Jurusan"
+      description="Tambah dan kelola jurusan/program keahlian."
+    >
       <Card>
         <CardHeader>
           <CardTitle>Tambah Jurusan</CardTitle>
@@ -44,20 +39,17 @@ export default async function MajorsPage() {
                 placeholder="Opsional"
               />
             </div>
-            <a
-              href="/academic/majors"
-              className="inline-flex h-9 px-4 items-center justify-center rounded-md border border-input bg-background text-sm font-medium hover:bg-muted"
-            >
+            <Button type="reset" variant="outline">
               Batal
-            </a>
+            </Button>
             <Button type="submit">Tambah</Button>
           </form>
         </CardContent>
       </Card>
 
-      <div className="rounded-md border bg-card">
+      <div className="rounded-md border">
         <MajorsClient data={majorList} />
       </div>
-    </div>
+    </PageShell>
   );
 }

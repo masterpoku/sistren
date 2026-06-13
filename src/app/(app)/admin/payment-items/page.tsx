@@ -8,6 +8,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageShell } from "@/components/ui/page-shell";
 import {
   Table,
   TableBody,
@@ -38,14 +39,10 @@ export default async function AdminPaymentItemsPage() {
     TYPE_LABELS[t ?? "one_time"] ?? t ?? "—";
 
   return (
-    <div className="flex flex-col gap-6 p-4 md:p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Item Pembayaran</h1>
-          <p className="text-muted-foreground">
-            Katalog item tagihan — SPP, uang gedung, dll.
-          </p>
-        </div>
+    <PageShell
+      title="Item Pembayaran"
+      description="Katalog item tagihan — SPP, uang gedung, dll."
+      actions={
         <PaymentItemDialog
           mode="create"
           semesters={semesters}
@@ -55,7 +52,8 @@ export default async function AdminPaymentItemsPage() {
         >
           <PaymentItemForm semesters={semesters} />
         </PaymentItemDialog>
-      </div>
+      }
+    >
 
       <Card>
         <CardHeader>
@@ -141,6 +139,6 @@ export default async function AdminPaymentItemsPage() {
           )}
         </CardContent>
       </Card>
-    </div>
+    </PageShell>
   );
 }

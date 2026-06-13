@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable } from "@/components/ui/data-table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PageShell } from "@/components/ui/page-shell";
 
 type ClassItem = {
   id: number;
@@ -64,14 +65,10 @@ export function ClassesClient({ classList }: ClassesClientProps) {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-4 md:p-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Kelola Kelas</h1>
-        <p className="text-muted-foreground">
-          Tambah dan kelola kelas (X, XI, XII).
-        </p>
-      </div>
-
+    <PageShell
+      title="Kelola Kelas"
+      description="Tambah dan kelola kelas (X, XI, XII)."
+    >
       <Card>
         <CardHeader>
           <CardTitle>Tambah Kelas</CardTitle>
@@ -103,7 +100,7 @@ export function ClassesClient({ classList }: ClassesClientProps) {
         </CardContent>
       </Card>
 
-      <div className="rounded-md border bg-card">
+      <div className="rounded-md border">
         <DataTable
           columns={columns}
           data={classList}
@@ -111,6 +108,6 @@ export function ClassesClient({ classList }: ClassesClientProps) {
           exportFilename="kelas"
         />
       </div>
-    </div>
+    </PageShell>
   );
 }

@@ -1,4 +1,5 @@
 import { desc, eq, isNull } from "drizzle-orm";
+import { PageShell } from "@/components/ui/page-shell";
 import { AdminUsersClient } from "@/features/admin/AdminUsersClient";
 import { verifyRoleLevel } from "@/lib/auth/verify-session";
 import { db } from "@/lib/db";
@@ -25,5 +26,12 @@ async function getUsers() {
 export default async function AdminUsersPage() {
   await verifyRoleLevel(80);
   const userList = await getUsers();
-  return <AdminUsersClient data={userList} />;
+  return (
+    <PageShell
+      title="Manajemen Pengguna"
+      description="Kelola akun staff, role, dan approval."
+    >
+      <AdminUsersClient data={userList} />
+    </PageShell>
+  );
 }

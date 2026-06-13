@@ -113,7 +113,7 @@ export function AssignmentsClient({
             action={handleAssign}
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4"
           >
-            <div className="space-y-1">
+            <div className="space-y-2">
               <Label htmlFor="teacherId">Guru</Label>
               <Select name="teacherId" required>
                 <SelectTrigger>
@@ -128,7 +128,7 @@ export function AssignmentsClient({
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-1">
+            <div className="space-y-2">
               <Label htmlFor="classId">Kelas</Label>
               <Select name="classId" required>
                 <SelectTrigger>
@@ -143,7 +143,7 @@ export function AssignmentsClient({
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-1">
+            <div className="space-y-2">
               <Label htmlFor="subjectId">Mapel</Label>
               <Select name="subjectId" required>
                 <SelectTrigger>
@@ -158,7 +158,7 @@ export function AssignmentsClient({
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-1">
+            <div className="space-y-2">
               <Label htmlFor="semesterId">Semester</Label>
               <Select name="semesterId" required>
                 <SelectTrigger>

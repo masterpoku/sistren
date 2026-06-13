@@ -1,4 +1,5 @@
 import { and, eq, isNull } from "drizzle-orm";
+import { PageShell } from "@/components/ui/page-shell";
 import { ApprovalsClient } from "@/features/admin/ApprovalsClient";
 import { verifyRoleLevel } from "@/lib/auth/verify-session";
 import { db } from "@/lib/db";
@@ -21,5 +22,12 @@ async function getPendingStudents() {
 export default async function ApprovalsPage() {
   await verifyRoleLevel(80);
   const pendingStudents = await getPendingStudents();
-  return <ApprovalsClient data={pendingStudents} />;
+  return (
+    <PageShell
+      title="Approval Siswa"
+      description="Daftar siswa yang menunggu verifikasi akun."
+    >
+      <ApprovalsClient data={pendingStudents} />
+    </PageShell>
+  );
 }

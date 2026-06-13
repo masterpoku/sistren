@@ -40,12 +40,9 @@ export function SemesterFormCard() {
             <Checkbox id="isActive" name="isActive" value="true" />
             <Label htmlFor="isActive">Semester Aktif</Label>
           </div>
-          <a
-            href="/academic/semesters"
-            className="inline-flex h-9 px-4 items-center justify-center rounded-md border border-input bg-background text-sm font-medium hover:bg-muted"
-          >
+          <Button type="reset" variant="outline">
             Batal
-          </a>
+          </Button>
           <Button type="submit">Tambah</Button>
         </form>
       </CardContent>
