@@ -1,5 +1,18 @@
 import { and, eq, isNull, sql } from "drizzle-orm";
 import { redirect } from "next/navigation";
+import {
+  getRecentActivities,
+  getRecentAnnouncements,
+  getRegistrationStatsByMonth,
+  getStudentCurrentGpa,
+  getStudentGpaHistory,
+  getStudentSppStatus,
+  getStudentSubjectCount,
+  getTeacherClassAverages,
+  getTeacherPendingGradingCount,
+  getTeacherSessionsToday,
+  getTodaySchedule,
+} from "@/actions/dashboard";
 import { DashboardClient } from "@/features/dashboard/DashboardClient";
 import { getAuthContext } from "@/lib/auth/permissions";
 import { verifySession } from "@/lib/auth/verify-session";
@@ -19,6 +32,7 @@ export default async function DashboardPage() {
   if (!ctx) redirect("/unauthorized");
 
   const roleLevel = ctx.roleLevel;
+  const userId = session.userId;
 
   let stats: {
     totalStudents?: number;
@@ -30,8 +44,23 @@ export default async function DashboardPage() {
     ownEnrollmentStatus?: string;
   } = {};
 
+  let registrationStats: Awaited<
+    ReturnType<typeof getRegistrationStatsByMonth>
+  > = [];
+  let gpaHistory: Awaited<ReturnType<typeof getStudentGpaHistory>> = [];
+  let todaySchedule: Awaited<ReturnType<typeof getTodaySchedule>> = [];
+  let teacherClassAverages: Awaited<
+    ReturnType<typeof getTeacherClassAverages>
+  > = [];
+  let recentActivities: Awaited<ReturnType<typeof getRecentActivities>> = [];
+
+  let currentGpa = 0;
+  let subjectCount = 0;
+  let sppStatus: "paid" | "unpaid" | "unknown" = "unknown";
+  let sessionsToday = 0;
+  let pendingGrading = 0;
+
   if (roleLevel >= 80) {
-    // Admin: count students (role level 40), teachers (role level 60), active enrollments, published announcements
     const [studentRow] = await db
       .select({ count: sql<number>`count(*)` })
       .from(users)
@@ -63,8 +92,10 @@ export default async function DashboardPage() {
       activeEnrollments: Number(activeRow?.count ?? 0),
       pendingAnnouncements: Number(announcementRow?.count ?? 0),
     };
+
+    registrationStats = await getRegistrationStatsByMonth(6);
+    recentActivities = await getRecentActivities(8);
   } else if (roleLevel === 60) {
-    // Guru: count assigned classes and subjects for this teacher this semester
     const activeSemester = await db
       .select({ id: semesters.id })
       .from(semesters)
@@ -78,7 +109,7 @@ export default async function DashboardPage() {
         .from(teacherClassSubjects)
         .where(
           and(
-            eq(teacherClassSubjects.teacherId, session.userId),
+            eq(teacherClassSubjects.teacherId, userId),
             eq(teacherClassSubjects.semesterId, semesterId),
             isNull(teacherClassSubjects.deletedAt)
           )
@@ -88,7 +119,7 @@ export default async function DashboardPage() {
         .from(teacherClassSubjects)
         .where(
           and(
-            eq(teacherClassSubjects.teacherId, session.userId),
+            eq(teacherClassSubjects.teacherId, userId),
             eq(teacherClassSubjects.semesterId, semesterId),
             isNull(teacherClassSubjects.deletedAt)
           )
@@ -99,29 +130,49 @@ export default async function DashboardPage() {
         assignedSubjects: Number(subjectRows[0]?.count ?? 0),
       };
     }
+
+    teacherClassAverages = await getTeacherClassAverages(userId);
+    sessionsToday = await getTeacherSessionsToday(userId);
+    pendingGrading = await getTeacherPendingGradingCount(userId);
+    recentActivities = await getRecentActivities(5);
   } else if (roleLevel === 40) {
-    // Siswa: own enrollment status
     const [enrollmentRow] = await db
       .select({ status: enrollments.status })
       .from(enrollments)
       .where(
-        and(
-          eq(enrollments.studentId, session.userId),
-          isNull(enrollments.deletedAt)
-        )
+        and(eq(enrollments.studentId, userId), isNull(enrollments.deletedAt))
       )
       .limit(1);
 
     if (enrollmentRow) {
       stats = { ownEnrollmentStatus: enrollmentRow.status ?? "unknown" };
     }
+
+    gpaHistory = await getStudentGpaHistory(userId);
+    currentGpa = await getStudentCurrentGpa(userId);
+    subjectCount = await getStudentSubjectCount(userId);
+    sppStatus = await getStudentSppStatus(userId);
+    todaySchedule = await getTodaySchedule(userId);
   }
+
+  const recentAnnouncements = await getRecentAnnouncements(5);
 
   return (
     <DashboardClient
       name={session.name}
       roleLevel={ctx?.roleLevel ?? 0}
       stats={stats}
+      registrationStats={registrationStats}
+      gpaHistory={gpaHistory}
+      todaySchedule={todaySchedule}
+      teacherClassAverages={teacherClassAverages}
+      recentActivities={recentActivities}
+      recentAnnouncements={recentAnnouncements}
+      currentGpa={currentGpa}
+      subjectCount={subjectCount}
+      sppStatus={sppStatus}
+      sessionsToday={sessionsToday}
+      pendingGrading={pendingGrading}
     />
   );
 }
