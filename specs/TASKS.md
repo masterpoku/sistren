@@ -8,63 +8,6 @@
 
 ## Active Goals
 
-### Sprint 8 — Boarding Page (Post-Registration Onboarding)
-
-**Status:** pending
-
-**Source:** Client clarification (2026-06-13) — "Boarding" is NOT asrama/dormitory. Old PHP system (`AuthController.php:42-59` + `boarding.blade.php`): after student self-registration, redirect to `/auth/boarding?rid=<encrypted>` showing:
-- "Pendaftaran Berhasil" (Registration Successful)
-- Registered email displayed
-- NISN = initial password instruction
-- CTA: "Kembali ke halaman Utama"
-
-**Current state:** `BoardingClient.tsx` has wrong title "Asrama" and desc "Kelola data asrama dan kamar". Placeholder shows "Modul Asrama — dalam pengembangan". Wrong label completely.
-
-**Scope:** Static page, no CRUD needed. Single-use success/confirmation display.
-
-**Plan:**
-- [ ] Create encrypted token verification pattern (or simple success page with user ID param)
-- [ ] Fix `BoardingClient.tsx` — title "Pendaftaran Berhasil", remove all "Asrama" references
-- [ ] Show registered user email from session/params
-- [ ] Show login instructions: "Gunakan NISN sebagai kata sandi untuk login pertama"
-- [ ] Add CTA button: "Kembali ke Halaman Login" → `/login`
-- [ ] Route: keep at `/boarding` or move to `/auth/boarding`? Clarify with client
-- [ ] Permission: `boarding.{r}` exists in AGENTS.md — no action needed for static page
-- [ ] Verify build passes
-
-**Files to touch:**
-- Modify: `src/features/boarding/BoardingClient.tsx`
-- Modify: `src/app/(app)/boarding/page.tsx`
-- Optionally create: `src/actions/boarding.ts` (verify encrypted token if needed)
-
----
-
-### Sprint 9 — DataTable Migration Cleanup
-
-**Status:** pending
-
-**Summary:** Sprint 2 migrated 13 of 16 table-based features to shared DataTable. 2 remain on raw `<Table>` + 1 intentionally kept custom. Migrate the 2 remaining tables for consistency.
-
-**Not migrated (leftovers from Sprint 2):**
-1. `admin/payment-items` — uses raw shadcn `<Table>` with PaymentItemDialog/PaymentItemForm
-2. `students/[id]/documents` — uses raw `<Table>` with document upload form, DocumentUploadForm
-3. `StudentAcademicClient` attitude table — intentionally kept custom 2-column layout (skip)
-
-**Plan:**
-- [ ] Migrate `admin/payment-items page.tsx` — convert raw `<Table>` to DataTable with `STATUS_LABELS`, `formatCurrency`, `ActionCell`
-- [ ] Migrate `students/[id]/documents page.tsx` — convert raw `<Table>` to DataTable
-- [ ] Verify both pages use shared formatters (`formatCurrency`, `STATUS_LABELS` etc.)
-- [ ] Ensure server-rendered pages still work (payment-items = server component, documents = server component)
-- [ ] Verify build passes
-
-**Files to touch:**
-- Modify: `src/app/(app)/admin/payment-items/page.tsx`
-- Modify: `src/app/(app)/students/[id]/documents/page.tsx`
-- Optionally create: `src/features/payments/PaymentItemsClient.tsx` (if extracting to client component)
-- Optionally create: `src/features/students/DocumentsClient.tsx`
-
----
-
 ### Blocked — Attendance Module
 
 **Status:** pending client requirements
@@ -213,6 +156,9 @@ No implementation until client confirms requirements. Add to active sprints when
 - [ ] Wire teacher "tugas belum dinilai" → real grades pending count
 - [ ] Wire teacher class average chart → real grade averages per class
 - [ ] Wire teacher activity feed → real recent actions (grading, attendance)
+- [ ] Fix Pembayaran card link: change href from `/finance` to `/payments` for roleLevel < 80 (siswa gets blocked)
+- [ ] Reorder dashboard layout: quick menu cards (Profil Saya, Pembayaran, Pengumuman) after stat cards, before charts
+- [ ] Replace admin/teacher activity feed: use calendar events in timeline format, limit to 20 items
 - [ ] Verify all 3 role dashboards (admin/guru/siswa) show real data end-to-end
 
 ---
@@ -265,6 +211,8 @@ No implementation until client confirms requirements. Add to active sprints when
 - [ ] Replace manual `<a href>` "Batal" buttons with `Button variant="outline" type="reset"` or `router.back()`
 - [ ] Standardize form label spacing (`space-y-2` across all forms)
 - [ ] Apply same `PageShell` pattern to `/admin/*` (Users, Approvals, Payment Items) for consistency
+- [ ] Fix admin double titles: PageShell title + client component header both visible on users/approvals pages
+- [ ] Standardize DataTable wrapper: all tables follow Finance pattern (no extra Card wrapper), not the old `rounded-md border bg-card`
 - [ ] Verify build passes
 - [ ] Visual inspection: all academic pages render with identical chrome
 
@@ -310,6 +258,92 @@ GET /dashboard 307
 - Modify: `src/features/admin/AdminUsersClient.tsx`
 
 ---
+
+## Pending Tasks Block
+
+### Sprint 8 — Boarding Page (Post-Registration Onboarding)
+
+**Status:** pending
+
+**Source:** Client clarification (2026-06-13) — "Boarding" is NOT asrama/dormitory. Old PHP system (`AuthController.php:42-59` + `boarding.blade.php`): after student self-registration, redirect to `/auth/boarding?rid=<encrypted>` showing:
+- "Pendaftaran Berhasil" (Registration Successful)
+- Registered email displayed
+- NISN = initial password instruction
+- CTA: "Kembali ke halaman Utama"
+
+**Current state:** `BoardingClient.tsx` has wrong title "Asrama" and desc "Kelola data asrama dan kamar". Placeholder shows "Modul Asrama — dalam pengembangan". Wrong label completely.
+
+**Scope:** Static page, no CRUD needed. Single-use success/confirmation display.
+
+**Plan:**
+- [ ] Create encrypted token verification pattern (or simple success page with user ID param)
+- [ ] Fix `BoardingClient.tsx` — title "Pendaftaran Berhasil", remove all "Asrama" references
+- [ ] Show registered user email from session/params
+- [ ] Show login instructions: "Gunakan NISN sebagai kata sandi untuk login pertama"
+- [ ] Add CTA button: "Kembali ke Halaman Login" → `/login`
+- [ ] Route: keep at `/boarding` or move to `/auth/boarding`? Clarify with client
+- [ ] Permission: `boarding.{r}` exists in AGENTS.md — no action needed for static page
+- [ ] Verify build passes
+
+**Files to touch:**
+- Modify: `src/features/boarding/BoardingClient.tsx`
+- Modify: `src/app/(app)/boarding/page.tsx`
+- Optionally create: `src/actions/boarding.ts` (verify encrypted token if needed)
+
+---
+
+### Sprint 9 — DataTable Migration Cleanup
+
+**Status:** pending
+
+**Summary:** Sprint 2 migrated 13 of 16 table-based features to shared DataTable. 2 remain on raw `<Table>` + 1 intentionally kept custom. Migrate the 2 remaining tables for consistency.
+
+**Not migrated (leftovers from Sprint 2):**
+1. `admin/payment-items` — uses raw shadcn `<Table>` with PaymentItemDialog/PaymentItemForm
+2. `students/[id]/documents` — uses raw `<Table>` with document upload form, DocumentUploadForm
+3. `StudentAcademicClient` attitude table — intentionally kept custom 2-column layout (skip)
+
+**Plan:**
+- [ ] Migrate `admin/payment-items page.tsx` — convert raw `<Table>` to DataTable with `STATUS_LABELS`, `formatCurrency`, `ActionCell`
+- [ ] Migrate `students/[id]/documents page.tsx` — convert raw `<Table>` to DataTable
+- [ ] Verify both pages use shared formatters (`formatCurrency`, `STATUS_LABELS` etc.)
+- [ ] Ensure server-rendered pages still work (payment-items = server component, documents = server component)
+- [ ] Add CRUD UI to Katalog Bayar (`/payments/catalog`): create/edit/delete buttons for admin
+- [ ] Fix transcript (`/alumni/transcript`): page gate only allows alumni (level 20), fix sidebar `maxLevel: 40` → `maxLevel: 20`
+- [ ] Verify build passes
+
+**Files to touch:**
+- Modify: `src/app/(app)/admin/payment-items/page.tsx`
+- Modify: `src/app/(app)/students/[id]/documents/page.tsx`
+- Modify: `src/app/(app)/alumni/transcript/page.tsx` (page gate)
+- Modify: `src/features/layout/app-sidebar.tsx` (sidebar maxLevel)
+- Optionally create: `src/features/payments/PaymentItemsClient.tsx` (if extracting to client component)
+- Optionally create: `src/features/students/DocumentsClient.tsx`
+
+---
+
+### Sprint 10 — UI Infra & Polish
+
+**Status:** pending
+
+**Summary:** Multiple UI infrastructure gaps found during QA: no toast notification system adopted, notifications/announcements page dead, search bars placeholder-only, avatar white-on-white invisible.
+
+**Bugs found:**
+
+1. **Toast/alert system not adopted** — `ToastProvider` exists and wraps app in layout, but 6+ components still use `alert()` for errors. `AdminUsersClient.tsx:96`, `createStaffAccount`, and several other actions call `alert()` instead of toast.
+
+2. **Notifications/announcements page dead** — `/announcements` page exists in sidebar but renders empty or placeholder content. `getRecentAnnouncements()` returns real data but page UI may be incomplete.
+
+3. **Search bars placeholder-only** — Sidebar search input (`Cari menu...`) does not filter nav items. DataTable search works (`Cari name...`, `Cari nama...`) but sidebar search is decorative.
+
+4. **Avatar white-on-white** — `profile-dropdown.tsx:17` uses `bg-slate-100` (light gray) with user initial letter. If the initial is in a light color (white, light gray), the letter becomes invisible against the light background.
+
+**Plan:**
+- [ ] Adopt toast: replace `alert()` calls in server actions + client components with existing ToastProvider
+- [ ] Fix announcements page: verify it renders real announcement data, not placeholder
+- [ ] Wire sidebar search: implement nav filtering when user types in `Cari menu...`
+- [ ] Fix avatar contrast: add dark text color or dynamic bg color based on initial letter
+- [ ] Verify build passes 
 
 ## Archived Goals
 
