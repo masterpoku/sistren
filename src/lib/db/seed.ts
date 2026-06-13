@@ -20,8 +20,10 @@ import {
   religions,
   rolePermissions,
   roles,
+  systemConfigs,
   users,
 } from "./schema";
+import { SYSTEM_CONFIG_KEYS } from "./system-config-keys";
 
 const religionNames = [
   "Islam",
@@ -56,6 +58,7 @@ async function seed() {
 
   await seedReligions();
   await seedCalendarEvents();
+  await seedSystemConfigs();
 
   console.log("\n--- Seeding roles ---");
   const roleMap: Record<string, number> = {};
@@ -272,6 +275,95 @@ async function seed() {
   }
 
   console.log("\n🎉 Seed completed");
+}
+
+async function seedSystemConfigs() {
+  console.log("\n--- Seeding system configs ---");
+
+  const configs: Array<{ key: string; value: string; description: string }> = [
+    {
+      key: SYSTEM_CONFIG_KEYS.SCHOOL_NAME,
+      value: "SMK Terpadu",
+      description: "Nama resmi sekolah",
+    },
+    {
+      key: SYSTEM_CONFIG_KEYS.SCHOOL_ADDRESS,
+      value: "Jl. Pendidikan No. 1, Kota",
+      description: "Alamat lengkap sekolah",
+    },
+    {
+      key: SYSTEM_CONFIG_KEYS.HEADMASTER,
+      value: "Drs. Kepala Sekolah",
+      description: "Nama kepala sekolah aktif",
+    },
+    {
+      key: SYSTEM_CONFIG_KEYS.NPSN,
+      value: "12345678",
+      description: "Nomor Pokok Sekolah Nasional",
+    },
+    {
+      key: SYSTEM_CONFIG_KEYS.NSS,
+      value: "123456789012",
+      description: "Nomor Statistik Sekolah",
+    },
+    {
+      key: SYSTEM_CONFIG_KEYS.ACADEMIC_YEAR,
+      value: "2025/2026",
+      description: "Tahun ajaran aktif",
+    },
+    {
+      key: SYSTEM_CONFIG_KEYS.SPP_DEFAULT_AMOUNT,
+      value: "250000",
+      description: "Nominal SPP default per bulan (rupiah)",
+    },
+    {
+      key: SYSTEM_CONFIG_KEYS.SPP_DUE_DAY,
+      value: "10",
+      description: "Tanggal jatuh tempo SPP (1-31)",
+    },
+    {
+      key: SYSTEM_CONFIG_KEYS.PAYMENT_GRACE_DAYS,
+      value: "7",
+      description: "Toleransi keterlambatan (hari)",
+    },
+    {
+      key: SYSTEM_CONFIG_KEYS.MIN_SCORE,
+      value: "0",
+      description: "Nilai minimum",
+    },
+    {
+      key: SYSTEM_CONFIG_KEYS.MAX_SCORE,
+      value: "100",
+      description: "Nilai maksimum",
+    },
+    {
+      key: SYSTEM_CONFIG_KEYS.PASSING_SCORE,
+      value: "75",
+      description: "Nilai minimum kelulusan",
+    },
+  ];
+
+  for (const c of configs) {
+    const [existing] = await db
+      .select({ id: systemConfigs.id })
+      .from(systemConfigs)
+      .where(
+        and(eq(systemConfigs.key, c.key), isNull(systemConfigs.deletedAt))
+      )
+      .limit(1);
+
+    if (existing) {
+      console.log(`⏭️  Config '${c.key}' already exists`);
+      continue;
+    }
+
+    await db.insert(systemConfigs).values({
+      key: c.key,
+      value: c.value,
+      description: c.description,
+    });
+    console.log(`✅ Seeded config: ${c.key}`);
+  }
 }
 
 async function seedCalendarEvents() {

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SYSTEM_CONFIG_KEYS } from "@/lib/db/system-config-keys";
 
 interface SchoolSettingsFormProps {
   schoolName: string;
@@ -28,17 +29,22 @@ export function SchoolSettingsForm({
 
   function handleSubmit(formData: FormData) {
     const data: Record<string, string> = {};
-    const schoolNameVal = formData.get("schoolName") as string;
-    const schoolAddressVal = formData.get("schoolAddress") as string;
-    const headmasterVal = formData.get("headmaster") as string;
-    const npsnVal = formData.get("npsn") as string;
-    const nssVal = formData.get("nss") as string;
+    const schoolNameVal = formData.get(SYSTEM_CONFIG_KEYS.SCHOOL_NAME) as string;
+    const schoolAddressVal = formData.get(
+      SYSTEM_CONFIG_KEYS.SCHOOL_ADDRESS
+    ) as string;
+    const headmasterVal = formData.get(
+      SYSTEM_CONFIG_KEYS.HEADMASTER
+    ) as string;
+    const npsnVal = formData.get(SYSTEM_CONFIG_KEYS.NPSN) as string;
+    const nssVal = formData.get(SYSTEM_CONFIG_KEYS.NSS) as string;
 
-    if (schoolNameVal) data.schoolName = schoolNameVal;
-    if (schoolAddressVal) data.schoolAddress = schoolAddressVal;
-    if (headmasterVal) data.headmaster = headmasterVal;
-    if (npsnVal) data.npsn = npsnVal;
-    if (nssVal) data.nss = nssVal;
+    if (schoolNameVal) data[SYSTEM_CONFIG_KEYS.SCHOOL_NAME] = schoolNameVal;
+    if (schoolAddressVal)
+      data[SYSTEM_CONFIG_KEYS.SCHOOL_ADDRESS] = schoolAddressVal;
+    if (headmasterVal) data[SYSTEM_CONFIG_KEYS.HEADMASTER] = headmasterVal;
+    if (npsnVal) data[SYSTEM_CONFIG_KEYS.NPSN] = npsnVal;
+    if (nssVal) data[SYSTEM_CONFIG_KEYS.NSS] = nssVal;
 
     startTransition(async () => {
       setStatus("idle");
@@ -65,38 +71,42 @@ export function SchoolSettingsForm({
         <form action={handleSubmit} className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="schoolName">Nama Sekolah</Label>
+              <Label htmlFor={SYSTEM_CONFIG_KEYS.SCHOOL_NAME}>
+                Nama Sekolah
+              </Label>
               <Input
-                id="schoolName"
-                name="schoolName"
+                id={SYSTEM_CONFIG_KEYS.SCHOOL_NAME}
+                name={SYSTEM_CONFIG_KEYS.SCHOOL_NAME}
                 defaultValue={schoolName}
                 placeholder="SMK Terpadu"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="headmaster">Nama Kepala Sekolah</Label>
+              <Label htmlFor={SYSTEM_CONFIG_KEYS.HEADMASTER}>
+                Nama Kepala Sekolah
+              </Label>
               <Input
-                id="headmaster"
-                name="headmaster"
+                id={SYSTEM_CONFIG_KEYS.HEADMASTER}
+                name={SYSTEM_CONFIG_KEYS.HEADMASTER}
                 defaultValue={headmaster}
                 placeholder="Nama lengkap"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="npsn">NPSN</Label>
+              <Label htmlFor={SYSTEM_CONFIG_KEYS.NPSN}>NPSN</Label>
               <Input
-                id="npsn"
-                name="npsn"
+                id={SYSTEM_CONFIG_KEYS.NPSN}
+                name={SYSTEM_CONFIG_KEYS.NPSN}
                 defaultValue={npsn}
                 placeholder="8 digit angka"
                 maxLength={8}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="nss">NSS</Label>
+              <Label htmlFor={SYSTEM_CONFIG_KEYS.NSS}>NSS</Label>
               <Input
-                id="nss"
-                name="nss"
+                id={SYSTEM_CONFIG_KEYS.NSS}
+                name={SYSTEM_CONFIG_KEYS.NSS}
                 defaultValue={nss}
                 placeholder="12 digit angka (opsional)"
                 maxLength={12}
@@ -104,10 +114,12 @@ export function SchoolSettingsForm({
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="schoolAddress">Alamat Sekolah</Label>
+            <Label htmlFor={SYSTEM_CONFIG_KEYS.SCHOOL_ADDRESS}>
+              Alamat Sekolah
+            </Label>
             <Input
-              id="schoolAddress"
-              name="schoolAddress"
+              id={SYSTEM_CONFIG_KEYS.SCHOOL_ADDRESS}
+              name={SYSTEM_CONFIG_KEYS.SCHOOL_ADDRESS}
               defaultValue={schoolAddress}
               placeholder="Alamat lengkap"
             />

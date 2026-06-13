@@ -1,6 +1,8 @@
 import { getSchoolSettings } from "@/actions/settings";
+import { PageShell } from "@/components/ui/page-shell";
 import { SchoolSettingsForm } from "@/features/settings/SchoolSettingsForm";
 import { verifyRoleLevel } from "@/lib/auth/verify-session";
+import { SYSTEM_CONFIG_KEYS } from "@/lib/db/system-config-keys";
 
 export default async function SchoolSettingsPage() {
   await verifyRoleLevel(80);
@@ -10,21 +12,17 @@ export default async function SchoolSettingsPage() {
     settings.find((s) => s.key === key)?.value ?? fallback;
 
   return (
-    <div className="flex flex-col gap-6 p-4 md:p-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">
-          Pengaturan Sekolah
-        </h1>
-        <p className="text-muted-foreground">Kelola informasi dasar sekolah.</p>
-      </div>
-
+    <PageShell
+      title="Pengaturan Sekolah"
+      description="Kelola informasi dasar sekolah."
+    >
       <SchoolSettingsForm
-        schoolName={getSetting("school_name")}
-        schoolAddress={getSetting("school_address")}
-        headmaster={getSetting("headmaster")}
-        npsn={getSetting("npsn")}
-        nss={getSetting("nss")}
+        schoolName={getSetting(SYSTEM_CONFIG_KEYS.SCHOOL_NAME)}
+        schoolAddress={getSetting(SYSTEM_CONFIG_KEYS.SCHOOL_ADDRESS)}
+        headmaster={getSetting(SYSTEM_CONFIG_KEYS.HEADMASTER)}
+        npsn={getSetting(SYSTEM_CONFIG_KEYS.NPSN)}
+        nss={getSetting(SYSTEM_CONFIG_KEYS.NSS)}
       />
-    </div>
+    </PageShell>
   );
 }

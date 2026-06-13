@@ -67,6 +67,7 @@ const navItems: NavItem[] = [
   },
   { title: "Roles", href: "/roles", icon: Shield, minLevel: 100 },
   { title: "Permissions", href: "/permissions", icon: Gear, minLevel: 100 },
+  { title: "Pengaturan", href: "/settings/system", icon: Gear, minLevel: 100 },
 ];
 
 interface AppSidebarProps {

@@ -70,6 +70,8 @@ export const ROUTE_PERMISSIONS: Record<string, string> = {
 
   // System Config
   "/settings": "system_configs.manage",
+  "/settings/school": "system_configs.manage",
+  "/settings/system": "system_configs.manage",
   "/system-configs": "system_configs.manage",
 
   // Profile (own profile is always accessible, edit_own)
@@ -111,6 +113,8 @@ export const ROLE_LEVEL_REQUIREMENTS: Record<string, number> = {
   "/admin/users": 80, // administrator minimum
   "/permissions": 100, // superadmin only
   "/settings": 100, // superadmin only
+  "/settings/school": 80, // administrator minimum
+  "/settings/system": 100, // superadmin only
   "/system-configs": 100, // superadmin only
   "/calendar": 40,
 };
