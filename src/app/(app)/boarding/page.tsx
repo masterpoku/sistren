@@ -1,7 +1,7 @@
 import { BoardingClient } from "@/features/boarding/BoardingClient";
-import { verifyRoleLevel } from "@/lib/auth/verify-session";
+import { verifySession } from "@/lib/auth/verify-session";
 
 export default async function BoardingPage() {
-  await verifyRoleLevel(80);
-  return <BoardingClient />;
+  const { email, name } = await verifySession();
+  return <BoardingClient email={email} name={name} />;
 }
