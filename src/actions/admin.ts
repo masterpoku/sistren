@@ -2,7 +2,6 @@
 
 import { and, eq, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { verifyRoleLevel } from "@/lib/auth/verify-session";
 import { db } from "@/lib/db";
@@ -90,14 +89,23 @@ export async function createStaffAccount(formData: FormData) {
     await db.transaction(async (tx) => {
       const result = await auth.api.signUpEmail({
         body: { email, password, name },
-        headers: await headers(),
+        asResponse: true,
       });
-      const userId = ("id" in result ? result.id : result.user.id) as string;
+      void result;
+      const [created] = await tx
+        .select({ id: users.id })
+        .from(users)
+        .where(eq(users.email, email))
+        .limit(1);
+      if (!created) {
+        throw new Error("User creation failed");
+      }
       await tx
         .update(users)
         .set({ roleId, emailVerified: true })
-        .where(eq(users.id, userId));
+        .where(eq(users.id, created.id));
     });
+    revalidatePath("/admin/users");
     return { success: true };
   } catch (err: unknown) {
     if (

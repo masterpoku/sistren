@@ -19,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 
 type User = {
   id: string;
@@ -87,30 +88,23 @@ interface AdminUsersClientProps {
 
 export function AdminUsersClient({ data }: AdminUsersClientProps) {
   const router = useRouter();
+  const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
 
   function handleCreate(formData: FormData) {
     startTransition(async () => {
       const result = await createStaffAccount(formData);
       if (result && "error" in result) {
-        alert(result.error);
+        toast({ variant: "destructive", description: result.error });
       } else {
+        toast({ description: "Akun berhasil dibuat." });
         router.refresh();
       }
     });
   }
 
   return (
-    <div className="flex flex-col gap-6 p-4 md:p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Kelola Pengguna</h1>
-          <p className="text-muted-foreground">
-            Buat dan kelola akun staff (guru, administrator).
-          </p>
-        </div>
-      </div>
-
+    <div className="flex flex-col gap-6">
       <Card>
         <CardHeader>
           <CardTitle>Tambah Pengguna Baru</CardTitle>
