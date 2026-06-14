@@ -3,7 +3,7 @@
 import { and, eq, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { verifyRoleLevel } from "@/lib/auth/verify-session";
+import { verifyRoleLevel, verifySession } from "@/lib/auth/verify-session";
 import { db } from "@/lib/db";
 import {
   classes,
@@ -374,7 +374,7 @@ export async function deleteSubject(subjectId: string) {
 // Semesters CRUD
 
 export async function getSemesters() {
-  await verifyRoleLevel(60);
+  await verifySession();
   return db
     .select()
     .from(semesters)
