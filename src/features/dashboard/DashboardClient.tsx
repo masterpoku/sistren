@@ -124,6 +124,116 @@ function relativeTime(date: Date | string | null): string {
   return DATE_FORMATTER.format(d);
 }
 
+function QuickMenu({ roleLevel }: { roleLevel: number }) {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <Card className="hover:shadow-md transition-shadow">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <User className="h-4 w-4" /> Profil Saya
+          </CardTitle>
+          <CardDescription>Kelola data pribadi</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Link href="/profile">
+            <Button variant="outline" size="sm" className="w-full">
+              Buka
+            </Button>
+          </Link>
+        </CardContent>
+      </Card>
+
+      {(roleLevel === 40 || roleLevel >= 80) && (
+        <Card className="hover:shadow-md transition-shadow">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Wallet className="h-4 w-4" /> Pembayaran
+            </CardTitle>
+            <CardDescription>Riwayat &amp; status SPP</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Link href={roleLevel === 40 ? "/payments" : "/finance"}>
+              <Button variant="outline" size="sm" className="w-full">
+                Buka
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      )}
+
+      <Card className="hover:shadow-md transition-shadow">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <Bell className="h-4 w-4" /> Pengumuman
+          </CardTitle>
+          <CardDescription>Info &amp; pengumuman</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Link href="/announcements">
+            <Button variant="outline" size="sm" className="w-full">
+              Buka
+            </Button>
+          </Link>
+        </CardContent>
+      </Card>
+
+      {roleLevel >= 60 && (
+        <Card className="hover:shadow-md transition-shadow">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <GraduationCap className="h-4 w-4" /> Akademik
+            </CardTitle>
+            <CardDescription>Kelas, jurusan, mapel</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Link href="/academic">
+              <Button variant="outline" size="sm" className="w-full">
+                Buka
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      )}
+
+      {roleLevel >= 60 && (
+        <Card className="hover:shadow-md transition-shadow">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Student className="h-4 w-4" /> Siswa
+            </CardTitle>
+            <CardDescription>Data siswa</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Link href="/students">
+              <Button variant="outline" size="sm" className="w-full">
+                Buka
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      )}
+
+      {roleLevel >= 80 && (
+        <Card className="hover:shadow-md transition-shadow">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Users className="h-4 w-4" /> Guru
+            </CardTitle>
+            <CardDescription>Data guru</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Link href="/teachers">
+              <Button variant="outline" size="sm" className="w-full">
+                Buka
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
+
 function formatTime(date: Date | string): string {
   const d = typeof date === "string" ? new Date(date) : date;
   return d.toLocaleTimeString("id-ID", {
@@ -391,7 +501,7 @@ export function DashboardClient({
               <CardContent>
                 {recentActivities.length > 0 ? (
                   <div className="space-y-4">
-                    {recentActivities.slice(0, 4).map((a) => (
+                    {recentActivities.slice(0, 20).map((a) => (
                       <div key={a.id} className="flex items-center gap-4">
                         <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100">
                           <Bell className="h-4 w-4" />
@@ -495,7 +605,7 @@ export function DashboardClient({
               <CardContent>
                 {recentActivities.length > 0 ? (
                   <div className="space-y-4">
-                    {recentActivities.slice(0, 3).map((a) => (
+                    {recentActivities.slice(0, 20).map((a) => (
                       <div key={a.id} className="flex items-center gap-4">
                         <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100">
                           <Bell className="h-4 w-4" />
@@ -524,111 +634,7 @@ export function DashboardClient({
         </>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="hover:shadow-md transition-shadow">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <User className="h-4 w-4" /> Profil Saya
-            </CardTitle>
-            <CardDescription>Kelola data pribadi</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Link href="/profile">
-              <Button variant="outline" size="sm" className="w-full">
-                Buka
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-
-        {(roleLevel === 40 || roleLevel >= 80) && (
-          <Card className="hover:shadow-md transition-shadow">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Wallet className="h-4 w-4" /> Pembayaran
-              </CardTitle>
-              <CardDescription>Riwayat &amp; status SPP</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Link href="/finance">
-                <Button variant="outline" size="sm" className="w-full">
-                  Buka
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        )}
-
-        <Card className="hover:shadow-md transition-shadow">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Bell className="h-4 w-4" /> Pengumuman
-            </CardTitle>
-            <CardDescription>Info &amp; pengumuman</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Link href="/announcements">
-              <Button variant="outline" size="sm" className="w-full">
-                Buka
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-
-        {roleLevel >= 60 && (
-          <Card className="hover:shadow-md transition-shadow">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <GraduationCap className="h-4 w-4" /> Akademik
-              </CardTitle>
-              <CardDescription>Kelas, jurusan, mapel</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Link href="/academic">
-                <Button variant="outline" size="sm" className="w-full">
-                  Buka
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        )}
-
-        {roleLevel >= 60 && (
-          <Card className="hover:shadow-md transition-shadow">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Student className="h-4 w-4" /> Siswa
-              </CardTitle>
-              <CardDescription>Data siswa</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Link href="/students">
-                <Button variant="outline" size="sm" className="w-full">
-                  Buka
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        )}
-
-        {roleLevel >= 80 && (
-          <Card className="hover:shadow-md transition-shadow">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Users className="h-4 w-4" /> Guru
-              </CardTitle>
-              <CardDescription>Data guru</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Link href="/teachers">
-                <Button variant="outline" size="sm" className="w-full">
-                  Buka
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+      <QuickMenu roleLevel={roleLevel} />
 
       {recentAnnouncements.length > 0 && (
         <Card>

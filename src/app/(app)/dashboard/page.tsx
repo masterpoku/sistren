@@ -94,7 +94,7 @@ export default async function DashboardPage() {
     };
 
     registrationStats = await getRegistrationStatsByMonth(6);
-    recentActivities = await getRecentActivities(8);
+    recentActivities = await getRecentActivities(20);
   } else if (roleLevel === 60) {
     const activeSemester = await db
       .select({ id: semesters.id })
@@ -134,7 +134,7 @@ export default async function DashboardPage() {
     teacherClassAverages = await getTeacherClassAverages(userId);
     sessionsToday = await getTeacherSessionsToday(userId);
     pendingGrading = await getTeacherPendingGradingCount(userId);
-    recentActivities = await getRecentActivities(5);
+    recentActivities = await getRecentActivities(20);
   } else if (roleLevel === 40) {
     const [enrollmentRow] = await db
       .select({ status: enrollments.status })
