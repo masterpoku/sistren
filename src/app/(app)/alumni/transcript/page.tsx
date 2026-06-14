@@ -7,7 +7,7 @@ import { verifySession } from "@/lib/auth/verify-session";
 export default async function AlumniTranscriptPage() {
   const session = await verifySession();
   const ctx = await getAuthContext(session.userId);
-  if (!ctx || ctx.roleLevel > 40) {
+  if (!ctx || ctx.roleLevel !== 20) {
     redirect("/dashboard");
   }
 

@@ -63,7 +63,7 @@ const navItems: NavItem[] = [
     href: "/alumni/transcript",
     icon: Scroll,
     minLevel: 20,
-    maxLevel: 40,
+    maxLevel: 20,
   },
   { title: "Roles", href: "/roles", icon: Shield, minLevel: 100 },
   { title: "Permissions", href: "/permissions", icon: Gear, minLevel: 100 },
