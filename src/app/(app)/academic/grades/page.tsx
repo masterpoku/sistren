@@ -1,4 +1,5 @@
 import { getClasses, getSemesters, getSubjects } from "@/actions/academic";
+import { PageShell } from "@/components/ui/page-shell";
 import { GradesClient } from "@/features/academic/GradesClient";
 import { getAuthContext } from "@/lib/auth/permissions";
 import { verifySession } from "@/lib/auth/verify-session";
@@ -25,14 +26,10 @@ export default async function GradesPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-4 md:p-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Input Nilai</h1>
-        <p className="text-muted-foreground">
-          Kelola nilai pengetahuan, keterampilan, dan sikap siswa.
-        </p>
-      </div>
-
+    <PageShell
+      title="Input Nilai"
+      description="Kelola nilai pengetahuan, keterampilan, dan sikap siswa."
+    >
       <GradesClient
         classes={classList}
         subjects={subjectList}
@@ -40,6 +37,6 @@ export default async function GradesPage() {
         roleLevel={roleLevel}
         assignedSubjectIds={assignedSubjectIds}
       />
-    </div>
+    </PageShell>
   );
 }
