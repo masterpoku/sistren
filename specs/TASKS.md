@@ -2,7 +2,7 @@
 
 > Append-only cross-session goal tracker. Add new goals, never delete old ones.
 > Archive completed goals by moving to an "## Archived" section.
-> Last updated: 2026-06-14 — Sprints 1, 3, 6, 7, 8, 9 executed and archived (system configs seed, createStaffAccount session fix, boarding success page, dashboard wiring+layout, page chrome unification, DataTable migration cleanup). Sprint 10 still pending (UI infra & polish). Attendance still blocked on client input.
+> Last updated: 2026-06-14 — Sprints 1, 3, 6, 7, 8, 9 executed and archived (system configs seed, createStaffAccount session fix, boarding success page, dashboard wiring+layout, page chrome unification, DataTable migration cleanup). Sprint 10 still pending (UI infra & polish). Attendance still blocked on client input. QA sweep 2026-06-14 added (Sprint 11) — 2 blockers fixed same day, 1 build break + 5 minor issues remain for follow-up.
 
 ---
 
@@ -343,9 +343,68 @@ GET /dashboard 307
 - [ ] Fix announcements page: verify it renders real announcement data, not placeholder
 - [ ] Wire sidebar search: implement nav filtering when user types in `Cari menu...`
 - [ ] Fix avatar contrast: add dark text color or dynamic bg color based on initial letter
-- [ ] Verify build passes 
+- [ ] Verify build passes
+
+
+---
+
+### Sprint 11 — QA Sweep (Multi-Role Auth + Schema Drift)
+
+**Status:** pending (2 blockers FIXED same day, follow-ups remain)
+
+**Source:** Full QA sweep across 5 roles (superadmin, admin, guru, siswa, alumni) using Firefox devtools on 2026-06-14.
+
+**FIXED same day (2026-06-14):**
+
+**1. Guru dashboard 500 — DB schema drift**
+- Error: `Unknown column 'grades.teacher_id' in 'WHERE'` at `src/actions/dashboard.ts:269` (`getTeacherClassAverages`)
+- Root cause: Drizzle migration `0001_glorious_exodus.sql` (Sprint G — Calendar) was generated but never pushed to MariaDB. `__drizzle_migrations` table is empty (DB was created via `db:push` originally, not migrate).
+- Fix: applied the migration SQL directly: `ALTER TABLE grades ADD teacher_id varchar(36) NOT NULL` + FK to `users.id`.
+- Files touched: `src/actions/dashboard.ts` (no code change, just gained functional column), DB schema synced.
+
+**2. Siswa "Katalog Bayar" sidebar link → Akses Ditolak**
+- Root cause: `src/actions/academic.ts:getSemesters()` had `verifyRoleLevel(60)` (guru minimum). `/payments/catalog` page calls `getSemesters()` for the semester dropdown. Siswa (level 40) gets bounced to /unauthorized.
+- Fix: `verifyRoleLevel(60)` → `verifySession()` in `getSemesters()`. Read-only operation, no role gate needed. Added `verifySession` to import.
+- Files touched: `src/actions/academic.ts` (2 lines).
+
+**REMAINING (to resolve next session):**
+
+**3. `bun run build` fails — pre-existing TypeScript error (BLOCKS SHIP)**
+- Error: `src/features/payments/PaymentItemsClient.tsx:66:10 — 'isPending' is declared but its value is never read.`
+- Sprint 9 debt. Either remove the unused destructure (`const [, startTransition] = useTransition()`) or actually wire `isPending` to a button's `disabled`.
+
+**4. Alumni can access /calendar (minLevel 40 leak)**
+- `/calendar` has `minLevel: 40` in `ROLE_LEVEL_REQUIREMENTS`, alumni has level 20, but page loads. Alumni sidebar shows "PORTAL ALUMNI" branding, suggesting they should be in a separate portal entirely. Either alumni should have NO access to sistren routes, or level in DB is wrong (verify `users.roleId` for `alumni@sister.com`).
+
+**5. /settings returns 404**
+- Only `/settings/school` and `/settings/system` exist. Direct URL hit to `/settings` 404s. Sidebar already points to `/settings/system` (correct), but consider adding `/settings/page.tsx` as an index/redirect.
+
+**6. /enrollments missing h1 title (chrome inconsistency)**
+- Page renders cards ("Bulk Enrollment", "Tambah Pendaftaran") but no h1. Sprint 6 missed this page. Apply `PageShell` pattern.
+
+**7. /attendance placeholder body still empty**
+- h1 + description render but body is empty. Blocked on client spec (TASKS top). Re-confirm blocking.
+
+**8. /alumni/transcript silent redirect (no Akses Ditolak UX)**
+- Non-alumni visiting `/alumni/transcript` get silently bounced to /dashboard via `redirect("/dashboard")`. No error message. Consider replacing with `redirect("/unauthorized")` for clearer UX.
+
+**9. Cosmetic — favicon.ico 404 (23× in network log)**
+- Pre-existing. Add `/public/favicon.ico` or set a proper icon.
+
+**Plan (next session):**
+
+- [ ] Fix PaymentItemsClient.tsx:66 TypeScript error (blocker for build)
+- [ ] Verify `bun run build` passes clean (all 35 routes)
+- [ ] Decide alumni portal isolation: redirect all sistren route hits from alumni to /portal-alumni OR raise alumni level to 40 OR fix proxy
+
+**Files to touch:**
+- Modify: `src/features/payments/PaymentItemsClient.tsx` (TS fix)
+- Optionally: `src/app/(app)/settings/page.tsx` (new index), `src/app/(app)/enrollments/page.tsx` (PageShell), `src/app/(app)/alumni/transcript/page.tsx` (UX), `src/proxy.ts` (alumni isolation)
+
+---
 
 ## Archived Goals
+
 
 ### Sprint 1 — Settings Pages (System Configs Key-Value Management)
 
