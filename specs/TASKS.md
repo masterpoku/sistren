@@ -2,7 +2,7 @@
 
 > Append-only cross-session goal tracker. Add new goals, never delete old ones.
 > Archive completed goals by moving to an "## Archived" section.
-> Last updated: 2026-06-13 — Sprints 2-6 archived (DataTable migration, layout polish, page chrome audit, redirect loop); Sprint 7 queued (page chrome unification); Sprints 8-9 added (Boarding page, DataTable migration cleanup); Attendance blocked on client input.
+> Last updated: 2026-06-14 — Sprints 1, 3, 6, 7, 8, 9 executed and archived (system configs seed, createStaffAccount session fix, boarding success page, dashboard wiring+layout, page chrome unification, DataTable migration cleanup). Sprint 10 still pending (UI infra & polish). Attendance still blocked on client input.
 
 ---
 
@@ -346,6 +346,75 @@ GET /dashboard 307
 - [ ] Verify build passes 
 
 ## Archived Goals
+
+### Sprint 1 — Settings Pages (System Configs Key-Value Management)
+
+**Status:** completed
+
+**Date:** 2026-06-14
+
+**Summary:** All 13 `SYSTEM_CONFIG_KEYS` values now seeded. `getSystemConfigs`, `createSystemConfig`, `deleteSystemConfig` actions exist with role-gating. `SchoolSettingsForm` + `SystemConfigsClient` rendered via `PageShell`. Route `/settings/system` wired with `system_configs.manage` permission (superadmin-only via level 100). Sidebar "Pengaturan" entry points to `/settings/system`. Snake_case key convention enforced via `SYSTEM_CONFIG_KEYS` constants.
+
+**Files:**
+- Modified: `src/lib/db/seed.ts` (added `current_semester_id` entry)
+
+### Sprint 7 — createStaffAccount Redirect Loop Fix
+
+**Status:** completed
+
+**Date:** 2026-06-14
+
+**Summary:** `auth.api.signUpEmail` no longer overwrites the admin's session cookie. Switched to `asResponse: true` (response headers discarded), then look up the new user by email within the same transaction to apply roleId/emailVerified. Added `revalidatePath("/admin/users")` on success. `AdminUsersClient` replaces `alert()` with toast.
+
+**Files:**
+- Modified: `src/actions/admin.ts` (`createStaffAccount`), `src/features/admin/AdminUsersClient.tsx`
+
+### Sprint 8 — Boarding Page (Post-Registration Onboarding)
+
+**Status:** completed
+
+**Date:** 2026-06-14
+
+**Summary:** `BoardingClient` rewritten as registration success page: title "Pendaftaran Berhasil", registered email display, NISN-as-password instruction, "Kembali ke Halaman Login" CTA. `page.tsx` lowered to `verifySession()` (was `verifyRoleLevel(80)` which blocked siswa).
+
+**Note:** Current `register.ts` does `redirect("/login")` after signup, so this page is currently reachable only after first login (when session exists). Wiring `redirect("/boarding")` from register.ts deferred.
+
+**Files:**
+- Modified: `src/features/boarding/BoardingClient.tsx`, `src/app/(app)/boarding/page.tsx`
+
+### Sprint 3 — Dashboard Real Data Wiring
+
+**Status:** completed
+
+**Date:** 2026-06-14
+
+**Summary:** Most chart/feed wiring was already complete from prior commit (ebd8d48). Remaining work: activity feed limit bumped to 20 (server fetch + display slice), Pembayaran card href differentiated (`/payments` for siswa, `/finance` for admin), layout extracted into `QuickMenu` function called after stat cards.
+
+**Files:**
+- Modified: `src/app/(app)/dashboard/page.tsx`, `src/features/dashboard/DashboardClient.tsx`
+
+### Sprint 6 — Academic Page Chrome Unification
+
+**Status:** completed
+
+**Date:** 2026-06-14
+
+**Summary:** Most academic pages already used `PageShell`. `grades/page.tsx` was using custom `<div>+<h1>` chrome — migrated to `PageShell`. Removed double h1 headers from `AdminUsersClient` and `ApprovalsClient` (PageShell already provides title). `admin/payment-items` and `admin/users` already use `PageShell`.
+
+**Files:**
+- Modified: `src/app/(app)/academic/grades/page.tsx`, `src/features/admin/AdminUsersClient.tsx`, `src/features/admin/ApprovalsClient.tsx`
+
+### Sprint 9 — DataTable Migration Cleanup
+
+**Status:** completed
+
+**Date:** 2026-06-14
+
+**Summary:** `admin/payment-items` and `students/[id]/documents` migrated from raw `<Table>` to DataTable via new client components (`PaymentItemsClient`, `DocumentsClient`). Katalog Bayar (`/payments/catalog`) gained admin CRUD via `PaymentItemDialog` + `PaymentItemForm` (admin sees all items, siswa/alumni see active-only). Alumni transcript page gate fixed: `roleLevel > 40` → `roleLevel !== 20`. Sidebar `Transkrip` `maxLevel: 40` → `20`.
+
+**Files:**
+- Modified: `src/app/(app)/admin/payment-items/page.tsx`, `src/app/(app)/students/[id]/documents/page.tsx`, `src/app/(app)/payments/catalog/page.tsx`, `src/app/(app)/alumni/transcript/page.tsx`, `src/features/payments/PaymentCatalogClient.tsx`, `src/features/layout/app-sidebar.tsx`
+- Created: `src/features/payments/PaymentItemsClient.tsx`, `src/features/students/DocumentsClient.tsx`
 
 ### Sprint A — Codebase Cleanup
 
