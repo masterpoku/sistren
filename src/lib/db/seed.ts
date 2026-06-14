@@ -312,6 +312,11 @@ async function seedSystemConfigs() {
       description: "Tahun ajaran aktif",
     },
     {
+      key: SYSTEM_CONFIG_KEYS.CURRENT_SEMESTER_ID,
+      value: "1",
+      description: "ID semester aktif (foreign reference)",
+    },
+    {
       key: SYSTEM_CONFIG_KEYS.SPP_DEFAULT_AMOUNT,
       value: "250000",
       description: "Nominal SPP default per bulan (rupiah)",
