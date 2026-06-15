@@ -2,7 +2,7 @@
 
 > Append-only cross-session goal tracker. Add new goals, never delete old ones.
 > Archive completed goals by moving to an "## Archived" section.
-> Last updated: 2026-06-14 — Sprints 1, 3, 6, 7, 8, 9 executed and archived (system configs seed, createStaffAccount session fix, boarding success page, dashboard wiring+layout, page chrome unification, DataTable migration cleanup). Sprint 10 still pending (UI infra & polish). Attendance still blocked on client input. QA sweep 2026-06-14 added (Sprint 11) — 2 blockers fixed same day, 1 build break + 5 minor issues remain for follow-up.
+> Last updated: 2026-06-15 — Sprints 1, 3, 6, 7, 8, 9 executed and archived. Sprint 10 still pending (UI infra & polish). Attendance still blocked on client input. Sprint 11 updated: 2 blockers fixed 2026-06-14, 7 follow-ups confirmed live 2026-06-15 (1 build blocker, 1 confirmed auth leak, 4 chrome/UX, 1 cosmetic). Sprint 10 debt: 6x alert() still in codebase.
 
 ---
 
@@ -388,18 +388,33 @@ GET /dashboard 307
 **8. /alumni/transcript silent redirect (no Akses Ditolak UX)**
 - Non-alumni visiting `/alumni/transcript` get silently bounced to /dashboard via `redirect("/dashboard")`. No error message. Consider replacing with `redirect("/unauthorized")` for clearer UX.
 
-**9. Cosmetic — favicon.ico 404 (23× in network log)**
-- Pre-existing. Add `/public/favicon.ico` or set a proper icon.
+**9. favicon.ico 404**
+- Confirmed: 6× 404 in network log during live test 2026-06-15. `public/` has `favicon.svg` only. Proxy matcher explicitly excludes `favicon.ico`.
+- Fix: add `/public/favicon.ico`.
+
+**10. `alert()` still in 6 client components (Sprint 10 debt)**
+- Sprint 10 goal was to replace `alert()` with toast. Only `AdminUsersClient.tsx` was fixed.
+- Remaining: `login/page.tsx`, `AssignmentsClient.tsx`, `AnnouncementsClient.tsx:139` (create error), `ProfileClient.tsx`, `StudentFinanceClient.tsx`, `PaymentMethodsClient.tsx`.
 
 **Plan (next session):**
 
-- [ ] Fix PaymentItemsClient.tsx:66 TypeScript error (blocker for build)
+- [ ] Fix `PaymentItemsClient.tsx:66` TypeScript error (build blocker)
 - [ ] Verify `bun run build` passes clean (all 35 routes)
-- [ ] Decide alumni portal isolation: redirect all sistren route hits from alumni to /portal-alumni OR raise alumni level to 40 OR fix proxy
+- [ ] Debug alumni/calendar: add `roleLevel` log in `hasRoleLevel` (proxy.ts), check DB `roles.level` for alumni at runtime, fix seed or `ROLE_ENTRIES` mismatch
+- [ ] Add `/settings` index redirect (`src/app/(app)/settings/page.tsx` → `/settings/system`)
+- [ ] Apply `PageShell` to `/enrollments` page
+- [ ] Replace `redirect("/dashboard")` → `redirect("/unauthorized")` in alumni transcript
+- [ ] Add `favicon.ico` to `/public/`
+- [ ] Replace remaining `alert()` calls with toast (Sprint 10 debt, 6 files)
 
 **Files to touch:**
 - Modify: `src/features/payments/PaymentItemsClient.tsx` (TS fix)
-- Optionally: `src/app/(app)/settings/page.tsx` (new index), `src/app/(app)/enrollments/page.tsx` (PageShell), `src/app/(app)/alumni/transcript/page.tsx` (UX), `src/proxy.ts` (alumni isolation)
+- Modify: `src/app/(app)/settings/page.tsx` (new index redirect)
+- Modify: `src/app/(app)/enrollments/page.tsx` (PageShell)
+- Modify: `src/app/(app)/alumni/transcript/page.tsx` (redirect UX)
+- Modify: `src/proxy.ts` (roleLevel debug log for alumni calendar investigation)
+- Add: `public/favicon.ico`
+- Modify: `src/features/login/LoginForm.tsx`, `src/features/academic/AssignmentsClient.tsx`, `src/features/announcements/AnnouncementsClient.tsx`, `src/features/profile/ProfileClient.tsx`, `src/features/payments/StudentFinanceClient.tsx`, `src/features/payments/PaymentMethodsClient.tsx` (alert → toast)
 
 ---
 
