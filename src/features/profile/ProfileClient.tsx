@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
+import { useToast } from "@/hooks/use-toast";
 import { updateProfile, uploadAvatar } from "@/actions/profile";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -41,13 +42,14 @@ export function ProfileClient({
   sessionEmail,
 }: ProfileClientProps) {
   const router = useRouter();
+const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
 
   function handleSubmit(formData: FormData) {
     startTransition(async () => {
       const result = await updateProfile(formData);
       if (result && "error" in result) {
-        alert(result.error);
+toast({ variant: "destructive", description: result.error });
       } else {
         router.refresh();
       }
@@ -107,7 +109,7 @@ export function ProfileClient({
                   startTransition(async () => {
                     const result = await uploadAvatar(formData);
                     if (result && "error" in result) {
-                      alert(result.error);
+toast({ variant: "destructive", description: result.error });
                     } else {
                       router.refresh();
                     }

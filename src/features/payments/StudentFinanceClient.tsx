@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 import type { ColumnDef } from "@tanstack/react-table";
 import {
   Bank,
@@ -132,7 +133,8 @@ interface StudentFinanceClientProps {
 
 export function StudentFinanceClient({ payments }: StudentFinanceClientProps) {
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
-  const [paymentOpen, setPaymentOpen] = useState(false);
+const [paymentOpen, setPaymentOpen] = useState(false);
+  const { toast } = useToast();
 
   const totalTagihan = payments
     .filter((p) => p.status !== "cancelled")
@@ -275,7 +277,7 @@ export function StudentFinanceClient({ payments }: StudentFinanceClientProps) {
                   className="w-full"
                   disabled={!selectedMethod}
                   onClick={() => {
-                    alert(`Pembayaran via ${selectedMethod} akan diproses.`);
+                    toast({ description: `Pembayaran via ${selectedMethod} akan diproses.` });
                     setPaymentOpen(false);
                   }}
                 >

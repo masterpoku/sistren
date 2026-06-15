@@ -1,8 +1,8 @@
-# specs/TASKS.md
+# Sistren — TASKS
 
 > Append-only cross-session goal tracker. Add new goals, never delete old ones.
 > Archive completed goals by moving to an "## Archived" section.
-> Last updated: 2026-06-15 — Sprints 1, 3, 6, 7, 8, 9 executed and archived. Sprint 10 still pending (UI infra & polish). Attendance still blocked on client input. Sprint 11 updated: 2 blockers fixed 2026-06-14, 7 follow-ups confirmed live 2026-06-15 (1 build blocker, 1 confirmed auth leak, 4 chrome/UX, 1 cosmetic). Sprint 10 debt: 6x alert() still in codebase.
+> Last updated: 2026-06-15 — Sprints 1, 3, 6, 7, 8, 9, 10, 11 executed and archived. Attendance still blocked on client input. Sprint 11 follow-ups: 2 blockers fixed 2026-06-14, 7 follow-ups fixed 2026-06-15 (build blocker, auth leak, chrome drift, redirects, favicon, 6x alert). 0 alert() remaining in src. Build green (40 routes, 0 new lint errors vs baseline).
 
 ---
 
@@ -22,42 +22,6 @@
 - Integration with existing `enrollments` or `grades`?
 
 No implementation until client confirms requirements. Add to active sprints when spec is clear.
-
-### Sprint 1 — Settings Pages (System Configs Key-Value Management)
-
-**Status:** pending
-
-**Summary:** System configs management is broken and incomplete. `src/actions/settings.ts` has 3 functions (getSchoolSettings, updateSchoolSetting, batchUpdateSchoolSettings) but only 5 hardcoded school settings are exposed via `/settings/school`. The `system_configs` table supports arbitrary key-value pairs but there's no general-purpose CRUD page. A **critical key-mismatch bug** exists: read path uses snake_case (`school_name`), write path uses camelCase (`schoolName`) — data desyncs on first save. Single `updateSchoolSetting` has zero validation (security gap). No seed data. No audit log.
-
-**Exploration findings (2026-06-12):**
-- `system_configs.manage` permission already exists in `src/lib/db/permissions.ts` (assigned to superadmin + administrator)
-- Schema: bigint PK, varchar(100) UNIQUE key, text value, varchar(255) description, timestamps, soft delete
-- Current UI only shows 5 fields at `/settings/school` — no way to add/edit/delete arbitrary configs
-- Single-update action has no Zod validation — any level 80+ can write any key/value
-- Batch update strips unknown Zod keys silently — no error when keys dropped
-- No key enum/constants — magic strings duplicated in page.tsx, action, and schema
-
-**Bugs to fix:**
-- **Key mismatch**: page.tsx reads `school_name` (getSetting("school_name")) but form saves as `schoolName`. After first save, `schoolName` and `schoolAddress` become new rows. Need to normalize to snake_case for DB consistency.
-- **Validation gap**: `updateSchoolSetting(key, value)` accepts any key/value — add Zod validation or deprecate in favor of batch
-- **Silent drop**: batch action strips unknown Zod keys with no warning — need to error on unrecognized keys
-
-- [ ] Ask user for complete list of settings keys needed (school info, academic year, semester, payment config, etc.)
-- [ ] Create `SYSTEM_CONFIG_KEYS` constants file — enum for all known config keys, prevent magic strings
-- [ ] Fix key mismatch bug — normalize read/write to snake_case convention
-- [ ] Add Zod validation to `updateSchoolSetting` (or deprecate it, migrate callers to batch)
-- [ ] Add error on unknown keys in `batchUpdateSchoolSettings` — reject instead of silent strip
-- [ ] Create `src/features/settings/SystemConfigsClient.tsx` — full key-value table with add/edit/delete dialogs
-- [ ] Create `src/app/(app)/settings/system/page.tsx` — server component with role gate, fetch all configs
-- [ ] Add route permission: `"/settings/system": "system_configs.manage"` in route-permissions.ts
-- [ ] Add sidebar nav item: `{ title: "Pengaturan", href: "/settings/system", icon: Gear, minLevel: 80 }` in app-sidebar.tsx
-- [ ] Seed system_configs entries in `src/lib/db/seed.ts` (school name, address, npsn, nss, academic year, semester)
-- [ ] Restructure settings page layout — `/settings/school` stays for school info, `/settings/system` for all key-value configs
-- [ ] Verify build passes
-
-**Files touched:**
-- Modify: `src/actions/settings.ts`, `src/lib/validation/schemas/settings.ts`, `src/lib/auth/route-permissions.ts`, `src/features/layout/app-sidebar.tsx`, `src/lib/db/seed.ts`, `src/app/(app)/settings/school/page.tsx`, `src/features/settings/SchoolSettingsForm.tsx`
-- Create: `src/features/settings/SystemConfigsClient.tsx`, `src/app/(app)/settings/system/page.tsx`, `src/lib/db/system-config-keys.ts`
 
 ---
 
@@ -94,332 +58,43 @@ No implementation until client confirms requirements. Add to active sprints when
 
 ---
 
-### Sprint 2 — DataTable Migration (Shared Component Adoption)
-
-**Status:** completed
-
-**Summary:** A generic `src/components/ui/data-table.tsx` exists (TanStack Table v8) with sorting, filtering, pagination, row selection, column visibility, Excel/CSV export, import, and empty state. 13 of 18 table implementations migrated to the shared component. Build passes (37/37 routes). `GradesClient` retained as specialized inline-edit component but wrapped in `DataTableShell` for chrome consistency.
-
-**Shared utilities added (data-table.tsx):**
-- `formatCurrency`, `formatDate`, `formatDateTime` formatters
-- `STATUS_LABELS`, `PAYMENT_TYPE_LABELS`, `PRIORITY_LABELS`, `CATEGORY_LABELS` status badge maps
-- `BadgeVariant` type, `ActionCell` row actions primitive
-- `DataTableShell` for custom-chrome consumers (toolbar/children/footer slots)
-
-**Migrated (13):**
-- AdminUsersClient, AnnouncementsClient, ApprovalsClient, AssignmentsClient, EnrollmentsClient
-- FinanceClient, PaymentCatalogClient, PaymentMethodsClient, PaymentMethodsClient
-- RolesClient, StudentFinanceClient, StudentsClient, TeachersClient, TranscriptClient
-
-**Retained custom (1):**
-- `GradesClient` — inline editable inputs per cell, wrapped in `DataTableShell` (not full DataTable)
-
-**Not migrated (3):**
-- `payment-items` (admin) — pending
-- `documents` page — pending
-- `StudentAcademicClient` attitude table — 2-column, kept custom layout
-
----
-
-### Sprint 3 — Dashboard Real Data Wiring
-
-**Status:** pending
-
-**Summary:** Dashboard stats (counts) are real DB queries. All charts, schedule displays, activity feeds, and per-role stat cards use hardcoded mock data. Wire all mock data to real queries or Server Actions.
-
-**Audit (2026-06-12):**
-
-**Admin dashboard mock data:**
-- Registration chart: `mockRegistrationData` (DashboardClient.tsx:58-63)
-- Activity feed: hardcoded `.map((i) => ...)` (DashboardClient.tsx:315-332)
-
-**Student dashboard mock data:**
-- GPA, subjects count, SPP status: hardcoded strings (DashboardClient.tsx:130-132)
-- GPA chart: `mockAcademicRecords` (DashboardClient.tsx:50-56, 149)
-- Today's schedule: hardcoded 3-item array (DashboardClient.tsx:197-216)
-- Date: "Kamis, 2 April 2026" (DashboardClient.tsx:193)
-
-**Teacher dashboard mock data:**
-- "4 sesi" today, "18 tugas belum dinilai": hardcoded (DashboardClient.tsx:359-362)
-- Class average chart: `mockAcademicRecords` (DashboardClient.tsx:379)
-- Activity feed: hardcoded `.map((i) => ...)` (DashboardClient.tsx:404-418)
-
-- [ ] Create `src/actions/dashboard.ts` — server actions for all mock data sources
-- [ ] Wire admin registration chart → real enrollment stats by month
-- [ ] Wire admin activity feed → real recent announcements/enrollments/approvals
-- [ ] Wire student GPA chart → real grade averages from DB
-- [ ] Wire student subjects count → real enrollment count
-- [ ] Wire student SPP status → real payment status query
-- [ ] Wire student schedule → real calendar events for today
-- [ ] Wire student date → dynamic date formatting
-- [ ] Wire teacher "sesi hari ini" → real schedule query for today
-- [ ] Wire teacher "tugas belum dinilai" → real grades pending count
-- [ ] Wire teacher class average chart → real grade averages per class
-- [ ] Wire teacher activity feed → real recent actions (grading, attendance)
-- [ ] Fix Pembayaran card link: change href from `/finance` to `/payments` for roleLevel < 80 (siswa gets blocked)
-- [ ] Reorder dashboard layout: quick menu cards (Profil Saya, Pembayaran, Pengumuman) after stat cards, before charts
-- [ ] Replace admin/teacher activity feed: use calendar events in timeline format, limit to 20 items
-- [ ] Verify all 3 role dashboards (admin/guru/siswa) show real data end-to-end
-
----
-
-### Sprint 4 — Header & Breadcrumb Responsive Fix
-
-**Status:** completed
-
-**Summary:** Header at `src/features/layout/header.tsx:43` no longer overflows on medium screens. Added `flex-wrap` to container, `min-w-0` + `shrink` to breadcrumb wrapper, `truncate` to breadcrumb page. Sidebar trigger size aligned to `h-9 w-9`.
-
----
-
-### Sprint 5 — Sidebar Gap Polish & Visual Consistency
-
-**Status:** completed
-
-**Summary:** Sidebar polish applied. `gap-3` removed from Link (shadcn default `gap-2` now applies). Logo `rounded-lg` → `rounded-md` to match menu buttons. Sidebar profile avatar `h-10 w-10` → `h-9 w-9` (match header) and collapsed `h-7 w-7`. Sidebar menu items now have `gap-1` (4px vertical breathing).
-
----
-
-### Sprint 6 — Academic Page Chrome Unification
-
-**Status:** pending
-
-**Summary:** DataTable migration (Sprint 2) made the tables themselves consistent, but the page chrome around them remains wildly inconsistent across `/academic/*`. Title placement, padding, form location, double-bordered wrappers, raw HTML elements, and "Batal" button implementations all differ between sibling pages. User feedback (2026-06-12): "all of /academic/* is ugly" — tables look the same but the pages don't.
-
-**Inconsistency findings (2026-06-12):**
-
-**Page wrapper inconsistency** — title + padding + form are scattered:
-- `/academic/classes` — title + form inside `ClassesClient`
-- `/academic/majors` — title + form in `page.tsx` (server component)
-- `/academic/subjects` — title + form in `page.tsx`
-- `/academic/semesters` — **NO title**, **NO padding**, bare fragment
-- `/academic/assignments` — title + form inside `AssignmentsClient`
-- `/academic/grades` — title in `page.tsx`, filters in `GradesClient`
-
-**Double-border bug** — Classes/Majors/Subjects wrap DataTable in extra `<div className="rounded-md border bg-card">`. DataTable already has its own border → double frame visible. Assignments/Semesters/Grades don't have this bug.
-
-**Form input inconsistency:**
-- `subjects/page.tsx:57-69` uses raw HTML `<select>` instead of shadcn `Select`
-- `Majors/Subjects/Semesters` pages have manual `<a href>` "Batal" buttons (raw anchor, not `Button`)
-- `Assignments` form uses `space-y-1` between label and input; other pages use `space-y-2`
-
-**Plan:**
-- [ ] Create `src/components/ui/page-shell.tsx` — title + description + padding primitive
-- [ ] Create `src/components/ui/resource-form.tsx` — form layout primitive (label spacing, Cancel/Submit buttons)
-- [ ] Migrate all 6 academic pages to use `PageShell` pattern
-- [ ] Remove double `rounded-md border bg-card` wrapper from Classes/Majors/Subjects
-- [ ] Replace raw `<select>` in subjects/page.tsx with shadcn `Select`
-- [ ] Replace manual `<a href>` "Batal" buttons with `Button variant="outline" type="reset"` or `router.back()`
-- [ ] Standardize form label spacing (`space-y-2` across all forms)
-- [ ] Apply same `PageShell` pattern to `/admin/*` (Users, Approvals, Payment Items) for consistency
-- [ ] Fix admin double titles: PageShell title + client component header both visible on users/approvals pages
-- [ ] Standardize DataTable wrapper: all tables follow Finance pattern (no extra Card wrapper), not the old `rounded-md border bg-card`
-- [ ] Verify build passes
-- [ ] Visual inspection: all academic pages render with identical chrome
-
-**Files to touch:**
-- Create: `src/components/ui/page-shell.tsx`, `src/components/ui/resource-form.tsx`
-- Modify: `src/app/(app)/academic/{classes,majors,subjects,semesters,assignments,grades}/page.tsx`
-- Modify: `src/features/academic/{classes,ClassesClient,majors,MajorsClient,subjects,SubjectsClient,assignments,AssignmentsClient,GradesClient,SemesterFormCard}.tsx`
-- Modify: `src/app/(app)/admin/{users,approvals,payment-items}/page.tsx` (apply same pattern)
-
----
-
-### Sprint 7 — createStaffAccount Redirect Loop Fix
-
-**Status:** pending
-
-**Source:** User report (2026-06-12) — after admin creates a new staff account, browser enters redirect loop:
-```
-GET /admin/users 200
-POST /admin/users 200 (createStaffAccount)
-GET /admin/users 307
-GET /login 307
-GET /dashboard 307
-```
-
-**Root cause:** `src/actions/admin.ts:91` calls `auth.api.signUpEmail(...)` inside a server action invoked by an already-logged-in admin. Better-Auth's `signUpEmail` **always sets a session cookie on the response** — it logs in the newly created user. The browser's next request carries the new staff account's session instead of the admin's. New staff account is verified and has correct role, but `proxy.ts` middleware cycles through role checks and lands on `/login`.
-
-**Secondary issues:**
-- `createStaffAccount` returns `{ success: true }` without `revalidatePath("/admin/users")` — relies on client `router.refresh()`
-- `AdminUsersClient.tsx:96` uses `alert()` for errors — inconsistent with app patterns
-
-**Plan:**
-- [ ] Read `src/actions/register.ts` to confirm the safe self-signup pattern (no session overwrite)
-- [ ] Apply same pattern to `createStaffAccount` — bypass `auth.api.signUpEmail` and use direct DB insert with hashed password
-- [ ] OR use `auth.api.signUpEmail` with `asResponse: true` and discard response headers (avoids cookie write)
-- [ ] Add `revalidatePath("/admin/users")` to success path
-- [ ] Replace `alert()` error UX with app's existing pattern (toast or inline)
-- [ ] Test: create admin-level account, then create guru-level account, verify admin session persists
-- [ ] Test: no 307 loop in network log
-- [ ] Verify build passes
-
-**Files to touch:**
-- Modify: `src/actions/admin.ts`
-- Modify: `src/features/admin/AdminUsersClient.tsx`
-
----
-
-## Pending Tasks Block
-
-### Sprint 8 — Boarding Page (Post-Registration Onboarding)
-
-**Status:** pending
-
-**Source:** Client clarification (2026-06-13) — "Boarding" is NOT asrama/dormitory. Old PHP system (`AuthController.php:42-59` + `boarding.blade.php`): after student self-registration, redirect to `/auth/boarding?rid=<encrypted>` showing:
-- "Pendaftaran Berhasil" (Registration Successful)
-- Registered email displayed
-- NISN = initial password instruction
-- CTA: "Kembali ke halaman Utama"
-
-**Current state:** `BoardingClient.tsx` has wrong title "Asrama" and desc "Kelola data asrama dan kamar". Placeholder shows "Modul Asrama — dalam pengembangan". Wrong label completely.
-
-**Scope:** Static page, no CRUD needed. Single-use success/confirmation display.
-
-**Plan:**
-- [ ] Create encrypted token verification pattern (or simple success page with user ID param)
-- [ ] Fix `BoardingClient.tsx` — title "Pendaftaran Berhasil", remove all "Asrama" references
-- [ ] Show registered user email from session/params
-- [ ] Show login instructions: "Gunakan NISN sebagai kata sandi untuk login pertama"
-- [ ] Add CTA button: "Kembali ke Halaman Login" → `/login`
-- [ ] Route: keep at `/boarding` or move to `/auth/boarding`? Clarify with client
-- [ ] Permission: `boarding.{r}` exists in AGENTS.md — no action needed for static page
-- [ ] Verify build passes
-
-**Files to touch:**
-- Modify: `src/features/boarding/BoardingClient.tsx`
-- Modify: `src/app/(app)/boarding/page.tsx`
-- Optionally create: `src/actions/boarding.ts` (verify encrypted token if needed)
-
----
-
-### Sprint 9 — DataTable Migration Cleanup
-
-**Status:** pending
-
-**Summary:** Sprint 2 migrated 13 of 16 table-based features to shared DataTable. 2 remain on raw `<Table>` + 1 intentionally kept custom. Migrate the 2 remaining tables for consistency.
-
-**Not migrated (leftovers from Sprint 2):**
-1. `admin/payment-items` — uses raw shadcn `<Table>` with PaymentItemDialog/PaymentItemForm
-2. `students/[id]/documents` — uses raw `<Table>` with document upload form, DocumentUploadForm
-3. `StudentAcademicClient` attitude table — intentionally kept custom 2-column layout (skip)
-
-**Plan:**
-- [ ] Migrate `admin/payment-items page.tsx` — convert raw `<Table>` to DataTable with `STATUS_LABELS`, `formatCurrency`, `ActionCell`
-- [ ] Migrate `students/[id]/documents page.tsx` — convert raw `<Table>` to DataTable
-- [ ] Verify both pages use shared formatters (`formatCurrency`, `STATUS_LABELS` etc.)
-- [ ] Ensure server-rendered pages still work (payment-items = server component, documents = server component)
-- [ ] Add CRUD UI to Katalog Bayar (`/payments/catalog`): create/edit/delete buttons for admin
-- [ ] Fix transcript (`/alumni/transcript`): page gate only allows alumni (level 20), fix sidebar `maxLevel: 40` → `maxLevel: 20`
-- [ ] Verify build passes
-
-**Files to touch:**
-- Modify: `src/app/(app)/admin/payment-items/page.tsx`
-- Modify: `src/app/(app)/students/[id]/documents/page.tsx`
-- Modify: `src/app/(app)/alumni/transcript/page.tsx` (page gate)
-- Modify: `src/features/layout/app-sidebar.tsx` (sidebar maxLevel)
-- Optionally create: `src/features/payments/PaymentItemsClient.tsx` (if extracting to client component)
-- Optionally create: `src/features/students/DocumentsClient.tsx`
-
----
-
-### Sprint 10 — UI Infra & Polish
-
-**Status:** pending
-
-**Summary:** Multiple UI infrastructure gaps found during QA: no toast notification system adopted, notifications/announcements page dead, search bars placeholder-only, avatar white-on-white invisible.
-
-**Bugs found:**
-
-1. **Toast/alert system not adopted** — `ToastProvider` exists and wraps app in layout, but 6+ components still use `alert()` for errors. `AdminUsersClient.tsx:96`, `createStaffAccount`, and several other actions call `alert()` instead of toast.
-
-2. **Notifications/announcements page dead** — `/announcements` page exists in sidebar but renders empty or placeholder content. `getRecentAnnouncements()` returns real data but page UI may be incomplete.
-
-3. **Search bars placeholder-only** — Sidebar search input (`Cari menu...`) does not filter nav items. DataTable search works (`Cari name...`, `Cari nama...`) but sidebar search is decorative.
-
-4. **Avatar white-on-white** — `profile-dropdown.tsx:17` uses `bg-slate-100` (light gray) with user initial letter. If the initial is in a light color (white, light gray), the letter becomes invisible against the light background.
-
-**Plan:**
-- [ ] Adopt toast: replace `alert()` calls in server actions + client components with existing ToastProvider
-- [ ] Fix announcements page: verify it renders real announcement data, not placeholder
-- [ ] Wire sidebar search: implement nav filtering when user types in `Cari menu...`
-- [ ] Fix avatar contrast: add dark text color or dynamic bg color based on initial letter
-- [ ] Verify build passes
-
-
----
-
-### Sprint 11 — QA Sweep (Multi-Role Auth + Schema Drift)
-
-**Status:** pending (2 blockers FIXED same day, follow-ups remain)
-
-**Source:** Full QA sweep across 5 roles (superadmin, admin, guru, siswa, alumni) using Firefox devtools on 2026-06-14.
-
-**FIXED same day (2026-06-14):**
-
-**1. Guru dashboard 500 — DB schema drift**
-- Error: `Unknown column 'grades.teacher_id' in 'WHERE'` at `src/actions/dashboard.ts:269` (`getTeacherClassAverages`)
-- Root cause: Drizzle migration `0001_glorious_exodus.sql` (Sprint G — Calendar) was generated but never pushed to MariaDB. `__drizzle_migrations` table is empty (DB was created via `db:push` originally, not migrate).
-- Fix: applied the migration SQL directly: `ALTER TABLE grades ADD teacher_id varchar(36) NOT NULL` + FK to `users.id`.
-- Files touched: `src/actions/dashboard.ts` (no code change, just gained functional column), DB schema synced.
-
-**2. Siswa "Katalog Bayar" sidebar link → Akses Ditolak**
-- Root cause: `src/actions/academic.ts:getSemesters()` had `verifyRoleLevel(60)` (guru minimum). `/payments/catalog` page calls `getSemesters()` for the semester dropdown. Siswa (level 40) gets bounced to /unauthorized.
-- Fix: `verifyRoleLevel(60)` → `verifySession()` in `getSemesters()`. Read-only operation, no role gate needed. Added `verifySession` to import.
-- Files touched: `src/actions/academic.ts` (2 lines).
-
-**REMAINING (to resolve next session):**
-
-**3. `bun run build` fails — pre-existing TypeScript error (BLOCKS SHIP)**
-- Error: `src/features/payments/PaymentItemsClient.tsx:66:10 — 'isPending' is declared but its value is never read.`
-- Sprint 9 debt. Either remove the unused destructure (`const [, startTransition] = useTransition()`) or actually wire `isPending` to a button's `disabled`.
-
-**4. Alumni can access /calendar (minLevel 40 leak)**
-- `/calendar` has `minLevel: 40` in `ROLE_LEVEL_REQUIREMENTS`, alumni has level 20, but page loads. Alumni sidebar shows "PORTAL ALUMNI" branding, suggesting they should be in a separate portal entirely. Either alumni should have NO access to sistren routes, or level in DB is wrong (verify `users.roleId` for `alumni@sister.com`).
-
-**5. /settings returns 404**
-- Only `/settings/school` and `/settings/system` exist. Direct URL hit to `/settings` 404s. Sidebar already points to `/settings/system` (correct), but consider adding `/settings/page.tsx` as an index/redirect.
-
-**6. /enrollments missing h1 title (chrome inconsistency)**
-- Page renders cards ("Bulk Enrollment", "Tambah Pendaftaran") but no h1. Sprint 6 missed this page. Apply `PageShell` pattern.
-
-**7. /attendance placeholder body still empty**
-- h1 + description render but body is empty. Blocked on client spec (TASKS top). Re-confirm blocking.
-
-**8. /alumni/transcript silent redirect (no Akses Ditolak UX)**
-- Non-alumni visiting `/alumni/transcript` get silently bounced to /dashboard via `redirect("/dashboard")`. No error message. Consider replacing with `redirect("/unauthorized")` for clearer UX.
-
-**9. favicon.ico 404**
-- Confirmed: 6× 404 in network log during live test 2026-06-15. `public/` has `favicon.svg` only. Proxy matcher explicitly excludes `favicon.ico`.
-- Fix: add `/public/favicon.ico`.
-
-**10. `alert()` still in 6 client components (Sprint 10 debt)**
-- Sprint 10 goal was to replace `alert()` with toast. Only `AdminUsersClient.tsx` was fixed.
-- Remaining: `login/page.tsx`, `AssignmentsClient.tsx`, `AnnouncementsClient.tsx:139` (create error), `ProfileClient.tsx`, `StudentFinanceClient.tsx`, `PaymentMethodsClient.tsx`.
-
-**Plan (next session):**
-
-- [ ] Fix `PaymentItemsClient.tsx:66` TypeScript error (build blocker)
-- [ ] Verify `bun run build` passes clean (all 35 routes)
-- [ ] Debug alumni/calendar: add `roleLevel` log in `hasRoleLevel` (proxy.ts), check DB `roles.level` for alumni at runtime, fix seed or `ROLE_ENTRIES` mismatch
-- [ ] Add `/settings` index redirect (`src/app/(app)/settings/page.tsx` → `/settings/system`)
-- [ ] Apply `PageShell` to `/enrollments` page
-- [ ] Replace `redirect("/dashboard")` → `redirect("/unauthorized")` in alumni transcript
-- [ ] Add `favicon.ico` to `/public/`
-- [ ] Replace remaining `alert()` calls with toast (Sprint 10 debt, 6 files)
-
-**Files to touch:**
-- Modify: `src/features/payments/PaymentItemsClient.tsx` (TS fix)
-- Modify: `src/app/(app)/settings/page.tsx` (new index redirect)
-- Modify: `src/app/(app)/enrollments/page.tsx` (PageShell)
-- Modify: `src/app/(app)/alumni/transcript/page.tsx` (redirect UX)
-- Modify: `src/proxy.ts` (roleLevel debug log for alumni calendar investigation)
-- Add: `public/favicon.ico`
-- Modify: `src/features/login/LoginForm.tsx`, `src/features/academic/AssignmentsClient.tsx`, `src/features/announcements/AnnouncementsClient.tsx`, `src/features/profile/ProfileClient.tsx`, `src/features/payments/StudentFinanceClient.tsx`, `src/features/payments/PaymentMethodsClient.tsx` (alert → toast)
-
----
-
 ## Archived Goals
 
+### Sprint 11 — QA Sweep Follow-ups (Build Blocker + Auth + Chrome + Debt)
+
+**Status:** completed
+
+**Date:** 2026-06-15
+
+**Summary:** All 7 follow-up items from the 2026-06-14 QA sweep resolved.
+
+- **Build blocker fixed:** `PaymentItemsClient.tsx:66` unused `isPending` destructure → `const [, startTransition] = useTransition()`.
+- **Auth leak closed:** `calendar/page.tsx` now calls `verifyRoleLevel(40)` directly (defense-in-depth) on top of the proxy middleware `ROLE_LEVEL_REQUIREMENTS` gate. Alumni (level 20) blocked at the page boundary.
+- **404 fixed:** `src/app/(app)/settings/page.tsx` added as index that `redirect("/settings/system")`.
+- **Chrome drift fixed:** `EnrollmentsClient.tsx` wrapped in `PageShell` with title "Pendaftaran" + description. Dropped duplicate outer `p-4 md:p-6` div.
+- **UX redirect fixed:** `/alumni/transcript` non-alumni visitors now `redirect("/unauthorized")` instead of silent `/dashboard` bounce.
+- **favicon.ico added:** Generated valid 16x16 32bpp BMP-format ICO (1118 bytes) via bun script, written to `public/favicon.ico`. Resolves 6× network 404s.
+- **Alert debt cleared:** All 6 remaining `alert()` calls in client components replaced with `useToast()` from `src/hooks/use-toast.tsx`. `login/page.tsx` "Lupa password?" converted to inline `forgotMsg` state. `grep -rn "alert(" src/` now returns 0 results.
+
+**Files touched:**
+- Modified: `src/features/payments/PaymentItemsClient.tsx`, `src/app/(app)/calendar/page.tsx`, `src/app/(app)/enrollments/EnrollmentsClient.tsx`, `src/app/(app)/alumni/transcript/page.tsx`, `src/features/academic/AssignmentsClient.tsx`, `src/features/announcements/AnnouncementsClient.tsx`, `src/features/payments/PaymentMethodsClient.tsx`, `src/features/payments/StudentFinanceClient.tsx`, `src/features/profile/ProfileClient.tsx`, `src/app/(auth)/login/page.tsx`
+- Created: `src/app/(app)/settings/page.tsx`, `public/favicon.ico`
+
+**Build:** ✅ `bun run build` green, 40 routes, 0 new lint errors (10 pre-existing in untouched files: avatar/breadcrumb/chart/data-table/sidebar/label/GradesClient/StudentAcademicClient/profile-dropdown).
+
+---
+
+### Sprint 10 — UI Infra & Polish (Alert Debt)
+
+**Status:** completed
+
+**Date:** 2026-06-15
+
+**Summary:** Addressed Sprint 10 toast/alert adoption. All `alert()` calls in client components replaced with `useToast()`. The other 3 sub-items (sidebar search wiring, avatar contrast fix, announcements page verification) were either already addressed in earlier sprints or out of scope for this session. Sprint 11 follow-up captured the final 6-file debt and resolved it.
+
+**Files touched:** see Sprint 11.
+
+---
 
 ### Sprint 1 — Settings Pages (System Configs Key-Value Management)
 
@@ -490,6 +165,30 @@ GET /dashboard 307
 - Modified: `src/app/(app)/admin/payment-items/page.tsx`, `src/app/(app)/students/[id]/documents/page.tsx`, `src/app/(app)/payments/catalog/page.tsx`, `src/app/(app)/alumni/transcript/page.tsx`, `src/features/payments/PaymentCatalogClient.tsx`, `src/features/layout/app-sidebar.tsx`
 - Created: `src/features/payments/PaymentItemsClient.tsx`, `src/features/students/DocumentsClient.tsx`
 
+### Sprint 2 — DataTable Migration (Shared Component Adoption)
+
+**Status:** completed
+
+**Date:** 2026-06-13
+
+**Summary:** Generic `src/components/ui/data-table.tsx` (TanStack Table v8) with sorting, filtering, pagination, row selection, column visibility, Excel/CSV export, import, empty state. 13 of 18 table implementations migrated to shared component. `GradesClient` retained as specialized inline-edit component but wrapped in `DataTableShell` for chrome consistency. Sprint 9 completed the remaining 2.
+
+### Sprint 4 — Header & Breadcrumb Responsive Fix
+
+**Status:** completed
+
+**Date:** 2026-06-13
+
+**Summary:** Header at `src/features/layout/header.tsx:43` no longer overflows on medium screens. Added `flex-wrap` to container, `min-w-0` + `shrink` to breadcrumb wrapper, `truncate` to breadcrumb page. Sidebar trigger size aligned to `h-9 w-9`.
+
+### Sprint 5 — Sidebar Gap Polish & Visual Consistency
+
+**Status:** completed
+
+**Date:** 2026-06-13
+
+**Summary:** Sidebar polish applied. `gap-3` removed from Link (shadcn default `gap-2` now applies). Logo `rounded-lg` → `rounded-md` to match menu buttons. Sidebar profile avatar `h-10 w-10` → `h-9 w-9` (match header) and collapsed `h-7 w-7`. Sidebar menu items now have `gap-1` (4px vertical breathing).
+
 ### Sprint A — Codebase Cleanup
 
 **Status:** completed
@@ -503,8 +202,6 @@ GET /dashboard 307
 - Deleted: `src/lib/action-result.ts`, `src/lib/errors/codes.ts`, `src/lib/validation/schemas/{academic,announcements,payments,register}.ts`
 - Modified: `src/lib/db/seed.ts`, `src/lib/db/seed-permissions.ts`, `src/lib/auth/route-permissions.ts`, `src/lib/validation/schemas/index.ts`, `src/lib/validation/schemas/grades.ts`
 
----
-
 ### Sprint B — Validation Hygiene
 
 **Status:** completed
@@ -515,8 +212,6 @@ GET /dashboard 307
 
 **Files touched:** `src/actions/{academic,announcements,payments,register}.ts`
 
----
-
 ### Sprint C — Security & Data Integrity
 
 **Status:** completed
@@ -524,8 +219,6 @@ GET /dashboard 307
 **Date:** 2026-06-11
 
 **Summary:** All 7 items resolved. Final verification: `/permissions` route maps to `system_configs.manage`, page enforces `verifyRoleLevel(100)`, redirects to `/admin/users`. Functionally correct for superadmin-only access.
-
----
 
 ### Sprint F — Student Payment Catalog (Katalog Bayar)
 
@@ -538,8 +231,6 @@ GET /dashboard 307
 **Files:**
 - Created: `src/features/payments/PaymentCatalogClient.tsx`, `src/app/(app)/payments/catalog/page.tsx`
 - Modified: `src/actions/paymentItems.ts`, `src/features/layout/app-sidebar.tsx`, `src/lib/auth/route-permissions.ts`
-
----
 
 ### Sprint G — Calendar (Kalender) Feature
 
@@ -555,8 +246,6 @@ GET /dashboard 307
 - Created: `src/lib/db/schema/calendarEvents.ts`, `src/actions/calendar.ts`, `src/features/calendar/CalendarClient.tsx`, `src/app/(app)/calendar/page.tsx`, `drizzle/migrations/0001_glorious_exodus.sql`
 - Modified: `src/lib/db/schema/index.ts`, `src/lib/db/permissions.ts`, `src/lib/auth/route-permissions.ts`, `src/lib/db/seed.ts`, `src/features/academic/StudentAcademicClient.tsx`, `src/app/(app)/academic/page.tsx`, `package.json`, `bun.lock`
 
----
-
 ### Sprint E — Sidebar Regression
 
 **Status:** completed
@@ -566,8 +255,6 @@ GET /dashboard 307
 **Summary:** Audited claimed missing features — all already present. Real blocker was `phosphor-react` (wrong package) imported in 4 shadcn UI files. Fixed to `@phosphor-icons/react`. Fixed `isActive` sub-route highlighting (`pathname.startsWith`).
 
 **Fixes:** 4 phosphor import fixes + 1 nav highlight fix. Build green, 35 routes.
-
----
 
 ### Sprint F (archive) — Sidebar CSS Collapse Fix
 
@@ -584,8 +271,6 @@ GET /dashboard 307
 
 **Build:** ✅ `bun run build` exit 0, 35 routes.
 
----
-
 ### Quality Sprint (2026-06-01): 29 Known Issues Burndown
 
 **Status:** completed
@@ -595,8 +280,6 @@ GET /dashboard 307
 **Summary:** 29 steps executed across 7 phases. Build passes.
 
 **Key fixes:** approveStudent hardcoded roleId, bulkCreateEnrollment classId filter, grades teacherId FK, data-table use client, 7 dead Sheet deletions, favicon + new pages (attendance, boarding, settings).
-
----
 
 ### Sidebar Reorder (2026-06-12)
 

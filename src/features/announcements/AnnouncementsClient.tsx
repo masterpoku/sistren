@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
+import { useToast } from "@/hooks/use-toast";
 import type { ColumnDef } from "@tanstack/react-table";
 import { createAnnouncement } from "@/actions/announcements";
 import { Badge } from "@/components/ui/badge";
@@ -144,13 +145,14 @@ export function AnnouncementsClient({
   roleLevel,
 }: AnnouncementsClientProps) {
   const router = useRouter();
+const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
 
   function handleCreate(formData: FormData) {
     startTransition(async () => {
       const result = await createAnnouncement(formData);
       if (result && "error" in result) {
-        alert(result.error);
+toast({ variant: "destructive", description: result.error });
       } else {
         router.refresh();
       }

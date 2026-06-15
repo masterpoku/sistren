@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
+import { useToast } from "@/hooks/use-toast";
 import type { ColumnDef } from "@tanstack/react-table";
 import { createPaymentMethod } from "@/actions/payments";
 import { Button } from "@/components/ui/button";
@@ -59,13 +60,14 @@ interface PaymentMethodsClientProps {
 
 export function PaymentMethodsClient({ data }: PaymentMethodsClientProps) {
   const router = useRouter();
+const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
 
   function handleCreate(formData: FormData) {
     startTransition(async () => {
       const result = await createPaymentMethod(formData);
       if (result && "error" in result) {
-        alert(result.error);
+toast({ variant: "destructive", description: result.error });
       } else {
         router.refresh();
       }

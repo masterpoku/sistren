@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable } from "@/components/ui/data-table";
 import { ActionCell } from "@/components/ui/data-table";
 import { Label } from "@/components/ui/label";
+import { PageShell } from "@/components/ui/page-shell";
 import {
   Select,
   SelectContent,
@@ -117,7 +118,10 @@ export function EnrollmentsClient({
   }
 
   return (
-    <div className="flex flex-col gap-6 p-4 md:p-6">
+    <PageShell
+      title="Pendaftaran"
+      description="Kelola pendaftaran siswa ke kelas per semester."
+    >
       {error && (
         <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
           {error}
@@ -213,6 +217,8 @@ export function EnrollmentsClient({
         exportFilename="pendaftaran"
         emptyMessage="Belum ada pendaftaran."
       />
-    </div>
+    </PageShell>
   );
+
+
 }

@@ -8,7 +8,7 @@ export default async function AlumniTranscriptPage() {
   const session = await verifySession();
   const ctx = await getAuthContext(session.userId);
   if (!ctx || ctx.roleLevel !== 20) {
-    redirect("/dashboard");
+    redirect("/unauthorized");
   }
 
   let documents: Array<{ type: string }> = [];

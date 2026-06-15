@@ -63,7 +63,7 @@ export function PaymentItemsClient({
 }: PaymentItemsClientProps) {
   const router = useRouter();
   const { toast } = useToast();
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
 
   function handleDelete(id: number) {
     startTransition(async () => {
