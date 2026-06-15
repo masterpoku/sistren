@@ -36,7 +36,8 @@ Env: `DATABASE_URL` `BETTER_AUTH_SECRET` `BETTER_AUTH_URL` `DOCUMENT_ENCRYPTION_
 - Perm: `hasPermission(userId, 'r.a')`, level≥100 bypass
 - Tailwind v4: `@theme` in CSS, `shadow-xs`, `size-*`
 - Never commit .env files
-
+- Proxy/middleware: Next.js 16 renamed `middleware.ts` → `proxy.ts`. File at `src/proxy.ts` with named export `proxy`. Build shows `ƒ Proxy (Middleware)`. Not dead code.
+- `middleware-manifest.json` showing empty `{}` is a Next.js 16 quirk — build output is authoritative
 ## Perms
 
 `users.{c,r,u,d}` `students.{c,r,u,d,promote,graduate,import}` `teachers.{c,r,u,d,assign_class,assign_subject}` `enrollments.{c,r,u,d}` `announcements.{c,r,u,d,publish}` `payments.{r,record,confirm,refund}` `grades.{c,r,u,d,approve}` `classes.{c,r,u,d}` `subjects.{c,r,u,d}` `majors.{c,r,u,d}` `semesters.{c,r,u,d}` `settings.{r,school}` `profile.{r,edit_own}` `documents.{c,r,u,d}` `boarding.{r}` `attendance.{r}` `finance.{r}` `roles.{c,r,u,d}` `permissions.{c,r,u,d}` `system_configs.{c,r,u,d,manage}` `payment_methods.{c,r,u,d}` `payment_items.{c,r,u,d}` `admin.{approvals,users}`
