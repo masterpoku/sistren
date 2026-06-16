@@ -8,37 +8,46 @@ Indonesian high schools manage student academic data across multiple domains —
 
 ### Functional
 
-- FR-001: User authentication via email/password with session management (better-auth). Staff accounts created by admin via `auth.api.createUser()`. Students self-register via `signUpEmail()` and require admin approval. Priority: High. Verification: Test.
-- FR-002: Role-based access control with hierarchical permissions. Level >= 100 bypasses all checks. Permissions granular per entity/action (c,r,u,d). Priority: High. Verification: Test.
-- FR-003: Student record CRUD with NISN, biodata, address, parent info, religion (normalized in separate table). Soft delete. Bulk import from CSV/Excel. Priority: High. Verification: Test.
-- FR-004: Teacher record CRUD with subject and class assignment. Soft delete. Priority: High. Verification: Test.
-- FR-005: Class CRUD (grade level, major, rombel group). Priority: High. Verification: Inspection.
-- FR-006: Subject CRUD (name, code, hours per week). Priority: High. Verification: Inspection.
-- FR-007: Major/department CRUD (jurusan: IPA, IPS, Bahasa, etc). Priority: Medium. Verification: Inspection.
-- FR-008: Semester/academic year CRUD with active semester flag. Priority: Medium. Verification: Inspection.
-- FR-009: Student enrollment with state machine: active → transferred | dropped | graduated. Transferred → dropped allowed. Dropped/graduated = terminal. Bulk enrollment: chunk 50/transaction, skip existing via unique constraint, fail-fast. Priority: High. Verification: Test.
-- FR-010: Grade entry with 4 types (knowledge, skill, attitude, extracurricular). Sub-scores: dailyTest1-4, midterm, finalExam, practical, project, portfolio. Unique constraint: (enrollmentId, subjectId, type). Grade approval workflow. Priority: High. Verification: Test.
-- FR-011: Attendance tracking per session per student. Priority: Medium. Verification: Test.
-- FR-012: Payment management (Odoo pattern). `payment_items` as templates. `payments.price` always editable — catalog price is default, never enforced. Record, confirm, refund workflows. Payment method CRUD. Priority: Medium. Verification: Test.
-- FR-013: Announcement CRUD with publish/unpublish. Role-targeted visibility. Priority: Medium. Verification: Test.
-- FR-014: Encrypted document storage (AES-256-GCM) for 10 document types (ijasah, skhun, skl, akta, kk, ktp, kip, foto, rapor). Stored as `longtext` in DB. `max_allowed_packet` >= 64MB. Priority: Medium. Verification: Test.
-- FR-015: Student promotion to next grade level and graduation workflow. Priority: Medium. Verification: Test.
-- FR-016: Rapor/KHS generation in government-compatible format. Priority: Medium. Verification: Inspection.
-- FR-017: Dashboard with role-specific summaries (admin overview, teacher class view, student progress). Priority: Medium. Verification: Inspection.
-- FR-018: Audit logging for all mutations — timestamp, actor, action, entity, details. Priority: Medium. Verification: Inspection.
-- FR-019: School profile settings (name, address, logo, academic year). Priority: Low. Verification: Inspection.
-- FR-020: Admin approval workflow for pending student registrations. Priority: Medium. Verification: Test.
-- FR-021: Boarding/hostel module — student dormitory assignment and tracking. Priority: Low. Verification: Test.
-- FR-022: Finance module — payment summaries, reporting, balance tracking. Priority: Low. Verification: Inspection.
-- FR-023: System configuration for tunable settings. Priority: Low. Verification: Inspection.
+- FR-001: User authentication via email/password with session management (better-auth). Staff accounts created by admin via `auth.api.createUser()`. Students self-register via `signUpEmail()` and require admin approval. Status: Implemented. Priority: High. Verification: Test.
+- FR-002: Role-based access control with hierarchical permissions. Level >= 100 bypasses all checks. Permissions granular per entity/action (c,r,u,d). Status: Implemented. Priority: High. Verification: Test.
+- FR-003: Student record CRUD with NISN, biodata, address, parent info, religion (normalized in separate table). Soft delete. Bulk import from CSV/Excel. Status: Partial — read-only table `StudentsClient.tsx` exists. No create/edit/delete/import UI. Students created via self-registration. Priority: High. Verification: Test.
+- FR-004: Teacher record CRUD with subject and class assignment. Soft delete. Status: Partial — read-only table `TeachersClient.tsx` exists. Teachers created via AdminUsers page. Priority: High. Verification: Test.
+- FR-005: Class CRUD (grade level, major, rombel group). Status: Implemented — create + delete in `ClassesClient.tsx`. Edit missing (planned Sprint 14). Priority: High. Verification: Inspection.
+- FR-006: Subject CRUD (name, code, hours per week). Status: Implemented — create/edit/delete via Dialog in `SubjectsClient.tsx`. Priority: High. Verification: Inspection.
+- FR-007: Major/department CRUD (jurusan: IPA, IPS, Bahasa, etc). Status: Implemented — edit/delete via Dialog in `MajorsClient.tsx`. Create missing (planned Sprint 14). Priority: Medium. Verification: Inspection.
+- FR-008: Semester/academic year CRUD with active semester flag. Status: Implemented — create/edit/delete/activate in `SemestersClient.tsx`. Priority: Medium. Verification: Inspection.
+- FR-009: Student enrollment with state machine: active → transferred | dropped | graduated. Transferred → dropped allowed. Dropped/graduated = terminal. Bulk enrollment: chunk 50/transaction, skip existing via unique constraint, fail-fast. Status: Implemented — `EnrollmentsClient.tsx` with single + bulk enrollment, status change via `StatusChangeForm`. Priority: High. Verification: Test.
+- FR-010: Grade entry with 4 types (knowledge, skill, attitude, extracurricular). Sub-scores: dailyTest1-4, midterm, finalExam, practical, project, portfolio. Unique constraint: (enrollmentId, subjectId, type). Grade approval workflow. Status: Implemented — `GradesClient.tsx` with spreadsheet-style input, auto-compute score + grade. Priority: High. Verification: Test.
+- FR-011: Attendance tracking per session per student. Status: Not Started — `AttendanceClient.tsx` is placeholder. No schema, no actions, no sidebar link. Blocked on client requirements. Priority: Medium. Verification: Test.
+- FR-012: Payment management (Odoo pattern). `payment_items` as templates. `payments.price` always editable — catalog price is default, never enforced. Record, confirm, refund workflows. Payment method CRUD. Status: Implemented — `PaymentItemsClient.tsx`, `PaymentMethodsClient.tsx`, `RecordPaymentForm.tsx`, `FinanceClient.tsx`. Confirm flow in action column. Priority: Medium. Verification: Test.
+- FR-013: Announcement CRUD with publish/unpublish. Role-targeted visibility. Status: Implemented — `AnnouncementsClient.tsx` with create, publish/unpublish, delete. Edit missing (planned Sprint 14). Priority: Medium. Verification: Test.
+- FR-014: Encrypted document storage (AES-256-GCM) for 10 document types (ijasah, skhun, skl, akta, kk, ktp, kip, foto, rapor). Stored as `longtext` in DB. `max_allowed_packet` >= 64MB. Status: Implemented — `src/lib/crypto.ts`, `DocumentsClient.tsx`, `DocumentUploadForm.tsx`. Upload, view, download, soft-delete per document type. Priority: Medium. Verification: Test.
+- FR-015: Student promotion to next grade level and graduation workflow. Status: Not Started — no UI. Only graduation via enrollment status change `updateEnrollmentStatus`. Requires multi-step form wizard. Priority: Medium. Verification: Test.
+- FR-016: Rapor/KHS generation in government-compatible format. Status: Partial — KHS display in `StudentAcademicClient.tsx` with DataTable + GPA calculation. Download button present but disabled. Government-format export not implemented. Priority: Medium. Verification: Inspection.
+- FR-017: Dashboard with role-specific summaries (admin overview, teacher class view, student progress). Status: Implemented — `DashboardClient.tsx` with role-gated sections (admin stats + charts, teacher class averages, student GPA + schedule, alumni read-only). Priority: Medium. Verification: Inspection.
+- FR-018: Audit logging for all mutations — timestamp, actor, action, entity, details. Status: Implemented — `audit_logs` schema with Drizzle relations. Wired to enrollment state changes. Coverage for all mutations not verified. Priority: Medium. Verification: Inspection.
+- FR-019: School profile settings (name, address, logo, academic year). Status: Implemented — `SchoolSettingsForm.tsx` with batch update. Priority: Low. Verification: Inspection.
+- FR-020: Admin approval workflow for pending student registrations. Status: Implemented — `ApprovalsClient.tsx` with approve/reject actions via `ActionCell`. Priority: Medium. Verification: Test.
+- FR-021: Boarding/hostel module — student dormitory assignment and tracking. Status: Not Started — `BoardingClient.tsx` is a post-registration success page (misnamed). No boarding schema or functionality exists. Priority: Low. Verification: Test.
+- FR-022: Finance module — payment summaries, reporting, balance tracking. Status: Implemented — `FinanceClient.tsx` with payment list, `StudentFinanceClient.tsx` with student-facing invoice + payment dialog. Priority: Low. Verification: Inspection.
+- FR-023: System configuration for tunable settings. Status: Implemented — `SystemConfigsClient.tsx` with full CRUD for `SYSTEM_CONFIG_KEYS`. Role-gated via `system_configs.manage` permission. Priority: Low. Verification: Inspection.
+- FR-024: Calendar management — school events with CRUD, FullCalendar integration, category filtering (academic, exam, holiday, event, meeting, other). Status: Implemented — `CalendarClient.tsx` with create/edit/delete Dialogs, FullCalendar views (month/week/day), role-gated event management. Priority: Medium. Verification: Inspection.
+- FR-025: Announcement notifications — bell icon in header with notification center dropdown. Status: Not Started — bell icon is static placeholder. Planned Sprint 13. Requires `sonner` toasts + `Popover` component + notification schema + server actions. Priority: Low. Verification: Test.
+- FR-026: Payment catalog — browse payment item templates with type/price/semester filtering. Status: Implemented — `PaymentCatalogClient.tsx` with DataTable, role-gated create/edit/delete via `PaymentItemDialog`. Priority: Medium. Verification: Inspection.
+- FR-027: Header command palette — global search for sidebar navigation items via cmdk combobox. Status: Not Started — static search input in header. Planned Sprint 13. Requires `cmdk` + `Command` component. Priority: Low. Verification: Inspection.
 
 ### Non-Functional
 
-- NFR-001: All mutations use Server Actions at `src/actions/*.ts`. No direct DB from client components. Priority: High. Verification: Inspection.
-- NFR-002: Soft delete on all entities. `deletedAt` timestamp, null = active. `isNull(deletedAt)` on every query. Priority: High. Verification: Inspection.
-- NFR-003: Server Components by default. `use client` only when using Phosphor icons, shadcn Card/Badge, or hooks. Priority: High. Verification: Inspection.
-- NFR-004: Self-hosted MariaDB. No cloud dependency. ~1000 student scale. Priority: High. Verification: Analysis.
-- NFR-005: Build must pass zero errors before deployment (`bun run build`). Priority: High. Verification: Analysis.
+- NFR-001: All mutations use Server Actions at `src/actions/*.ts`. No direct DB from client components. Status: Implemented. Priority: High. Verification: Inspection.
+- NFR-002: Soft delete on all entities. `deletedAt` timestamp, null = active. `isNull(deletedAt)` on every query. Status: Partial — `announcement_recipients`, `profile_assets`, `user_permissions` tables missing `deletedAt` (Sprint 12 finding). Priority: High. Verification: Inspection.
+- NFR-003: Server Components by default. `use client` only when using Phosphor icons, shadcn Card/Badge, or hooks. Status: Partial — most feature files correctly use `use client`. `table.tsx` has unnecessary `use client` (Sprint 12 finding). Priority: High. Verification: Inspection.
+- NFR-004: Self-hosted MariaDB. No cloud dependency. ~1000 student scale. Status: Implemented. Priority: High. Verification: Analysis.
+- NFR-005: Build must pass zero errors before deployment (`bun run build`). Status: Implemented — build confirmed green at 40 routes (Sprint 11). Priority: High. Verification: Analysis.
+- NFR-006: Form error handling via `useToast()` — no `throw new Error()`, no `setMessage()`, no native `alert()`. Status: Partial — 3 `throw new Error()` remaining in `RecordPaymentForm.tsx` and `PaymentItemDialog.tsx`. 7 files use `setMessage()`/`setError()` instead of toast (planned Sprint 14 Phase 5). Priority: Medium. Verification: Inspection.
+- NFR-007: Action column pattern — `ActionCell` for delete, Dialog trigger for edit, `ActionCell onCustom` for extra actions. No raw buttons in action columns. Status: Partial — 7/18 features use `ActionCell`. Remaining use raw buttons + `confirm()` (planned Sprint 14 Phase 3). Priority: Medium. Verification: Inspection.
+- NFR-008: CRUD form pattern — `<EntityDialog>` wrapping `<EntityForm>` in `<Dialog>`. No inline Card forms. Status: Partial — 4 features use Dialog (Calendar, PaymentItems, PaymentCatalog, SystemConfigs). 11 features still use inline Cards (planned Sprint 14 Phases 1-2). Priority: Medium. Verification: Inspection.
+- NFR-009: Page wrapper pattern — `<PageShell>` for all CRUD pages. Status: Partial — 4 features use PageShell (Classes, Enrollments, Assignments, Boarding). 12 features use manual div wrappers (planned Sprint 14 Phase 4). Priority: Low. Verification: Inspection.
+- NFR-010: Validation schemas centralized in `src/lib/validation/schemas/`. No inline `z.object()` in action files. Status: Partial — `src/lib/validation/schemas/` has 4 files (enrollments, grades, settings). 4 action files still have inline schemas (academic, announcements, payments, register). 6 action files have no Zod validation at all (planned Sprint 15). Priority: Medium. Verification: Inspection.
 
 ## Architecture Decisions
 
@@ -52,6 +61,10 @@ Indonesian high schools manage student academic data across multiple domains —
 - **Enrollment state machine** over simple active/inactive flag. States: active → transferred|dropped|graduated. Terminal states: dropped|graduated. Transferred allows re-enrollment path. Logged to audit_logs.
 - **Payments: Odoo pattern** — `payment_items` as catalog templates, `payments.price` always editable. Trade-off: no enforced catalog pricing, but handles discounts and adjustments without schema changes.
 - **Religions: normalized separate table** over enum string column. Values: Islam, Kristen, Katolik, Hindu, Budha, Konghucu. Trade-off: join required for display, but enforces data integrity.
+- **CRUD form pattern: Dialog (centered modal) over sidebar/drawer (Sheet)** — school staff users work on 1024px screens, do one task at a time, and universally understand modal popups. Dialog obscures context but fits the one-task-at-a-time workflow better than Sheet. Trade-off: complex forms with 10+ fields may feel cramped — use Sheet for those cases only. Decided 2026-06-16.
+- **Action column pattern: ActionCell** — reusable component for delete (built-in confirmation), edit (Dialog trigger), and custom actions (onCustom array). Avoids raw button duplication across features. Trade-off: less flexibility for unique action layouts. Decided 2026-06-16.
+- **Error handling: useToast() for all action feedback** — no `throw new Error()` (crashes UI silently), no `setMessage()` (fragile state management), no native `confirm()`. Single hook for success/error feedback. Trade-off: toasts auto-dismiss — persistent status messages need alternative pattern. Decided 2026-06-16.
+- **Schema validation: centralized in `src/lib/validation/schemas/`** — one file per domain, re-exported via `index.ts`. No inline `z.object()` in action files. Enables reuse across actions, API routes, tests, and seed scripts. Trade-off: more files to navigate, but predictable location. Decided 2026-06-16.
 
 ## Anti-patterns
 
@@ -63,6 +76,12 @@ Indonesian high schools manage student academic data across multiple domains —
 - `Number()` on UUID string — produces NaN which coerces to 0, silently corrupting queries. Root cause: JavaScript loose coercion.
 - Binary/mediumblob for document storage — MariaDB binary caps at 255 bytes. Root cause: PostgreSQL/MySQL habits. Fix: use `longtext`.
 - Unique constraint names exceeding 64 characters — MariaDB truncates silently, causing migration errors. Root cause: auto-generated constraint names from composite indexes.
+- `throw new Error()` in form handlers — crashes the React component tree, user sees blank page. Root cause: treating form errors like programming errors. Fix: use `useToast()`.
+- `confirm()` in action columns — blocks the browser event loop, inconsistent with Dialog-based UI. Root cause: legacy habit. Fix: use `ActionCell` built-in confirmation.
+- `require()` instead of dynamic `import()` — breaks bundler tree-shaking, not compatible with ESM-only packages. Root cause: CommonJS habit. Fix: use `await import()`.
+- Raw HTML `<select>` instead of shadcn `<Select>` — inconsistent styling, missing keyboard navigation, no accessible label binding. Root cause: import oversight. Fix: use shadcn `<Select>`.
+- `document.getElementById()` instead of `useRef` — bypasses React's reconciliation, can reference stale DOM nodes. Root cause: jQuery-era habit. Fix: use `useRef` callback ref pattern.
+- `use client` on purely presentational components (e.g., `table.tsx`) — forces client-side rendering for HTML that could be SSR'd. Root cause: cargo-culting `use client`.
 
 ## Constraints
 
@@ -74,16 +93,16 @@ Indonesian high schools manage student academic data across multiple domains —
 
 ## Success Criteria
 
-- [ ] All FR-NNN implemented with passing tests or manual inspection
-- [ ] Build passes with zero errors (`bun run build`)
-- [ ] TypeScript strict mode passes (`bun run typecheck`)
-- [ ] All mutations revalidate affected paths
-- [ ] No direct DB calls from client components
-- [ ] RBAC enforced on all protected routes
-- [ ] Soft delete filter present on all entity queries
-- [ ] Document encryption round-trips correctly (store → retrieve → decrypt)
-- [ ] Enrollment state machine transitions verified (no invalid transitions)
-- [ ] All 3 roles (admin, teacher, student) can complete their primary workflows
+- [x] Build passes with zero errors (`bun run build`) — confirmed Sprint 11, 40 routes
+- [x] TypeScript strict mode passes (`bun run typecheck`) — confirmed Sprint D
+- [x] RBAC enforced on all protected routes — proxy.ts active, permissions wired
+- [ ] All FR-NNN implemented with passing tests or manual inspection — FR-011, 015, 021 not started
+- [ ] All mutations revalidate affected paths — unverified
+- [ ] No direct DB calls from client components — unverified
+- [ ] Soft delete filter present on all entity queries — Sprint 12 found missing tables
+- [ ] Document encryption round-trips correctly (store → retrieve → decrypt) — needs test
+- [ ] Enrollment state machine transitions verified (no invalid transitions) — needs test
+- [ ] All 3 roles (admin, teacher, student) can complete their primary workflows — needs test
 
 ## Non-Goals & Out of Scope
 
@@ -111,3 +130,13 @@ Indonesian high schools manage student academic data across multiple domains —
 ## Decision Log
 
 - 2025-11-15: Initial architecture decisions recorded — auth (better-auth), DB (Drizzle+MariaDB), UI (shadcn/ui v4), soft delete, encryption, grading schema, enrollment state machine, payment pattern, religion normalization. Context: project bootstrap.
+- 2026-06-10: Sprint B — Zod validation schemas wired where practical. `gradeTypeSchema` in `src/lib/validation/schemas/grades.ts`. `createEnrollmentSchema` in `schemas/enrollments.ts`. Context: security follow-up.
+- 2026-06-10: Sprint C — SQL injection fixes (raw `await db.$run()` replaced with parameterized queries). Schema relations added (Drizzle `relations`). Audit log user ID changed from number to string (UUID compatibility). Context: security sprint.
+- 2026-06-10: Sprint D — 16 feature pages verified as thin Server Components. Build + typecheck pass. Context: architecture compliance.
+- 2026-06-15: Sprint 10 — All 6 remaining `alert()` calls replaced with `useToast()`. Context: UI infrastructure.
+- 2026-06-15: Sprint 11 — QA sweep: build blocker fixed, auth leak closed, 404 fixed, chrome drift fixed, UX redirect fixed, favicon.ico added, alert debt cleared. 0 `alert()` remaining. Build green (40 routes). Context: pre-deployment quality gate.
+- 2026-06-15: Sprint 12 — Full codebase audit surfaced ~85 findings (~60 confirmed). Database integrity (CASCADE→SET NULL, PK syntax, migration cleanup, missing indexes, missing soft delete). Server Actions (missing Zod schemas, missing revalidatePath, missing soft delete filters). Feature components (throw→toast, raw select→shadcn Select, confirm→Dialog). Auth & middleware (proxy.ts active, favicon exclusion, level 100 bypass). Lib & components (unnecessary use client, breadcrumb a11y). Context: comprehensive code review.
+- 2026-06-16: Sprint 13 — Header search bar (static → cmdk Command combobox) and notification bell (static → Popover with notification center). Both pending. Context: header interactivity.
+- 2026-06-16: Sprint 14 — CRUD uniformity: all inline Card forms migrate to Dialog, missing create/edit operations added, action columns standardized to ActionCell, page wrappers standardized to PageShell, error handling unified to useToast(), debt items fixed. Context: feature consistency.
+- 2026-06-16: Sprint 15 — Schema centralization: all inline Zod schemas in action files extracted to `src/lib/validation/schemas/`. Missing Zod schemas created for 6 action files. Context: validation architecture.
+- 2026-06-16: Dialog-over-sidebar decision recorded for CRUD forms. ActionCell, PageShell, useToast() standards documented. Schema centralization pattern ratified. Context: Sprint 14-15 planning.
