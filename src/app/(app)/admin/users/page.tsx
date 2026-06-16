@@ -1,4 +1,4 @@
-import { desc, eq, isNull } from "drizzle-orm";
+import { desc, eq, inArray, isNull } from "drizzle-orm";
 import { PageShell } from "@/components/ui/page-shell";
 import { AdminUsersClient } from "@/features/admin/AdminUsersClient";
 import { verifyRoleLevel } from "@/lib/auth/verify-session";
@@ -23,15 +23,22 @@ async function getUsers() {
     .orderBy(desc(users.createdAt));
 }
 
+async function getStaffRoles() {
+  return db
+    .select({ id: roles.id, name: roles.name })
+    .from(roles)
+    .where(inArray(roles.level, [60, 80]));
+}
+
 export default async function AdminUsersPage() {
   await verifyRoleLevel(80);
-  const userList = await getUsers();
+  const [userList, roleList] = await Promise.all([getUsers(), getStaffRoles()]);
   return (
     <PageShell
       title="Manajemen Pengguna"
       description="Kelola akun staff, role, dan approval."
     >
-      <AdminUsersClient data={userList} />
+      <AdminUsersClient data={userList} roles={roleList} />
     </PageShell>
   );
 }

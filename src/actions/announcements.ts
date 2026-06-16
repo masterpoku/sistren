@@ -2,19 +2,16 @@
 
 import { and, desc, eq, isNotNull, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
 import { getAuthContext } from "@/lib/auth/permissions";
 import { verifyRoleLevel, verifySession } from "@/lib/auth/verify-session";
 import { db } from "@/lib/db";
-import { announcementRecipients, announcements, users } from "@/lib/db/schema";
-
-const announcementSchema = z.object({
-  title: z.string().min(1, "Judul wajib diisi").max(255),
-  content: z.string().min(1, "Konten wajib diisi"),
-  description: z.string().max(500).optional().nullable(),
-  category: z.string().max(50).optional().nullable(),
-  priority: z.enum(["normal", "important", "urgent"]).default("normal"),
-});
+import {
+  announcementRecipients,
+  announcements,
+  notifications,
+  users,
+} from "@/lib/db/schema";
+import { announcementSchema } from "@/lib/validation/schemas/announcements";
 
 export async function getAnnouncements(limit?: number) {
   const session = await verifySession();
@@ -178,7 +175,11 @@ export async function publishAnnouncement(announcementId: string) {
   await verifyRoleLevel(80);
 
   const [existing] = await db
-    .select({ id: announcements.id })
+    .select({
+      id: announcements.id,
+      title: announcements.title,
+      content: announcements.content,
+    })
     .from(announcements)
     .where(
       and(
@@ -196,6 +197,24 @@ export async function publishAnnouncement(announcementId: string) {
     .update(announcements)
     .set({ publishedAt: new Date() })
     .where(eq(announcements.id, Number(announcementId)));
+
+  // Notify all active users about the new announcement
+  const recipients = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(isNull(users.deletedAt));
+
+  if (recipients.length > 0) {
+    await db.insert(notifications).values(
+      recipients.map((r) => ({
+        userId: r.id,
+        title: "Pengumuman Baru",
+        message: existing.title,
+        type: "announcement" as const,
+        entityId: existing.id,
+      }))
+    );
+  }
 
   revalidatePath("/announcements");
 

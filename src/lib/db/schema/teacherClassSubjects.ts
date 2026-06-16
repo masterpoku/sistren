@@ -1,6 +1,7 @@
 import { relations } from "drizzle-orm";
 import {
   bigint,
+  index,
   mysqlTable,
   timestamp,
   unique,
@@ -38,6 +39,9 @@ export const teacherClassSubjects = mysqlTable(
       table.subjectId,
       table.semesterId
     ),
+    teacherIdx: index("tcs_teacher_idx").on(table.teacherId),
+    classIdx: index("tcs_class_idx").on(table.classId),
+    semesterIdx: index("tcs_semester_idx").on(table.semesterId),
   })
 );
 

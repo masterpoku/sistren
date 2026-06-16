@@ -2,6 +2,7 @@ import { relations } from "drizzle-orm";
 import {
   bigint,
   decimal,
+  index,
   int,
   json,
   mysqlEnum,
@@ -48,7 +49,9 @@ export const payments = mysqlTable("payments", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").onUpdateNow(),
   deletedAt: timestamp("deleted_at"),
-});
+}, (table) => ({
+  studentIdx: index("payments_student_idx").on(table.studentId),
+}));
 
 export const paymentsRelations = relations(payments, ({ one }) => ({
   student: one(users, {

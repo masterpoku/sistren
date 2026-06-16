@@ -16,6 +16,7 @@ import { db } from "./index";
 import { PERMISSIONS, ROLE_ENTRIES, ROLE_PERMISSIONS } from "./permissions";
 import {
   calendarEvents,
+  notifications,
   permissions,
   religions,
   rolePermissions,
@@ -450,6 +451,52 @@ async function seedCalendarEvents() {
 
     await db.insert(calendarEvents).values(event);
     console.log(`✅ Seeded event: ${event.title}`);
+  }
+
+  // Seed demo notifications for superadmin
+  const [superadmin] = await db
+    .select({ id: users.id })
+    .from(users)
+    .innerJoin(roles, eq(users.roleId, roles.id))
+    .where(and(eq(roles.level, 100), isNull(users.deletedAt)))
+    .limit(1);
+
+  if (superadmin) {
+    const sampleNotifications = [
+      {
+        userId: superadmin.id,
+        title: "Selamat Datang di Sistren",
+        message: "Sistem Informasi Sekolah siap digunakan.",
+        type: "system" as const,
+      },
+      {
+        userId: superadmin.id,
+        title: "Pengingat: Tahun Ajaran Baru",
+        message: "Mohon perbarui semester aktif untuk tahun ajaran 2026/2027.",
+        type: "system" as const,
+      },
+    ];
+
+    for (const n of sampleNotifications) {
+      const [existing] = await db
+        .select({ id: notifications.id })
+        .from(notifications)
+        .where(
+          and(
+            eq(notifications.userId, n.userId),
+            eq(notifications.title, n.title)
+          )
+        )
+        .limit(1);
+
+      if (existing) {
+        console.log(`⏭️  Notification '${n.title}' already exists`);
+        continue;
+      }
+
+      await db.insert(notifications).values(n);
+      console.log(`✅ Seeded notification: ${n.title}`);
+    }
   }
 }
 

@@ -1,6 +1,7 @@
 import { relations } from "drizzle-orm";
 import {
   bigint,
+  index,
   mysqlEnum,
   mysqlTable,
   timestamp,
@@ -46,6 +47,7 @@ export const enrollments = mysqlTable(
   },
   (table) => ({
     studentSemesterUnique: unique().on(table.studentId, table.semesterId),
+    studentIdx: index("enrollments_student_idx").on(table.studentId),
   })
 );
 

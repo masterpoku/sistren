@@ -32,6 +32,7 @@ export const userPermissions = mysqlTable("user_permissions", {
   expiresAt: timestamp("expires_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
 });
 
 export const userPermissionsRelations = relations(

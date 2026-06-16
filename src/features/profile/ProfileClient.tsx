@@ -1,8 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
-import { useToast } from "@/hooks/use-toast";
 import { updateProfile, uploadAvatar } from "@/actions/profile";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 
 type Profile = {
   id: number;
@@ -42,14 +43,14 @@ export function ProfileClient({
   sessionEmail,
 }: ProfileClientProps) {
   const router = useRouter();
-const { toast } = useToast();
+  const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
 
   function handleSubmit(formData: FormData) {
     startTransition(async () => {
       const result = await updateProfile(formData);
       if (result && "error" in result) {
-toast({ variant: "destructive", description: result.error });
+        toast({ variant: "destructive", description: result.error });
       } else {
         router.refresh();
       }
@@ -76,9 +77,12 @@ toast({ variant: "destructive", description: result.error });
           <div className="flex items-center gap-6">
             <Avatar className="h-20 w-20 border-2 border-primary/10">
               {sessionEmail ? (
-                <img
+                <Image
                   src={`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(sessionEmail)}`}
                   alt={sessionName}
+                  width={80}
+                  height={80}
+                  unoptimized
                   className="size-full rounded-full object-cover"
                 />
               ) : (
@@ -109,7 +113,10 @@ toast({ variant: "destructive", description: result.error });
                   startTransition(async () => {
                     const result = await uploadAvatar(formData);
                     if (result && "error" in result) {
-toast({ variant: "destructive", description: result.error });
+                      toast({
+                        variant: "destructive",
+                        description: result.error,
+                      });
                     } else {
                       router.refresh();
                     }

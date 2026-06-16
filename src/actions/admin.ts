@@ -6,6 +6,7 @@ import { auth } from "@/lib/auth";
 import { verifyRoleLevel } from "@/lib/auth/verify-session";
 import { db } from "@/lib/db";
 import { roles, users } from "@/lib/db/schema";
+import { createStaffAccountSchema, updateStaffAccountSchema } from "@/lib/validation/schemas/admin";
 
 export async function approveStudent(userId: string) {
   await verifyRoleLevel(80);
@@ -29,6 +30,7 @@ export async function approveStudent(userId: string) {
     .set({ emailVerified: true, roleId: 40 })
     .where(eq(users.id, userId));
 
+  revalidatePath("/admin/approvals");
   return { success: true };
 }
 
@@ -57,20 +59,17 @@ export async function rejectStudent(userId: string) {
 export async function createStaffAccount(formData: FormData) {
   await verifyRoleLevel(80);
 
-  const name = formData.get("name") as string;
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
-  const roleIdStr = formData.get("roleId") as string;
-
-  if (!name || !email || !password || !roleIdStr) {
-    return { error: "Semua field wajib diisi." };
+  const parsed = createStaffAccountSchema.safeParse({
+    name: formData.get("name"),
+    email: formData.get("email"),
+    password: formData.get("password"),
+    roleId: formData.get("roleId"),
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Data tidak valid" };
   }
+  const { name, email, password, roleId } = parsed.data;
 
-  if (password.length < 6) {
-    return { error: "Password minimal 6 karakter." };
-  }
-
-  const roleId = Number(roleIdStr);
   if (![60, 80].includes(roleId)) {
     return { error: "Role tidak valid. Pilih Guru atau Administrator." };
   }
@@ -117,6 +116,53 @@ export async function createStaffAccount(formData: FormData) {
     }
     return { error: "Gagal membuat akun. Silakan coba lagi." };
   }
+}
+
+export async function updateStaffAccount(userId: string, formData: FormData) {
+  await verifyRoleLevel(80);
+
+  const parsed = updateStaffAccountSchema.safeParse({
+    name: formData.get("name"),
+    email: formData.get("email"),
+    roleId: formData.get("roleId"),
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Data tidak valid" };
+  }
+  const { name, email, roleId } = parsed.data;
+
+  if (![60, 80].includes(roleId)) {
+    return { error: "Role tidak valid. Pilih Guru atau Administrator." };
+  }
+
+  const [user] = await db
+    .select({ id: users.id, email: users.email })
+    .from(users)
+    .where(and(eq(users.id, userId), isNull(users.deletedAt)))
+    .limit(1);
+
+  if (!user) {
+    return { error: "Pengguna tidak ditemukan." };
+  }
+
+  if (email !== user.email) {
+    const [existing] = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.email, email))
+      .limit(1);
+    if (existing) {
+      return { error: "Email sudah terdaftar." };
+    }
+  }
+
+  await db
+    .update(users)
+    .set({ name, email, roleId })
+    .where(eq(users.id, userId));
+
+  revalidatePath("/admin/users");
+  return { success: true };
 }
 
 export async function deleteStaffAccount(userId: string) {

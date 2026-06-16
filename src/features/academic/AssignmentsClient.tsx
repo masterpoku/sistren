@@ -1,32 +1,20 @@
 "use client";
 
-
 import type { ColumnDef } from "@tanstack/react-table";
-import { useRouter } from "next/navigation";
-import { useTransition } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { assignTeacher } from "@/actions/academic";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable } from "@/components/ui/data-table";
 import { ActionCell } from "@/components/ui/data-table";
-import { Label } from "@/components/ui/label";
 import { PageShell } from "@/components/ui/page-shell";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { AssignmentDialog } from "@/features/academic/AssignmentDialog";
 
 type Assignment = {
-	id: number;
-	teacherName: string;
-	className: string;
-	subjectName: string;
-	semesterName: string;
-	academicYear: string;
+    id: number;
+    teacherName: string;
+    className: string;
+    subjectName: string;
+    semesterName: string;
+    academicYear: string;
 };
 
 type Teacher = { id: string; name: string };
@@ -34,160 +22,85 @@ type Class = { id: number; name: string };
 type Subject = { id: number; name: string };
 type Semester = { id: number; name: string; academicYear: string };
 
-export const columns: ColumnDef<Assignment>[] = [
-	{
-		accessorKey: "teacherName",
-		header: "Guru",
-	},
-	{
-		accessorKey: "className",
-		header: "Kelas",
-	},
-	{
-		accessorKey: "subjectName",
-		header: "Mapel",
-	},
-	{
-		accessorKey: "semesterName",
-		header: "Semester",
-		cell: ({ row }) =>
-			`${row.original.semesterName} (${row.original.academicYear})`,
-	},
-	{
-		id: "actions",
-		header: "Aksi",
-		cell: ({ row }) => (
-			<ActionCell
-				onDelete={async () => {
-					const { removeAssignment } = await import("@/actions/academic");
-					await removeAssignment(String(row.original.id));
-				}}
-			/>
-		),
-	},
-];
-
 interface AssignmentsClientProps {
-	assignments: Assignment[];
-	teachers: Teacher[];
-	classes: Class[];
-	subjects: Subject[];
-	semesters: Semester[];
+    assignments: Assignment[];
+    teachers: Teacher[];
+    classes: Class[];
+    subjects: Subject[];
+    semesters: Semester[];
+}
+
+function AssignmentActions({ id }: { id: number }) {
+    const { toast } = useToast();
+
+    async function handleDelete() {
+        const { removeAssignment } = await import("@/actions/academic");
+        const result = await removeAssignment(String(id));
+        if (result && "error" in result && result.error) {
+            toast({ variant: "destructive", description: result.error });
+            return;
+        }
+        toast({ description: "Tugas dihapus." });
+    }
+
+    return <ActionCell onDelete={handleDelete} />;
 }
 
 export function AssignmentsClient({
-	assignments,
-	teachers,
-	classes,
-	subjects,
-	semesters,
+    assignments,
+    teachers,
+    classes,
+    subjects,
+    semesters,
 }: AssignmentsClientProps) {
-	const router = useRouter();
-	const { toast } = useToast();
-	const [isPending, startTransition] = useTransition();
+    const columns: ColumnDef<Assignment>[] = [
+        {
+            accessorKey: "teacherName",
+            header: "Guru",
+        },
+        {
+            accessorKey: "className",
+            header: "Kelas",
+        },
+        {
+            accessorKey: "subjectName",
+            header: "Mapel",
+        },
+        {
+            accessorKey: "semesterName",
+            header: "Semester",
+            cell: ({ row }) =>
+                `${row.original.semesterName} (${row.original.academicYear})`,
+        },
+        {
+            id: "actions",
+            header: "Aksi",
+            cell: ({ row }) => <AssignmentActions id={row.original.id} />,
+        },
+    ];
 
-	function handleAssign(formData: FormData) {
-		startTransition(async () => {
-			const result = await assignTeacher(formData);
-			if (result && "error" in result) {
-				toast({ variant: "destructive", description: result.error });
-			} else {
-				router.refresh();
-			}
-		});
-	}
-
-	return (
-		<PageShell
-			title="Tugas Guru"
-			description="Tugaskan guru ke kelas dan mata pelajaran per semester."
-		>
-			<Card>
-				<CardHeader>
-					<CardTitle>Tambah Tugas Baru</CardTitle>
-				</CardHeader>
-				<CardContent>
-					<form
-						action={handleAssign}
-						className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4"
-					>
-						<div className="space-y-2">
-							<Label htmlFor="teacherId">Guru</Label>
-							<Select name="teacherId" required>
-								<SelectTrigger>
-									<SelectValue placeholder="Pilih guru" />
-								</SelectTrigger>
-								<SelectContent>
-									{teachers.map((t) => (
-										<SelectItem key={t.id} value={t.id}>
-											{t.name}
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
-						</div>
-						<div className="space-y-2">
-							<Label htmlFor="classId">Kelas</Label>
-							<Select name="classId" required>
-								<SelectTrigger>
-									<SelectValue placeholder="Pilih kelas" />
-								</SelectTrigger>
-								<SelectContent>
-									{classes.map((c) => (
-										<SelectItem key={c.id} value={String(c.id)}>
-											{c.name}
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
-						</div>
-						<div className="space-y-2">
-							<Label htmlFor="subjectId">Mapel</Label>
-							<Select name="subjectId" required>
-								<SelectTrigger>
-									<SelectValue placeholder="Pilih mapel" />
-								</SelectTrigger>
-								<SelectContent>
-									{subjects.map((s) => (
-										<SelectItem key={s.id} value={String(s.id)}>
-											{s.name}
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
-						</div>
-						<div className="space-y-2">
-							<Label htmlFor="semesterId">Semester</Label>
-							<Select name="semesterId" required>
-								<SelectTrigger>
-									<SelectValue placeholder="Pilih semester" />
-								</SelectTrigger>
-								<SelectContent>
-									{semesters.map((s) => (
-										<SelectItem key={s.id} value={String(s.id)}>
-											{s.name} ({s.academicYear})
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
-						</div>
-						<div className="flex items-end">
-							<Button type="submit" className="w-full" disabled={isPending}>
-								{isPending ? "Menyimpan..." : "Tambah"}
-							</Button>
-						</div>
-					</form>
-				</CardContent>
-			</Card>
-
-			<DataTable
-				columns={columns}
-				data={assignments}
-				searchKey="teacherName"
-				searchPlaceholder="Cari guru..."
-				exportFilename="tugas-guru"
-				emptyMessage="Belum ada tugas."
-			/>
-		</PageShell>
-	);
+    return (
+        <PageShell
+            title="Tugas Guru"
+            description="Tugaskan guru ke kelas dan mata pelajaran per semester."
+            actions={
+                <AssignmentDialog
+                    teachers={teachers}
+                    classes={classes}
+                    subjects={subjects}
+                    semesters={semesters}
+                    trigger={<Button type="button">Tambah Tugas</Button>}
+                />
+            }
+        >
+            <DataTable
+                columns={columns}
+                data={assignments}
+                searchKey="teacherName"
+                searchPlaceholder="Cari guru..."
+                exportFilename="tugas-guru"
+                emptyMessage="Belum ada tugas."
+            />
+        </PageShell>
+    );
 }

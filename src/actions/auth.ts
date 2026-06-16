@@ -3,18 +3,17 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
+import { loginSchema } from "@/lib/validation/schemas/auth";
 
 export async function loginAction(formData: FormData) {
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
-
-  if (!email || !password) {
-    return { error: "Email dan password wajib diisi." };
+  const parsed = loginSchema.safeParse({
+    email: formData.get("email"),
+    password: formData.get("password"),
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Data tidak valid" };
   }
-
-  if (password.length < 6) {
-    return { error: "Password minimal 6 karakter." };
-  }
+  const { email, password } = parsed.data;
 
   try {
     const result = await auth.api.signInEmail({

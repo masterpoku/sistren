@@ -10,6 +10,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
 
 type PaymentItem = {
   id?: number;
@@ -51,21 +52,18 @@ export function PaymentItemDialog({
   children,
 }: Props) {
   const [open, setOpen] = useState(false);
+  const { toast } = useToast();
   const action =
     mode === "create" ? "Tambah Item Pembayaran" : `Edit: ${item?.name}`;
   const isEdit = mode === "edit";
 
   async function handleSubmit(formData: FormData) {
-    if (isEdit && item?.id) {
-      const result = await updateAction(String(item.id), formData);
-      if (result && "error" in result) {
-        throw new Error(result.error);
-      }
-    } else {
-      const result = await createAction(formData);
-      if (result && "error" in result) {
-        throw new Error(result.error);
-      }
+    const result = isEdit && item?.id
+      ? await updateAction(String(item.id), formData)
+      : await createAction(formData);
+    if (result && "error" in result) {
+      toast({ variant: "destructive", description: result.error });
+      return;
     }
     setOpen(false);
   }

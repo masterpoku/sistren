@@ -23,6 +23,7 @@ export const profileAssets = mysqlTable("profile_assets", {
   kip: varchar("kip", { length: 255 }),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").onUpdateNow(),
+  deletedAt: timestamp("deleted_at"),
 });
 
 export const profileAssetsRelations = relations(profileAssets, ({ one }) => ({

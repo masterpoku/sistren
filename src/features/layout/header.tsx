@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, GraduationCap, MagnifyingGlass } from "@phosphor-icons/react";
+import { GraduationCap } from "@phosphor-icons/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -11,9 +11,10 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { HeaderNotifications } from "./HeaderNotifications";
+import { HeaderSearch } from "./HeaderSearch";
 
 interface AppHeaderProps {
   user: {
@@ -63,22 +64,8 @@ export function AppHeader({ user }: AppHeaderProps) {
       </div>
 
       <div className="flex items-center gap-4">
-        <div className="relative hidden md:block">
-          <MagnifyingGlass className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Cari menu..."
-            className="w-[300px] pl-8 bg-muted/50 border-none focus-visible:ring-primary/20"
-          />
-        </div>
-
-        <button
-          type="button"
-          className="relative inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-        >
-          <Bell className="h-5 w-5" />
-          <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-red-500 border-2 border-background" />
-        </button>
+        <HeaderSearch />
+        <HeaderNotifications />
 
         <Separator orientation="vertical" className="h-8 mx-1" />
 

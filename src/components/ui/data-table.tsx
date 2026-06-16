@@ -25,7 +25,6 @@ import Papa from "papaparse";
 import * as React from "react";
 import * as XLSX from "xlsx";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -43,6 +42,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 
 // ============================================================================
 // SHARED UTILITIES
@@ -50,7 +50,7 @@ import {
 
 export function formatCurrency(amount: number | string): string {
   const num = typeof amount === "string" ? parseFloat(amount) : amount;
-  if (isNaN(num)) return "Rp 0";
+  if (Number.isNaN(num)) return "Rp 0";
   return `Rp ${num.toLocaleString("id-ID")}`;
 }
 
@@ -60,7 +60,7 @@ export function formatDate(
 ): string {
   if (!date) return "-";
   const d = typeof date === "string" ? new Date(date) : date;
-  if (isNaN(d.getTime())) return "-";
+  if (Number.isNaN(d.getTime())) return "-";
   return d.toLocaleDateString("id-ID", {
     day: "2-digit",
     month: "short",
@@ -69,12 +69,10 @@ export function formatDate(
   });
 }
 
-export function formatDateTime(
-  date: Date | string | null | undefined
-): string {
+export function formatDateTime(date: Date | string | null | undefined): string {
   if (!date) return "-";
   const d = typeof date === "string" ? new Date(date) : date;
-  if (isNaN(d.getTime())) return "-";
+  if (Number.isNaN(d.getTime())) return "-";
   return d.toLocaleDateString("id-ID", {
     day: "2-digit",
     month: "short",
@@ -88,11 +86,7 @@ export function formatDateTime(
 // STATUS BADGE CONFIG
 // ============================================================================
 
-export type BadgeVariant =
-  | "default"
-  | "secondary"
-  | "destructive"
-  | "outline";
+export type BadgeVariant = "default" | "secondary" | "destructive" | "outline";
 
 export interface StatusConfig {
   label: string;
@@ -176,6 +170,7 @@ export function ActionCell({
       )}
       {onCustom?.map((action, i) => (
         <Button
+          // biome-ignore lint/suspicious/noArrayIndexKey: caller passes a transient action list with no stable id
           key={i}
           size="sm"
           variant={action.variant ?? "outline"}
@@ -213,7 +208,9 @@ export function DataTableShell({
 }: DataTableShellProps) {
   return (
     <div className={cn("w-full space-y-4", className)}>
-      {toolbar && <div className="flex items-center justify-between gap-4">{toolbar}</div>}
+      {toolbar && (
+        <div className="flex items-center justify-between gap-4">{toolbar}</div>
+      )}
       <div className="rounded-md border bg-card">{children}</div>
       {footer && (
         <div className="flex items-center justify-between px-2">{footer}</div>
@@ -366,7 +363,10 @@ export function DataTable<TData, TValue>({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={exportToExcel} className="cursor-pointer">
+            <DropdownMenuItem
+              onClick={exportToExcel}
+              className="cursor-pointer"
+            >
               <File className="mr-2 h-4 w-4 text-green-600" weight="fill" />
               Export Excel (.xlsx)
             </DropdownMenuItem>
@@ -404,7 +404,9 @@ export function DataTable<TData, TValue>({
                     key={column.id}
                     className="capitalize"
                     checked={column.getIsVisible()}
-                    onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                    onCheckedChange={(value) =>
+                      column.toggleVisibility(!!value)
+                    }
                   >
                     {column.id}
                   </DropdownMenuCheckboxItem>
@@ -426,9 +428,7 @@ export function DataTable<TData, TValue>({
           </span>
         )}
         {table.getFilteredSelectedRowModel().rows.length === 0 && (
-          <span>
-            {table.getFilteredRowModel().rows.length} baris total.
-          </span>
+          <span>{table.getFilteredRowModel().rows.length} baris total.</span>
         )}
       </div>
       <div className="flex items-center space-x-2">
@@ -490,10 +490,7 @@ export function DataTable<TData, TValue>({
               >
                 {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id}>
-                    {flexRender(
-                      cell.column.columnDef.cell,
-                      cell.getContext()
-                    )}
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
                 ))}
               </TableRow>

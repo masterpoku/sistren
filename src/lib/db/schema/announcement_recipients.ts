@@ -2,7 +2,9 @@ import { relations } from "drizzle-orm";
 import {
   bigint,
   boolean,
+  index,
   mysqlTable,
+  primaryKey,
   timestamp,
   varchar,
 } from "drizzle-orm/mysql-core";
@@ -27,9 +29,11 @@ export const announcementRecipients = mysqlTable(
     isRead: boolean("is_read").default(false),
     readAt: timestamp("read_at"),
     createdAt: timestamp("created_at").defaultNow(),
+    deletedAt: timestamp("deleted_at"),
   },
   (table) => ({
-    pk: { columns: [table.announcementId, table.userId] },
+    pk: primaryKey({ columns: [table.announcementId, table.userId] }),
+    userIdx: index("ar_user_idx").on(table.userId),
   })
 );
 

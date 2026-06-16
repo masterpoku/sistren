@@ -2,6 +2,7 @@ import { relations } from "drizzle-orm";
 import {
   bigint,
   boolean,
+  index,
   mysqlEnum,
   mysqlTable,
   timestamp,
@@ -31,7 +32,9 @@ export const calendarEvents = mysqlTable("calendar_events", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").onUpdateNow(),
   deletedAt: timestamp("deleted_at"),
-});
+}, (table) => ({
+  createdByIdx: index("calendar_events_created_by_idx").on(table.createdById),
+}));
 
 export const calendarEventsRelations = relations(calendarEvents, ({ one }) => ({
   createdBy: one(users, {

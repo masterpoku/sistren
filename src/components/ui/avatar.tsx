@@ -27,6 +27,7 @@ function AvatarImage({
   ...props
 }: React.ImgHTMLAttributes<HTMLImageElement>) {
   return (
+    // biome-ignore lint/performance/noImgElement: shadcn AvatarImage intentionally wraps a raw <img>
     <img
       data-slot="avatar-image"
       className={cn(

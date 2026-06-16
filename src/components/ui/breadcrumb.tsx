@@ -74,10 +74,10 @@ const BreadcrumbLink = React.forwardRef<
 BreadcrumbLink.displayName = "BreadcrumbLink";
 
 const BreadcrumbPage = React.forwardRef<
-  HTMLSpanElement,
-  React.HTMLAttributes<HTMLSpanElement>
+  HTMLAnchorElement,
+  React.AnchorHTMLAttributes<HTMLAnchorElement>
 >(({ className, ...props }, ref) => (
-  <span
+  <a
     ref={ref}
     role="link"
     aria-disabled="true"
@@ -92,7 +92,13 @@ const BreadcrumbSeparator = React.forwardRef<
   HTMLLIElement,
   React.LiHTMLAttributes<HTMLLIElement>
 >(({ className, ...props }, ref) => (
-  <li ref={ref} className={cn("text-muted-foreground", className)} {...props}>
+  <li
+    ref={ref}
+    role="presentation"
+    aria-hidden="true"
+    className={cn("text-muted-foreground", className)}
+    {...props}
+  >
     <ChevronRight className="h-4 w-4" />
   </li>
 ));

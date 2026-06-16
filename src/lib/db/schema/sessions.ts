@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { mysqlTable, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { index, mysqlTable, timestamp, varchar } from "drizzle-orm/mysql-core";
 import { users } from "./users";
 
 export const sessions = mysqlTable("sessions", {
@@ -13,7 +13,9 @@ export const sessions = mysqlTable("sessions", {
   userAgent: varchar("user_agent", { length: 255 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").onUpdateNow().notNull(),
-});
+}, (table) => ({
+  userIdx: index("sessions_user_idx").on(table.userId),
+}));
 
 export const sessionsRelations = relations(sessions, ({ one }) => ({
   user: one(users, {

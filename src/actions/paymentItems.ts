@@ -5,6 +5,10 @@ import { revalidatePath } from "next/cache";
 import { verifyRoleLevel } from "@/lib/auth/verify-session";
 import { db } from "@/lib/db";
 import { paymentItems, semesters } from "@/lib/db/schema";
+import {
+  createPaymentItemSchema,
+  updatePaymentItemSchema,
+} from "@/lib/validation/schemas/paymentItems";
 
 export async function getPaymentItems(opts?: {
   search?: string;
@@ -82,22 +86,20 @@ export async function getActivePaymentItems() {
 export async function createPaymentItem(formData: FormData) {
   await verifyRoleLevel(80);
 
-  const code = (formData.get("code") as string)?.trim().toUpperCase();
-  const name = (formData.get("name") as string)?.trim();
-  const description = (formData.get("description") as string)?.trim() || null;
-  const standardPriceStr = formData.get("standardPrice") as string;
-  const type = (formData.get("type") as string) || "one_time";
-  const semesterIdStr = formData.get("semesterId") as string;
-  const isActive = formData.get("isActive") !== "false";
-
-  if (!code || !name || !standardPriceStr) {
-    return { error: "Kode, nama, dan harga standar wajib diisi." };
+  const parsed = createPaymentItemSchema.safeParse({
+    code: formData.get("code"),
+    name: formData.get("name"),
+    description: (formData.get("description") as string)?.trim() || null,
+    standardPrice: formData.get("standardPrice"),
+    type: formData.get("type") || "one_time",
+    semesterId: formData.get("semesterId") || null,
+    isActive: formData.get("isActive") !== "false",
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Data tidak valid" };
   }
-
-  const standardPrice = parseFloat(standardPriceStr);
-  if (Number.isNaN(standardPrice) || standardPrice < 0) {
-    return { error: "Harga standar tidak valid." };
-  }
+  const { code, name, description, standardPrice, type, semesterId, isActive } =
+    parsed.data;
 
   const [existing] = await db
     .select({ id: paymentItems.id })
@@ -109,15 +111,13 @@ export async function createPaymentItem(formData: FormData) {
     return { error: `Kode item pembayaran "${code}" sudah ada.` };
   }
 
-  const semesterId = semesterIdStr ? parseInt(semesterIdStr, 10) : null;
-
   await db.insert(paymentItems).values({
     code,
-    name,
+    name: name.trim(),
     description,
     standardPrice: String(standardPrice),
-    type: type as "recurring" | "one_time" | "variable",
-    semesterId: semesterId && !Number.isNaN(semesterId) ? semesterId : null,
+    type,
+    semesterId: semesterId ?? null,
     isActive,
   });
 
@@ -128,28 +128,27 @@ export async function createPaymentItem(formData: FormData) {
 export async function updatePaymentItem(itemId: string, formData: FormData) {
   await verifyRoleLevel(80);
 
-  const code = (formData.get("code") as string)?.trim().toUpperCase();
-  const name = (formData.get("name") as string)?.trim();
-  const description = (formData.get("description") as string)?.trim() || null;
-  const standardPriceStr = formData.get("standardPrice") as string;
-  const type = (formData.get("type") as string) || "one_time";
-  const semesterIdStr = formData.get("semesterId") as string;
-  const isActive = formData.get("isActive") !== "false";
-
-  if (!code || !name || !standardPriceStr) {
-    return { error: "Kode, nama, dan harga standar wajib diisi." };
+  const parsed = updatePaymentItemSchema.safeParse({
+    itemId,
+    code: formData.get("code"),
+    name: formData.get("name"),
+    description: (formData.get("description") as string)?.trim() || null,
+    standardPrice: formData.get("standardPrice"),
+    type: formData.get("type") || "one_time",
+    semesterId: formData.get("semesterId") || null,
+    isActive: formData.get("isActive") !== "false",
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Data tidak valid" };
   }
-
-  const standardPrice = parseFloat(standardPriceStr);
-  if (Number.isNaN(standardPrice) || standardPrice < 0) {
-    return { error: "Harga standar tidak valid." };
-  }
+  const { code, name, description, standardPrice, type, semesterId, isActive } =
+    parsed.data;
 
   const [existing] = await db
     .select({ id: paymentItems.id })
     .from(paymentItems)
     .where(
-      and(eq(paymentItems.id, Number(itemId)), isNull(paymentItems.deletedAt))
+      and(eq(paymentItems.id, parsed.data.itemId), isNull(paymentItems.deletedAt))
     )
     .limit(1);
 
@@ -157,7 +156,6 @@ export async function updatePaymentItem(itemId: string, formData: FormData) {
     return { error: "Item pembayaran tidak ditemukan." };
   }
 
-  // Check code uniqueness excluding self
   const [codeConflict] = await db
     .select({ id: paymentItems.id })
     .from(paymentItems)
@@ -165,7 +163,7 @@ export async function updatePaymentItem(itemId: string, formData: FormData) {
       and(
         eq(paymentItems.code, code),
         isNull(paymentItems.deletedAt),
-        ne(paymentItems.id, Number(itemId))
+        ne(paymentItems.id, parsed.data.itemId)
       )
     )
     .limit(1);
@@ -174,20 +172,18 @@ export async function updatePaymentItem(itemId: string, formData: FormData) {
     return { error: `Kode "${code}" sudah digunakan item lain.` };
   }
 
-  const semesterId = semesterIdStr ? parseInt(semesterIdStr, 10) : null;
-
   await db
     .update(paymentItems)
     .set({
       code,
-      name,
+      name: name.trim(),
       description,
       standardPrice: String(standardPrice),
-      type: type as "recurring" | "one_time" | "variable",
-      semesterId: semesterId && !Number.isNaN(semesterId) ? semesterId : null,
+      type,
+      semesterId: semesterId ?? null,
       isActive,
     })
-    .where(eq(paymentItems.id, Number(itemId)));
+    .where(eq(paymentItems.id, parsed.data.itemId));
 
   revalidatePath("/admin/payment-items");
   return { success: true };

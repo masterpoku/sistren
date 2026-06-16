@@ -2,7 +2,6 @@
 
 import { and, eq, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
 import { verifyRoleLevel, verifySession } from "@/lib/auth/verify-session";
 import { db } from "@/lib/db";
 import {
@@ -14,46 +13,20 @@ import {
   teacherClassSubjects,
   users,
 } from "@/lib/db/schema";
+import {
+  assignTeacherSchema,
+  classSchema,
+  idSchema,
+  majorSchema,
+  semesterSchema,
+  subjectSchema,
+  updateClassSchema,
+  updateMajorSchema,
+  updateSemesterSchema,
+  updateSubjectSchema,
+} from "@/lib/validation/schemas/academic";
 
-const classSchema = z.object({
-  name: z.string().min(1, "Nama wajib diisi").max(255),
-  code: z.string().min(1, "Kode wajib diisi").max(50),
-});
-const updateClassSchema = classSchema.extend({
-  classId: z.coerce.number().positive(),
-});
-const majorSchema = z.object({
-  name: z.string().min(1, "Nama wajib diisi").max(255),
-  description: z.string().max(500).optional().nullable(),
-});
-const updateMajorSchema = majorSchema.extend({
-  majorId: z.coerce.number().positive(),
-});
-const subjectSchema = z.object({
-  name: z.string().min(1, "Nama wajib diisi").max(255),
-  code: z.string().max(50).optional().nullable(),
-  classId: z.coerce.number().positive("Kelas wajib dipilih"),
-  majorId: z.coerce.number().positive().optional().nullable(),
-  credits: z.coerce.number().int().min(0).max(20),
-});
-const updateSubjectSchema = subjectSchema.extend({
-  subjectId: z.coerce.number().positive(),
-});
-const semesterSchema = z.object({
-  name: z.string().min(1, "Nama wajib diisi").max(100),
-  academicYear: z.string().min(1, "Tahun ajaran wajib diisi").max(20),
-  isActive: z.coerce.boolean(),
-});
-const updateSemesterSchema = semesterSchema.extend({
-  semesterId: z.coerce.number().positive(),
-});
-const assignTeacherSchema = z.object({
-  teacherId: z.string().min(1, "Guru wajib dipilih"),
-  classId: z.coerce.number().positive(),
-  subjectId: z.coerce.number().positive(),
-  semesterId: z.coerce.number().positive(),
-});
-const idSchema = z.coerce.number().positive();
+// Assignments are immutable: edits are delete+create, no updateAssignment action.
 
 // Classes CRUD
 
@@ -616,20 +589,3 @@ export async function removeAssignment(assignmentId: string) {
 }
 
 // Form action wrappers — return void for Next.js form action compatibility.
-// TODO: Refactor to useActionState for proper error feedback + toast.
-
-export async function createClassAction(formData: FormData): Promise<void> {
-  await createClass(formData);
-}
-
-export async function createMajorAction(formData: FormData): Promise<void> {
-  await createMajor(formData);
-}
-
-export async function createSubjectAction(formData: FormData): Promise<void> {
-  await createSubject(formData);
-}
-
-export async function createSemesterAction(formData: FormData): Promise<void> {
-  await createSemester(formData);
-}

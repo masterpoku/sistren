@@ -13,6 +13,7 @@ import {
   semesters,
   users,
 } from "@/lib/db/schema";
+import { updateEnrollmentSchema } from "@/lib/validation/schemas/enrollments";
 
 export async function getEnrollments(opts?: {
   semesterId?: string;
@@ -261,6 +262,94 @@ export async function bulkCreateEnrollment(
   }
 
   return { inserted, skipped, failed: false };
+}
+
+export async function updateEnrollment(
+  enrollmentId: string,
+  formData: FormData
+) {
+  const session = await verifySession();
+  const ctx = await getAuthContext(session.userId);
+
+  if (!ctx || ctx.roleLevel < 80) {
+    return { error: "Anda tidak memiliki izin." };
+  }
+
+  const parsed = updateEnrollmentSchema.safeParse({
+    enrollmentId: formData.get("enrollmentId"),
+    studentId: formData.get("studentId"),
+    semesterId: formData.get("semesterId"),
+    classId: formData.get("classId"),
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Data tidak valid" };
+  }
+  const { studentId, semesterId, classId } = parsed.data;
+
+  if (Number(enrollmentId) !== parsed.data.enrollmentId) {
+    return { error: "ID pendaftaran tidak cocok." };
+  }
+
+  const [existing] = await db
+    .select({ id: enrollments.id, status: enrollments.status })
+    .from(enrollments)
+    .where(
+      and(
+        eq(enrollments.id, parsed.data.enrollmentId),
+        isNull(enrollments.deletedAt)
+      )
+    )
+    .limit(1);
+
+  if (!existing) {
+    return { error: "Pendaftaran tidak ditemukan." };
+  }
+
+  if (existing.status !== "active") {
+    return { error: "Hanya pendaftaran aktif yang dapat diubah." };
+  }
+
+  const [student] = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(and(eq(users.id, studentId), isNull(users.deletedAt)))
+    .limit(1);
+
+  if (!student) {
+    return { error: "Siswa tidak ditemukan." };
+  }
+
+  const [duplicate] = await db
+    .select({ id: enrollments.id })
+    .from(enrollments)
+    .where(
+      and(
+        eq(enrollments.studentId, studentId),
+        eq(enrollments.semesterId, semesterId),
+        isNull(enrollments.deletedAt)
+      )
+    )
+    .limit(1);
+
+  if (duplicate && duplicate.id !== existing.id) {
+    return { error: "Siswa sudah terdaftar untuk semester ini." };
+  }
+
+  await db
+    .update(enrollments)
+    .set({ studentId, semesterId, classId })
+    .where(eq(enrollments.id, parsed.data.enrollmentId));
+
+  await db.insert(auditLogs).values({
+    userId: session.userId,
+    action: "enrollment.updated",
+    entityType: "enrollment",
+    entityId: parsed.data.enrollmentId,
+    metadata: { changes: { studentId, semesterId, classId } },
+  });
+
+  revalidatePath("/enrollments");
+  return { success: true };
 }
 
 export async function updateEnrollmentStatus(

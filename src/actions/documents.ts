@@ -1,12 +1,13 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getAuthContext } from "@/lib/auth/permissions";
 import { verifySession } from "@/lib/auth/verify-session";
 import { decryptBlob, encryptBlob } from "@/lib/crypto";
 import { db } from "@/lib/db";
 import { studentDocuments } from "@/lib/db/schema";
+import { uploadDocumentSchema } from "@/lib/validation/schemas/documents";
 
 type DocumentType =
   | "ijasah"
@@ -52,7 +53,12 @@ export async function getDocuments(studentId: string) {
   const [doc] = await db
     .select()
     .from(studentDocuments)
-    .where(eq(studentDocuments.studentId, studentId))
+    .where(
+      and(
+        eq(studentDocuments.studentId, studentId),
+        isNull(studentDocuments.deletedAt)
+      )
+    )
     .limit(1);
 
   if (!doc) {
@@ -76,16 +82,14 @@ export async function uploadDocument(formData: FormData) {
   const ctx = await getAuthContext(session.userId);
 
   const file = formData.get("file") as File | null;
-  const studentId = formData.get("studentId") as string;
-  const documentType = formData.get("documentType") as string;
-
-  if (!file || !studentId || !documentType) {
-    return { error: "File, studentId, dan documentType wajib diisi." };
+  const parsed = uploadDocumentSchema.safeParse({
+    studentId: formData.get("studentId"),
+    documentType: formData.get("documentType"),
+  });
+  if (!file || !parsed.success) {
+    return { error: parsed.error?.issues[0]?.message ?? "File dan data wajib diisi." };
   }
-
-  if (!isValidDocumentType(documentType)) {
-    return { error: "Jenis dokumen tidak valid." };
-  }
+  const { studentId, documentType } = parsed.data;
 
   // Permission: profile.edit_any OR own profile
   if (
@@ -163,7 +167,12 @@ export async function downloadDocument(
   const [doc] = await db
     .select()
     .from(studentDocuments)
-    .where(eq(studentDocuments.studentId, studentId))
+    .where(
+      and(
+        eq(studentDocuments.studentId, studentId),
+        isNull(studentDocuments.deletedAt)
+      )
+    )
     .limit(1);
 
   if (!doc) {

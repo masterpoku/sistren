@@ -6,6 +6,10 @@ import { getAuthContext } from "@/lib/auth/permissions";
 import { getOptionalSession, verifyRoleLevel } from "@/lib/auth/verify-session";
 import { db } from "@/lib/db";
 import { calendarEvents } from "@/lib/db/schema";
+import {
+  createEventSchema,
+  updateEventSchema,
+} from "@/lib/validation/schemas/calendar";
 
 export interface CalendarEvent {
   id: number;
@@ -100,41 +104,38 @@ export async function getPublicEvents(opts?: {
 export async function createEvent(formData: FormData) {
   const userId = await verifyRoleLevel(80);
 
-  const title = (formData.get("title") as string)?.trim();
-  const description = (formData.get("description") as string)?.trim() || null;
-  const startAtStr = formData.get("startAt") as string;
-  const endAtStr = formData.get("endAt") as string;
-  const allDay = formData.get("allDay") === "true";
-  const category = (formData.get("category") as string) || "event";
-  const isPublic = formData.get("isPublic") !== "false";
-
-  if (!title || !startAtStr) {
-    return { error: "Judul dan tanggal mulai wajib diisi." };
+  const parsed = createEventSchema.safeParse({
+    title: formData.get("title"),
+    description: (formData.get("description") as string)?.trim() || null,
+    startAt: formData.get("startAt"),
+    endAt: formData.get("endAt") || null,
+    allDay: formData.get("allDay") === "true",
+    category: formData.get("category") || "event",
+    isPublic: formData.get("isPublic") !== "false",
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Data tidak valid" };
   }
+  const { title, description, startAt, endAt, allDay, category, isPublic } =
+    parsed.data;
 
-  const startAt = new Date(startAtStr);
-  if (Number.isNaN(startAt.getTime())) {
+  const startAtDate = new Date(startAt);
+  if (Number.isNaN(startAtDate.getTime())) {
     return { error: "Tanggal mulai tidak valid." };
   }
 
-  const endAt = endAtStr ? new Date(endAtStr) : null;
-  if (endAt && Number.isNaN(endAt.getTime())) {
+  const endAtDate = endAt ? new Date(endAt) : null;
+  if (endAtDate && Number.isNaN(endAtDate.getTime())) {
     return { error: "Tanggal selesai tidak valid." };
   }
 
   await db.insert(calendarEvents).values({
-    title,
+    title: title.trim(),
     description,
-    startAt,
-    endAt,
+    startAt: startAtDate,
+    endAt: endAtDate,
     allDay,
-    category: category as
-      | "academic"
-      | "holiday"
-      | "event"
-      | "meeting"
-      | "exam"
-      | "other",
+    category,
     isPublic,
     createdById: userId,
   });
@@ -147,25 +148,29 @@ export async function createEvent(formData: FormData) {
 export async function updateEvent(id: number, formData: FormData) {
   await verifyRoleLevel(80);
 
-  const title = (formData.get("title") as string)?.trim();
-  const description = (formData.get("description") as string)?.trim() || null;
-  const startAtStr = formData.get("startAt") as string;
-  const endAtStr = formData.get("endAt") as string;
-  const allDay = formData.get("allDay") === "true";
-  const category = (formData.get("category") as string) || "event";
-  const isPublic = formData.get("isPublic") !== "false";
-
-  if (!title || !startAtStr) {
-    return { error: "Judul dan tanggal mulai wajib diisi." };
+  const parsed = updateEventSchema.safeParse({
+    eventId: id,
+    title: formData.get("title"),
+    description: (formData.get("description") as string)?.trim() || null,
+    startAt: formData.get("startAt"),
+    endAt: formData.get("endAt") || null,
+    allDay: formData.get("allDay") === "true",
+    category: formData.get("category") || "event",
+    isPublic: formData.get("isPublic") !== "false",
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Data tidak valid" };
   }
+  const { title, description, startAt, endAt, allDay, category, isPublic } =
+    parsed.data;
 
-  const startAt = new Date(startAtStr);
-  if (Number.isNaN(startAt.getTime())) {
+  const startAtDate = new Date(startAt);
+  if (Number.isNaN(startAtDate.getTime())) {
     return { error: "Tanggal mulai tidak valid." };
   }
 
-  const endAt = endAtStr ? new Date(endAtStr) : null;
-  if (endAt && Number.isNaN(endAt.getTime())) {
+  const endAtDate = endAt ? new Date(endAt) : null;
+  if (endAtDate && Number.isNaN(endAtDate.getTime())) {
     return { error: "Tanggal selesai tidak valid." };
   }
 
@@ -182,18 +187,12 @@ export async function updateEvent(id: number, formData: FormData) {
   await db
     .update(calendarEvents)
     .set({
-      title,
+      title: title.trim(),
       description,
-      startAt,
-      endAt,
+      startAt: startAtDate,
+      endAt: endAtDate,
       allDay,
-      category: category as
-        | "academic"
-        | "holiday"
-        | "event"
-        | "meeting"
-        | "exam"
-        | "other",
+      category,
       isPublic,
     })
     .where(eq(calendarEvents.id, id));

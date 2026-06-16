@@ -8,6 +8,7 @@ export * from "./classes";
 export * from "./enrollments";
 export * from "./grades";
 export * from "./majors";
+export * from "./notifications";
 export * from "./payment_methods";
 export * from "./paymentItems";
 export * from "./payments";

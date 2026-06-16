@@ -1,29 +1,24 @@
 "use client";
 
-import { useState, useTransition } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
-import { createEnrollment } from "@/actions/enrollments";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable } from "@/components/ui/data-table";
 import { ActionCell } from "@/components/ui/data-table";
-import { Label } from "@/components/ui/label";
 import { PageShell } from "@/components/ui/page-shell";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
 import { BulkEnrollmentForm } from "@/features/enrollments/BulkEnrollmentForm";
+import { EnrollmentDialog } from "@/features/enrollments/EnrollmentDialog";
 import { StatusChangeForm } from "@/features/enrollments/StatusChangeForm";
 
 type Enrollment = {
   id: number;
+  studentId: string;
   studentName: string;
   studentEmail: string;
+  classId: number;
   className: string;
+  semesterId: number;
   semesterName: string;
   academicYear: string;
   status: string;
@@ -36,66 +31,59 @@ const STATUS_COLORS: Record<string, string> = {
   dropped: "bg-red-100 text-red-800",
 };
 
-export const columns: ColumnDef<Enrollment>[] = [
-  {
-    accessorKey: "studentName",
-    header: "Siswa",
-  },
-  {
-    accessorKey: "studentEmail",
-    header: "Email",
-  },
-  {
-    accessorKey: "className",
-    header: "Kelas",
-  },
-  {
-    accessorKey: "semesterName",
-    header: "Semester",
-    cell: ({ row }) =>
-      `${row.original.semesterName} (${row.original.academicYear})`,
-  },
-  {
-    accessorKey: "status",
-    header: "Status",
-    cell: ({ row }) => {
-      const status = row.getValue("status") as string;
-      const colorClass = STATUS_COLORS[status] ?? "bg-gray-100 text-gray-800";
-      return (
-        <span className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-medium ${colorClass}`}>
-          {status}
-        </span>
-      );
-    },
-  },
-  {
-    id: "actions",
-    header: "Aksi",
-    cell: ({ row }) => (
-      <div className="flex items-center gap-2">
-        {row.original.status === "active" ? (
-          <StatusChangeForm enrollmentId={row.original.id} />
-        ) : (
-          <span className="text-xs text-muted-foreground">
-            Tidak dapat diubah
-          </span>
-        )}
-        <ActionCell
-          onDelete={async () => {
-            const { deleteEnrollment } = await import("@/actions/enrollments");
-            await deleteEnrollment(String(row.original.id));
-          }}
-        />
-      </div>
-    ),
-  },
-];
-
-interface EnrollmentsClientProps {
-  enrollmentList: Enrollment[];
+function EnrollmentsActions({
+  enrollment,
+  studentList,
+  semesterList,
+  classList,
+}: {
+  enrollment: Enrollment;
   studentList: { id: string; name: string }[];
   semesterList: { id: number; name: string; academicYear: string }[];
   classList: { id: number; name: string }[];
+}) {
+  const { toast } = useToast();
+
+  async function handleDelete() {
+    const { deleteEnrollment } = await import("@/actions/enrollments");
+    const result = await deleteEnrollment(String(enrollment.id));
+    if (result && "error" in result && result.error) {
+      toast({ variant: "destructive", description: result.error });
+      return;
+    }
+    toast({ description: "Pendaftaran dihapus." });
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      {enrollment.status === "active" ? (
+        <>
+          <StatusChangeForm enrollmentId={enrollment.id} />
+          <EnrollmentDialog
+            students={studentList}
+            semesters={semesterList}
+            classes={classList}
+            item={{
+              id: enrollment.id,
+              studentId: enrollment.studentId,
+              semesterId: enrollment.semesterId,
+              classId: enrollment.classId,
+            }}
+            trigger={
+              <Button type="button" variant="outline" size="sm">
+                Edit
+              </Button>
+            }
+          />
+        </>
+      ) : (
+        <span className="text-xs text-muted-foreground">
+          Tidak dapat diubah
+        </span>
+      )}
+      <ActionCell onDelete={handleDelete} />
+    </div>
+  );
 }
 
 export function EnrollmentsClient({
@@ -103,32 +91,71 @@ export function EnrollmentsClient({
   studentList,
   semesterList,
   classList,
-}: EnrollmentsClientProps) {
-  const [isPending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
-
-  function handleCreateEnrollment(formData: FormData) {
-    setError(null);
-    startTransition(async () => {
-      const result = await createEnrollment(formData);
-      if (result && "error" in result && result.error) {
-        setError(result.error);
-      }
-    });
-  }
+}: {
+  enrollmentList: Enrollment[];
+  studentList: { id: string; name: string }[];
+  semesterList: { id: number; name: string; academicYear: string }[];
+  classList: { id: number; name: string }[];
+}) {
+  const columns: ColumnDef<Enrollment>[] = [
+    {
+      accessorKey: "studentName",
+      header: "Siswa",
+    },
+    {
+      accessorKey: "studentEmail",
+      header: "Email",
+    },
+    {
+      accessorKey: "className",
+      header: "Kelas",
+    },
+    {
+      accessorKey: "semesterName",
+      header: "Semester",
+      cell: ({ row }) =>
+        `${row.original.semesterName} (${row.original.academicYear})`,
+    },
+    {
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }) => {
+        const status = row.getValue("status") as string;
+        const colorClass = STATUS_COLORS[status] ?? "bg-gray-100 text-gray-800";
+        return (
+          <span className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-medium ${colorClass}`}>
+            {status}
+          </span>
+        );
+      },
+    },
+    {
+      id: "actions",
+      header: "Aksi",
+      cell: ({ row }) => (
+        <EnrollmentsActions
+          enrollment={row.original}
+          studentList={studentList}
+          semesterList={semesterList}
+          classList={classList}
+        />
+      ),
+    },
+  ];
 
   return (
     <PageShell
       title="Pendaftaran"
       description="Kelola pendaftaran siswa ke kelas per semester."
+      actions={
+        <EnrollmentDialog
+          students={studentList}
+          semesters={semesterList}
+          classes={classList}
+          trigger={<Button type="button">Tambah Pendaftaran</Button>}
+        />
+      }
     >
-      {error && (
-        <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-          {error}
-        </div>
-      )}
-
-      {/* Bulk Enrollment Form */}
       <Card>
         <CardHeader>
           <CardTitle>Bulk Enrollment</CardTitle>
@@ -141,74 +168,6 @@ export function EnrollmentsClient({
         </CardContent>
       </Card>
 
-      {/* Create Form */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Tambah Pendaftaran</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form
-            action={handleCreateEnrollment}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
-          >
-            <div className="space-y-2">
-              <Label>Siswa</Label>
-              <Select name="studentId" required>
-                <SelectTrigger>
-                  <SelectValue placeholder="Pilih siswa" />
-                </SelectTrigger>
-                <SelectContent>
-                  {studentList.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>
-                      {s.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Semester</Label>
-              <Select name="semesterId" required>
-                <SelectTrigger>
-                  <SelectValue placeholder="Pilih semester" />
-                </SelectTrigger>
-                <SelectContent>
-                  {semesterList.map((s) => (
-                    <SelectItem key={s.id} value={String(s.id)}>
-                      {s.name} ({s.academicYear})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Kelas</Label>
-              <Select name="classId" required>
-                <SelectTrigger>
-                  <SelectValue placeholder="Pilih kelas" />
-                </SelectTrigger>
-                <SelectContent>
-                  {classList.map((c) => (
-                    <SelectItem key={c.id} value={String(c.id)}>
-                      {c.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex items-end">
-              <Button type="submit" className="w-full" disabled={isPending}>
-                Daftarkan
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-
-      {/* Enrollment List */}
       <DataTable
         columns={columns}
         data={enrollmentList}
@@ -219,6 +178,4 @@ export function EnrollmentsClient({
       />
     </PageShell>
   );
-
-
 }

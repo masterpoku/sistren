@@ -3,6 +3,7 @@ import {
   bigint,
   char,
   decimal,
+  index,
   mysqlEnum,
   mysqlTable,
   text,
@@ -77,6 +78,7 @@ export const grades = mysqlTable(
       table.subjectId,
       table.type
     ),
+    teacherIdx: index("grades_teacher_idx").on(table.teacherId),
   })
 );
 

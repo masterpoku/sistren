@@ -1,32 +1,12 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { profiles, users } from "@/lib/db/schema";
-
-const registerSchema = z
-  .object({
-    name: z.string().min(2, "Nama minimal 2 karakter").max(100),
-    email: z.string().email("Email tidak valid"),
-    password: z.string().min(6, "Password minimal 6 karakter"),
-    confirmPassword: z.string().min(6, "Konfirmasi password wajib diisi"),
-    nisn: z.string().max(20).optional().or(z.literal("")),
-    birthPlace: z.string().max(100).optional().or(z.literal("")),
-    birthDate: z.string().optional().or(z.literal("")),
-    gender: z.enum(["male", "female"]).optional().or(z.literal("")),
-    religionId: z.string().optional().or(z.literal("")),
-    address: z.string().max(500).optional().or(z.literal("")),
-    fatherName: z.string().max(100).optional().or(z.literal("")),
-    motherName: z.string().max(100).optional().or(z.literal("")),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Password dan konfirmasi password tidak cocok",
-    path: ["confirmPassword"],
-  });
+import { registerSchema } from "@/lib/validation/schemas/register";
 
 export async function registerAction(formData: FormData) {
   const raw = {
@@ -53,7 +33,7 @@ export async function registerAction(formData: FormData) {
   const [existing] = await db
     .select({ id: users.id })
     .from(users)
-    .where(eq(users.email, email))
+    .where(and(eq(users.email, email), isNull(users.deletedAt)))
     .limit(1);
 
   if (existing) {
@@ -93,8 +73,6 @@ export async function registerAction(formData: FormData) {
     if (!Number.isNaN(religionIdNum)) profileValues.religionId = religionIdNum;
   }
   if (parsed.data.address?.trim()) profileValues.address = parsed.data.address;
-  if (parsed.data.fatherName?.trim())
-    profileValues.fatherName = parsed.data.fatherName;
   if (parsed.data.fatherName?.trim())
     profileValues.fatherName = parsed.data.fatherName;
   if (parsed.data.motherName?.trim())

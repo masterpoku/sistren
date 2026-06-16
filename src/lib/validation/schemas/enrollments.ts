@@ -16,6 +16,13 @@ export const updateEnrollmentStatusSchema = z.object({
   newStatus: z.enum(["active", "transferred", "dropped", "graduated"]),
 });
 
+export const updateEnrollmentSchema = z.object({
+  enrollmentId: z.coerce.number().positive(),
+  studentId: z.string().uuid("ID siswa tidak valid"),
+  semesterId: z.coerce.number().positive("Semester harus dipilih"),
+  classId: z.coerce.number().positive("Kelas harus dipilih"),
+});
+
 export const deleteEnrollmentSchema = z.object({
   enrollmentId: z.coerce.number().positive(),
 });

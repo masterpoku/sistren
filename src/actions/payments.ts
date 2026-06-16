@@ -2,27 +2,15 @@
 
 import { and, desc, eq, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
 import { getAuthContext } from "@/lib/auth/permissions";
 import { verifyRoleLevel, verifySession } from "@/lib/auth/verify-session";
 import { db } from "@/lib/db";
 import { paymentMethods, payments, users } from "@/lib/db/schema";
-
-const paymentMethodSchema = z.object({
-  name: z.string().min(1, "Nama wajib diisi").max(255),
-  accountNumber: z.string().max(50).optional().nullable(),
-  accountName: z.string().max(255).optional().nullable(),
-  provider: z.string().max(100).optional().nullable(),
-  instructions: z.string().max(1000).optional().nullable(),
-});
-const recordPaymentSchema = z.object({
-  studentId: z.string().min(1, "Siswa wajib dipilih"),
-  paymentItemId: z.coerce.number().positive().optional().nullable(),
-  description: z.string().min(1, "Deskripsi wajib diisi").max(500),
-  price: z.string().regex(/^\d+(\.\d{1,2})?$/, "Harga tidak valid"),
-  quantity: z.coerce.number().int().min(1).default(1),
-});
-const idSchema = z.coerce.number().positive();
+import {
+  idSchema,
+  paymentMethodSchema,
+  recordPaymentSchema,
+} from "@/lib/validation/schemas/payments";
 
 export async function getPaymentMethods() {
   await verifyRoleLevel(80);

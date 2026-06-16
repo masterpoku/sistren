@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { bulkUpsertGrades, getGrades } from "@/actions/grades";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,20 +8,21 @@ import { DataTableShell } from "@/components/ui/data-table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from "@/components/ui/select";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
 } from "@/components/ui/table";
+import { useToast } from "@/hooks/use-toast";
 
 type ClassItem = { id: number; name: string; code: string };
 type SubjectItem = { id: number; name: string; code: string | null };
@@ -74,10 +75,7 @@ export function GradesClient({
   >({});
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [message, setMessage] = useState<{
-    type: "success" | "error";
-    text: string;
-  } | null>(null);
+  const { toast } = useToast();
 
   const isTeacher = roleLevel === 60;
   const filteredSubjects =
@@ -85,15 +83,8 @@ export function GradesClient({
       ? subjects.filter((s) => assignedSubjectIds.includes(s.id))
       : subjects;
 
-  useEffect(() => {
-    if (selectedClass && selectedSubject && selectedSemester) {
-      loadGrades();
-    }
-  }, [selectedClass, selectedSubject, selectedSemester, loadGrades]);
-
-  async function loadGrades() {
+  const loadGrades = useCallback(async () => {
     setIsLoading(true);
-    setMessage(null);
     try {
       const result = await getGrades(
         Number(selectedClass),
@@ -124,11 +115,22 @@ export function GradesClient({
         setRows([]);
       }
     } catch {
-      setMessage({ type: "error", text: "Gagal memuat nilai." });
+      toast({ variant: "destructive", description: "Gagal memuat nilai." });
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [
+    selectedClass,
+    selectedSubject,
+    selectedSemester,
+    toast,
+  ]);
+
+  useEffect(() => {
+    if (selectedClass && selectedSubject && selectedSemester) {
+      loadGrades();
+    }
+  }, [selectedClass, selectedSubject, selectedSemester, loadGrades]);
 
   function handleScoreChange(
     enrollmentId: number,
@@ -143,7 +145,6 @@ export function GradesClient({
 
   async function handleSave() {
     setIsSaving(true);
-    setMessage(null);
     try {
       const grades = rows.map((row) => {
         const edited = editedRows[row.enrollmentId] ?? {};
@@ -165,14 +166,14 @@ export function GradesClient({
       fd.set("rows", JSON.stringify(grades));
       const result = await bulkUpsertGrades(fd);
       if (result && "error" in result) {
-        setMessage({ type: "error", text: result.error as string });
+        toast({ variant: "destructive", description: result.error as string });
       } else {
-        setMessage({ type: "success", text: "Nilai berhasil disimpan." });
+        toast({ description: "Nilai berhasil disimpan." });
         setEditedRows({});
         loadGrades();
       }
     } catch {
-      setMessage({ type: "error", text: "Gagal menyimpan nilai." });
+      toast({ variant: "destructive", description: "Gagal menyimpan nilai." });
     } finally {
       setIsSaving(false);
     }
@@ -273,20 +274,9 @@ export function GradesClient({
           toolbar={
             <>
               <div className="flex flex-1 items-center gap-2">
-                {message && (
-                  <p
-                    className={`text-sm ${message.type === "error" ? "text-red-600" : "text-green-600"}`}
-                  >
-                    {message.text}
-                  </p>
-                )}
-                {!message && (
-                  <p className="text-sm text-muted-foreground">
-                    {isLoading
-                      ? "Memuat..."
-                      : `${rows.length} siswa`}
-                  </p>
-                )}
+                <p className="text-sm text-muted-foreground">
+                  {isLoading ? "Memuat..." : `${rows.length} siswa`}
+                </p>
               </div>
               <div className="flex items-center gap-2">
                 <Button

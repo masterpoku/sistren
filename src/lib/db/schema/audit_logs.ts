@@ -1,6 +1,7 @@
 import { relations } from "drizzle-orm";
 import {
   bigint,
+  index,
   json,
   mysqlTable,
   timestamp,
@@ -25,7 +26,9 @@ export const auditLogs = mysqlTable("audit_logs", {
   ipAddress: varchar("ip_address", { length: 45 }),
   userAgent: varchar("user_agent", { length: 255 }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (table) => ({
+  userIdx: index("audit_logs_user_idx").on(table.userId),
+}));
 
 export const auditLogsRelations = relations(auditLogs, ({ one }) => ({
   user: one(users, {

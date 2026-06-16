@@ -14,6 +14,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable } from "@/components/ui/data-table";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface CalendarEventItem {
@@ -260,20 +267,22 @@ export function StudentAcademicClient({ userId, calendarEvents = [] }: Props) {
               {/* Semester picker */}
               {semesterOptions.length > 1 && (
                 <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <select
-                    value={selectedSemester ?? ""}
-                    onChange={(e) =>
-                      setSelectedSemester(Number(e.target.value))
-                    }
-                    className="rounded-md border border-input bg-background px-3 py-1.5 text-sm"
-                  >
-                    {semesterOptions.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.label}
-                      </option>
-                    ))}
-                  </select>
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <Select
+                        value={selectedSemester ? String(selectedSemester) : undefined}
+                        onValueChange={(v) => setSelectedSemester(Number(v))}
+                    >
+                        <SelectTrigger className="w-[200px]">
+                            <SelectValue placeholder="Pilih semester" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {semesterOptions.map((s) => (
+                                <SelectItem key={s.id} value={String(s.id)}>
+                                    {s.label}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                 </div>
               )}
 

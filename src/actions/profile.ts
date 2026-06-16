@@ -5,14 +5,21 @@ import { revalidatePath } from "next/cache";
 import { verifySession } from "@/lib/auth/verify-session";
 import { db } from "@/lib/db";
 import { profiles, users } from "@/lib/db/schema";
+import { updateProfileSchema } from "@/lib/validation/schemas/profile";
 
 export async function updateProfile(formData: FormData) {
   const session = await verifySession();
 
-  const phone = formData.get("phone") as string;
-  const address = formData.get("address") as string;
-  const fatherName = formData.get("fatherName") as string;
-  const motherName = formData.get("motherName") as string;
+  const parsed = updateProfileSchema.safeParse({
+    phone: formData.get("phone") ?? "",
+    address: formData.get("address") ?? "",
+    fatherName: formData.get("fatherName") ?? "",
+    motherName: formData.get("motherName") ?? "",
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Data tidak valid" };
+  }
+  const { phone, address, fatherName, motherName } = parsed.data;
 
   const [existing] = await db
     .select({ id: profiles.id })

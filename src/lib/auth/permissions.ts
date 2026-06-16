@@ -159,6 +159,8 @@ export async function hasRoleLevel(
   const ctx = await getAuthContext(userId);
   if (!ctx) return false;
 
+  if (ctx.roleLevel >= 100) return true;
+
   return ctx.roleLevel >= minLevel;
 }
 

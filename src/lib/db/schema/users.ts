@@ -7,7 +7,20 @@ import {
   varchar,
 } from "drizzle-orm/mysql-core";
 import { accounts } from "./accounts";
+import { announcementRecipients } from "./announcement_recipients";
+import { announcements } from "./announcements";
+import { auditLogs } from "./audit_logs";
+import { calendarEvents } from "./calendarEvents";
+import { enrollments } from "./enrollments";
+import { grades } from "./grades";
+import { payments } from "./payments";
+import { profileAssets } from "./profile_assets";
+import { profiles } from "./profiles";
 import { roles } from "./roles";
+import { sessions } from "./sessions";
+import { studentDocuments } from "./studentDocuments";
+import { teacherClassSubjects } from "./teacherClassSubjects";
+import { userPermissions } from "./user_permissions";
 
 /**
  * Users table — core authentication (Better Auth compatible).
@@ -27,7 +40,7 @@ export const users = mysqlTable("users", {
   image: varchar("image", { length: 255 }),
   password: varchar("password", { length: 255 }),
   roleId: bigint("role_id", { mode: "number" }).references(() => roles.id, {
-    onDelete: "cascade",
+    onDelete: "set null",
   }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").onUpdateNow().notNull(),
@@ -40,4 +53,17 @@ export const usersRelations = relations(users, ({ one, many }) => ({
     references: [roles.id],
   }),
   accounts: many(accounts),
+  enrollments: many(enrollments),
+  payments: many(payments),
+  teacherClassSubjects: many(teacherClassSubjects),
+  grades: many(grades),
+  announcements: many(announcements),
+  calendarEvents: many(calendarEvents),
+  auditLogs: many(auditLogs),
+  announcementRecipients: many(announcementRecipients),
+  sessions: many(sessions),
+  userPermissions: many(userPermissions),
+  profiles: many(profiles),
+  profileAssets: many(profileAssets),
+  studentDocuments: many(studentDocuments),
 }));
