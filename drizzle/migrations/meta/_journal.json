@@ -15,6 +15,13 @@
       "when": 1781192476942,
       "tag": "0001_glorious_exodus",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1781684153349,
+      "tag": "0002_sudden_the_captain",
+      "breakpoints": true
     }
   ]
 }
