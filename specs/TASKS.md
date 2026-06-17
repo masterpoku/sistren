@@ -2,7 +2,7 @@
 
 > Append-only cross-session goal tracker. Add new goals, never delete old ones.
 > Archive completed goals by moving to an "## Archived" section. Keep only the 5 most recent entries.
-> Last updated: 2026-06-16 — Unified execution pass complete. Sprints 12, 13, 14, 15 executed in a single coordinated run and archived. Sprint 16 (Follow-up Wiring) created in Active to track remaining work from Sprints 14/15. Lint baseline preserved (0 new errors). Typecheck passes. Build reaches "Compiled successfully" + "TypeScript pass" but hangs at "Collecting page data" — needs MariaDB running on localhost to complete.
+> Last updated: 2026-06-17 — Sprints 17 (Bug Fix) and 18 (Documents Module) added. Sprint 16 (Follow-up Wiring) remains active alongside Sprint 17/18.
 
 ---
 
@@ -80,90 +80,91 @@ Replace `useState` for messages/errors with `useToast()` and remove inline error
 
 ---
 
-### Blocked — Attendance Module
+### Sprint 17 — Bug Fix Sprint (Code Review Findings)
 
-**Status:** pending client requirements
+**Status:** planned
+**Date:** 2026-06-17
+**Source:** Code review audit — 6 confirmed bugs across the codebase: toast styling, user creation blocker, sidebar avatar visibility, table border consistency, dashboard layout ordering.
 
-**Summary:** `AttendanceClient.tsx` is a placeholder "Modul Absensi — dalam pengembangan". No schema table exists. No server actions exist. Not linked in sidebar.
-
-**Blocked on:** Client needs to define:
-- Type of attendance: per-session? per-day? per-subject?
-- Who records: teacher? admin? homeroom?
-- Frequency: setiap jam pelajaran? setiap hari?
-- Reports needed: recaps? per-student? per-class?
-- Integration with existing `enrollments` or `grades`?
-
-No implementation until client confirms requirements. Add to active sprints when spec is clear.
+**Sprint goal:** All 6 bugs fixed. CreateStaffAccount role validation corrected so admin can create users again. Sidebar avatar visible on dark sidebar. Table borders consistent across all feature pages. Dashboard Quick Menu ordered before stats. Toast destructive variant renders proper text color. Build + typecheck pass.
 
 ---
 
-### Client Request — Assessment / Grading System (Penilaian)
+#### Phase 1 — Critical: User creation broken (1 task)
 
-**Status:** pending
+- [ ] **1.1 Fix `createStaffAccount` role validation** — In `src/actions/admin.ts:65`, the check `![60, 80].includes(roleId)` compares DB auto-increment role ID against level values (60, 80). The role IDs are auto-increment small ints (1-5), never 60 or 80. Fix: fetch the role's `level` from DB and validate against that, or compare the resolved level directly. Also switch `auth.api.signUpEmail()` → `auth.api.createUser()` at line 76 per AGENTS.md rule (staff accounts must use createUser, not signUpEmail). `M src/actions/admin.ts`
 
-**Source:** Obsidian `jadwal-sistren.md` — client request, 1 Juni 2026
+#### Phase 2 — High: Sidebar avatar invisible (1 task)
 
-**Summary:** Client reported "masalah penilaian". Phase 16 grade management exists (structured input + KHS). May be bug report or refinement. Needs investigation.
+- [ ] **2.1 Fix `ProfileDropdown` avatar text color** — In `src/features/layout/profile-dropdown.tsx:22-26`, avatar uses `bg-slate-100` as circle background with inherited sidebar foreground text (near-white on light-gray). Fix: use `bg-sidebar-primary` (gold accent) as avatar background + `text-sidebar-primary-foreground` for contrast, or set explicit dark text color on the span. `M src/features/layout/profile-dropdown.tsx`
 
-- [ ] Clarify specific grading issue
-- [ ] Investigate Phase 16 implementation
-- [ ] Determine bug vs feature
-- [ ] Implement and verify
+#### Phase 3 — Medium: Double border on tables (3 tasks)
 
-**Audit note (2026-06-11):** `src/actions/grades.ts` was read — no obvious bugs found at the surface. Schema validation wired via `gradeTypeSchema` (Sprint B done). Without specific bug report from client, no fix can be applied. Awaiting user clarification.
+- [ ] **3.1 Remove extra border wrapper from Subjects page** — `src/app/(app)/academic/subjects/page.tsx:15-17`: remove outer `<div className="rounded-md border">`. DataTable already renders inside `DataTableShell` which has `rounded-md border bg-card`. `M src/app/(app)/academic/subjects/page.tsx`
+- [ ] **3.2 Remove extra border wrapper from Semesters page** — `src/app/(app)/academic/semesters/page.tsx:15-17`: same fix. Remove outer border div. `M src/app/(app)/academic/semesters/page.tsx`
+- [ ] **3.3 Remove extra border wrapper from Settings system configs** — `src/features/settings/SystemConfigsClient.tsx:153`: remove outer `<div className="rounded-md border">` around DataTable. `M src/features/settings/SystemConfigsClient.tsx`
 
----
+#### Phase 4 — Low: Dashboard layout (1 task)
 
-### Client Request — Alumni Form Flow (Nice-to-Have)
+- [ ] **4.1 Move QuickMenu above stats sections** — In `src/features/dashboard/DashboardClient.tsx`, move `<QuickMenu roleLevel={roleLevel} />` from line 485 (after all stat sections) to before the stat cards (before the `isSiswa/isAlumni` block at line 260, or immediately after the welcome heading at line 258). Ensure QuickMenu renders first for all role levels. `M src/features/dashboard/DashboardClient.tsx`
 
-**Status:** pending
+#### Phase 5 — Medium: Toast destructive variant style (1 task)
 
-**Source:** Obsidian `sistren-decision.md` + `jadwal-sistren.md`
+- [ ] **5.1 Fix toast description color on destructive variant** — In `src/hooks/use-toast.tsx:70`, the description `<div>` always uses `text-muted-foreground`. On destructive toasts, text should be `text-destructive-foreground`. Fix: conditionally apply `text-destructive-foreground` when `variant === "destructive"`, otherwise `text-muted-foreground`. `M src/hooks/use-toast.tsx`
 
-**Summary:** Before graduation, student needs to fill forms. Graduation just changes role — no form step. Nice-to-have, not MVP.
+#### Phase 6 — Verify (1 task)
 
-- [ ] Design alumni graduation form workflow
-- [ ] Determine required forms
-- [ ] Build multi-step form wizard
-- [ ] Wire form completion → role change
-- [ ] Test end-to-end
+- [ ] **6.1 Run verification suite** — `bun run lint` (target: 0 new errors), `bun run typecheck` (target: pass), `bun run build` (target: green with MariaDB running). Manually test: create user with guru role, verify avatar visible in sidebar footer, verify Subjects/Semesters tables have single border, verify Dashboard Quick Menu appears before stats.
 
 ---
 
-### Sprint 16 — Follow-up Wiring (Carry-over from Sprints 14/15)
+**Files touched (estimate):** 8 source files. 0 new files.
 
-**Status:** pending
+---
 
-**Date:** 2026-06-16
+### Sprint 18 — Documents Management Module (Admin)
 
-**Source:** Unified execution pass on 2026-06-16 surfaced unfinished wiring work. All 20 Form/Dialog components were created but most existing client files were not rewired to use them. Two server actions were referenced but not created. Several lint items from the original audit remain.
+**Status:** planned
+**Date:** 2026-06-17
+**Source:** Client request — missing standalone documents menu for admin to upload, manage, and distribute important school files (policies, circulars, forms, reports). Current documents feature is per-student only at `/students/[id]/documents/`.
 
-**Summary:** Mechanical migration to use the new Form/Dialog pairs, create two missing actions, and finish the remaining debt items from the original audit.
+**Sprint goal:** New "Dokumen" sidebar menu item for admin role (level ≥ 80). Standalone documents page with upload (file picker + drag-drop), list table, search, delete (soft), and download. Schema for school-wide documents. Integration with existing encryption (`src/lib/crypto.ts`, AES-256-GCM). No per-student document overlap — this is a separate entity.
 
-- [ ] **1. Wire new Form/Dialog components into existing clients** — Replace inline `Dialog` and `<form action>` patterns in 11 client files. Reuse the new `*Form.tsx` + `*Dialog.tsx` components.
-  Files: `src/features/academic/classes/ClassesClient.tsx`, `MajorsClient.tsx`, `SubjectsClient.tsx`, `SemestersClient.tsx`, `AssignmentsClient.tsx`, `EnrollmentsClient.tsx`, `src/features/admin/AdminUsersClient.tsx`, `AnnouncementsClient.tsx`, `PaymentMethodsClient.tsx`, `FinanceClient.tsx`, `DocumentsClient.tsx`
+---
 
-- [ ] **2. Create `updateStaffAccount` action** — `StaffAccountDialog` accepts an `item` prop but no `updateStaffAccount` server action exists. Add at `src/actions/admin.ts`. Use existing `updateStaffAccountSchema` in `src/lib/validation/schemas/admin.ts` (already created).
-  Files: `M src/actions/admin.ts`, `M src/features/admin/StaffAccountDialog.tsx`
+#### Phase 1 — Schema & DB (2 tasks)
 
-- [ ] **3. Create `updateEnrollment` action** — Per Sprint 14 Phase 2 decision: all editable fields (`classId`, `semesterId`, `studentId`). Status stays on `updateEnrollmentStatus`. Wire `EnrollmentDialog` to support edit mode.
-  Files: `M src/actions/enrollments.ts`, `M src/features/enrollments/EnrollmentDialog.tsx`, `M src/features/enrollments/EnrollmentsClient.tsx`
+- [ ] **1.1 Create `school_documents` table** — New Drizzle schema at `src/lib/db/schema/schoolDocuments.ts`. Columns: `id` (BIGINT auto PK), `title` (varchar 255), `description` (text, nullable), `fileName` (varchar 255), `fileType` (varchar 100, MIME type), `fileSize` (int, bytes), `encryptedData` (longtext, AES-256-GCM encrypted via `src/lib/crypto.ts`), `category` (varchar 50, nullable — e.g. "kebijakan", "surat_edaran", "formulir", "laporan"), `isPublic` (boolean, default false), `uploadedBy` (varchar 36 FK to users.id), `createdAt`, `updatedAt`, `deletedAt` (timestamp, soft delete). Export from `src/lib/db/schema/index.ts`. `M +schema/schoolDocuments.ts`, `M +schema/index.ts`
+- [ ] **1.2 Run migration** — `bunx drizzle-kit generate` + `bunx drizzle-kit push` to create the table in MariaDB. `M src/lib/db/schema/`
 
-- [ ] **4. Replace `setMessage`/`setError` → `useToast()`** — 6 files still use `useState` for error messages: `GradesClient.tsx`, `BulkEnrollmentForm.tsx`, `EnrollmentsClient.tsx`, `SystemConfigsClient.tsx`, `LoginFormClient.tsx`, `DocumentUploadForm.tsx`. (`SchoolSettingsForm.tsx` persistent status is allowed.)
-  Files: see Sprint 14 Phase 5 item 50
+#### Phase 2 — Server actions (3 tasks)
 
-- [ ] **5. Replace remaining raw `<select>` → shadcn `<Select>`** — 2 sites remaining: `StudentAcademicClient.tsx:264`, `SystemConfigsClient.tsx:175`.
-  Files: `M src/features/academic/StudentAcademicClient.tsx`, `M src/features/settings/SystemConfigsClient.tsx`
+- [ ] **2.1 Create `src/actions/documents-admin.ts`** — `uploadSchoolDocument(formData: FormData)`: validate actor role ≥ 80, parse multipart (title, description, category, file), encrypt file buffer via `src/lib/crypto.ts`, insert row. `getSchoolDocuments()`: list with pagination, filter by category, search by title. `deleteSchoolDocument(id: number)`: soft delete. All actions include RBAC check + `revalidatePath`. `M +src/actions/documents-admin.ts`
+- [ ] **2.2 Add `downloadSchoolDocument` API route** — At `src/app/api/documents/school/[id]/route.ts`. GET handler: verify auth, fetch document, check permission (public or same-user or admin), decrypt, return file with correct Content-Type + Content-Disposition headers. `M +src/app/api/documents/school/[id]/route.ts`
+- [ ] **2.3 Add Zod validation schema** — At `src/lib/validation/schemas/schoolDocuments.ts`. `uploadSchoolDocumentSchema` with title (min 1, max 255), description (optional), category (optional enum), file (required, max 10MB). Export from schemas index. `M +src/lib/validation/schemas/schoolDocuments.ts`, `M +src/lib/validation/schemas/index.ts`
 
-- [ ] **6. Add `ENABLE_QUICK_LOGINS_DEMO` env var** — Hide Quick Login buttons on `/login` when set to `false`. Requires `NEXT_PUBLIC_` prefix for client component access.
-  Files: `M src/app/(auth)/login/page.tsx`
+#### Phase 3 — UI pages (2 tasks)
 
-- [ ] **7. Address pre-existing lint debt** — 11 errors from Sprint 11 baseline that were deferred: `data-table.tsx` (3 × `noGlobalIsNan`), `chart.tsx` (2 × `noDangerouslySetInnerHtml`/`noArrayIndexKey`), `avatar.tsx` (1 × `noImgElement`), `sidebar.tsx` (1 × `noDocumentCookie`), `alumni/transcript/page.tsx` (1 × `useOptionalChain`), `ProfileClient.tsx` (1 × `noImgElement`), `breadcrumb.tsx` (2 × a11y). Goal: 0 lint errors total.
-  Files: 8 components
+- [ ] **3.1 Create `DocumentsAdminClient.tsx`** — In `src/features/documents/`. Client component with: DataTable listing all school documents (title, category, file type, file size, upload date, uploaded by). Search by title, filter by category dropdown. Actions per row: download, delete (soft, with confirmation dialog). Upload button opens dialog with form (title, description, category select, file upload). Drag-drop zone for file. Use `useToast()` for feedback. `M +src/features/documents/DocumentsAdminClient.tsx`
+- [ ] **3.2 Create page route at `src/app/(app)/documents/page.tsx`** — Server component: verify role ≥ 80, fetch `getSchoolDocuments()`, render `PageShell` + `DocumentsAdminClient`. Add Breadcrumb. `M +src/app/(app)/documents/page.tsx`
 
-**Files created (new):** None — all infrastructure from Sprints 12-15 is in place.
+#### Phase 4 — Sidebar menu (1 task)
 
-**Files modified (estimate):** ~20 files in `src/features/` and `src/actions/`.
+- [ ] **4.1 Add "Dokumen" nav item to sidebar** — In `src/features/layout/app-sidebar.tsx`, add a new `NavItem` to `navItems[]`:
+  ```ts
+  { title: "Dokumen", href: "/documents", icon: File, minLevel: 80 },
+  ```
+  Import `File` from `@phosphor-icons/react`. Place after "Pengumuman" or in a logical group. Ensure it only shows for users with roleLevel ≥ 80. `M src/features/layout/app-sidebar.tsx`
+
+#### Phase 5 — Verify (1 task)
+
+- [ ] **5.1 Run verification suite** — `bun run lint` (0 errors), `bun run typecheck` (pass), `bun run build` (green). Check: sidebar shows "Dokumen" for admin/superadmin, hides for guru/siswa/alumni. Upload a file, see it in table, download it back, delete it. File is encrypted at rest (verify via DB query).
+
+---
+
+**Files created:** 6 new files: schema, actions, validation, page, client component, API route.
+**Files modified:** 3 files: schema/index.ts, sidebar, schemas/index.ts.
+**Out of scope:** Per-student document upload (already exists at `/students/[id]/documents/`). Document categories CRUD — use hardcoded enum initially.
 
 ---
 
