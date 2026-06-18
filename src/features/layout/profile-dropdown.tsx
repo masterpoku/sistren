@@ -26,6 +26,7 @@ export function ProfileDropdown({ user, onLogout }: ProfileDropdownProps) {
           </p>
         </div>
         <button
+          type="button"
           onClick={onLogout}
           className="shrink-0 rounded-lg p-2 text-muted-foreground hover:bg-slate-100 group-data-[collapsible=icon]:hidden"
           title="Logout"

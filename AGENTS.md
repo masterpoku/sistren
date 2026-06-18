@@ -28,7 +28,7 @@ Env: `DATABASE_URL` `BETTER_AUTH_SECRET` `BETTER_AUTH_URL` `DOCUMENT_ENCRYPTION_
 - MariaDB no LATERAL JOIN — no `experimental.joins`
 - Blob: `longtext`, not binary/mediumblob (binary caps 255B)
 - Auth ID: varchar(36) UUID. roles.id: BIGINT auto. Never cast UUID to Number()
-- Staff accounts: `auth.api.createUser()` only. Not signUpEmail
+- Staff accounts: `auth.api.signUpEmail()` + Drizzle update for `roleId` (in transaction). Student self-registration uses the same `signUpEmail` flow
 - `nextCookies()` must be last plugin in auth config
 - Documents encrypted via `src/lib/crypto.ts` (AES-256-GCM)
 - Soft delete: `isNull(table.deletedAt)` on every query. Delete = `update().set({ deletedAt: new Date() })`
