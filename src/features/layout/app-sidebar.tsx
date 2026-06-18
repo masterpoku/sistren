@@ -3,6 +3,7 @@
 import {
   Bell,
   Calendar,
+  File,
   Gear,
   GraduationCap,
   House,
@@ -58,6 +59,7 @@ const navItems: NavItem[] = [
   { title: "Guru", href: "/teachers", icon: Users, minLevel: 60 },
   { title: "Pengguna", href: "/users", icon: UserCircle, minLevel: 80 },
   { title: "Pengumuman", href: "/announcements", icon: Bell },
+  { title: "Dokumen", href: "/documents", icon: File, minLevel: 80 },
   {
     title: "Transkrip",
     href: "/alumni/transcript",

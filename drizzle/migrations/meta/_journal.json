@@ -22,6 +22,13 @@
       "when": 1781684153349,
       "tag": "0002_sudden_the_captain",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1781753770124,
+      "tag": "0003_mushy_moon_knight",
+      "breakpoints": true
     }
   ]
 }

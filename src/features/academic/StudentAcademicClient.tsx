@@ -15,11 +15,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable } from "@/components/ui/data-table";
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -267,22 +267,24 @@ export function StudentAcademicClient({ userId, calendarEvents = [] }: Props) {
               {/* Semester picker */}
               {semesterOptions.length > 1 && (
                 <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <Select
-                        value={selectedSemester ? String(selectedSemester) : undefined}
-                        onValueChange={(v) => setSelectedSemester(Number(v))}
-                    >
-                        <SelectTrigger className="w-[200px]">
-                            <SelectValue placeholder="Pilih semester" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {semesterOptions.map((s) => (
-                                <SelectItem key={s.id} value={String(s.id)}>
-                                    {s.label}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <Select
+                    value={
+                      selectedSemester ? String(selectedSemester) : undefined
+                    }
+                    onValueChange={(v) => setSelectedSemester(Number(v))}
+                  >
+                    <SelectTrigger className="w-[200px]">
+                      <SelectValue placeholder="Pilih semester" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {semesterOptions.map((s) => (
+                        <SelectItem key={s.id} value={String(s.id)}>
+                          {s.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               )}
 
@@ -399,9 +401,9 @@ export function StudentAcademicClient({ userId, calendarEvents = [] }: Props) {
                             </tr>
                           </thead>
                           <tbody>
-                            {attitudeGrades.map((g, i) => (
+                            {attitudeGrades.map((g) => (
                               <tr
-                                key={`attitude-${g.subjectCode}-${i}`}
+                                key={`attitude-${g.subjectCode}`}
                                 className="border-b border-border/50 hover:bg-muted/30 transition-colors"
                               >
                                 <td className="px-4 py-3">{g.subjectName}</td>
@@ -433,7 +435,10 @@ export function StudentAcademicClient({ userId, calendarEvents = [] }: Props) {
                 ) : (
                   <DataTable
                     columns={krsColumns}
-                    data={knowledgeGrades.map((g) => ({ ...g, status: "Aktif" }))}
+                    data={knowledgeGrades.map((g) => ({
+                      ...g,
+                      status: "Aktif",
+                    }))}
                     exportFilename={`krs-${selectedSemesterLabel}`}
                     emptyMessage="Belum ada data KRS."
                   />

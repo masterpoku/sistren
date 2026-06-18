@@ -70,7 +70,13 @@ export async function createStaffAccount(formData: FormData) {
   }
   const { name, email, password, roleId } = parsed.data;
 
-  if (![60, 80].includes(roleId)) {
+  const [role] = await db
+    .select({ id: roles.id, level: roles.level })
+    .from(roles)
+    .where(and(eq(roles.id, roleId), isNull(roles.deletedAt)))
+    .limit(1);
+
+  if (!role || (role.level !== 60 && role.level !== 80)) {
     return { error: "Role tidak valid. Pilih Guru atau Administrator." };
   }
 
@@ -131,7 +137,13 @@ export async function updateStaffAccount(userId: string, formData: FormData) {
   }
   const { name, email, roleId } = parsed.data;
 
-  if (![60, 80].includes(roleId)) {
+  const [role] = await db
+    .select({ id: roles.id, level: roles.level })
+    .from(roles)
+    .where(and(eq(roles.id, roleId), isNull(roles.deletedAt)))
+    .limit(1);
+
+  if (!role || (role.level !== 60 && role.level !== 80)) {
     return { error: "Role tidak valid. Pilih Guru atau Administrator." };
   }
 

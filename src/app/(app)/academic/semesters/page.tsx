@@ -12,9 +12,7 @@ export default async function SemestersPage() {
       title="Kelola Semester"
       description="Tambah dan kelola semester serta tahun ajaran."
     >
-      <div className="rounded-md border">
-        <SemestersClient data={semesterList} />
-      </div>
+      <SemestersClient data={semesterList} />
     </PageShell>
   );
 }

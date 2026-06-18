@@ -19,6 +19,7 @@ export * from "./role_permissions";
 export * from "./roles";
 export * from "./semesters";
 export * from "./sessions";
+export * from "./schoolDocuments";
 export * from "./studentDocuments";
 export * from "./subjects";
 export * from "./system_configs";

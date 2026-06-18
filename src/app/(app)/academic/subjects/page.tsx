@@ -15,9 +15,7 @@ export default async function SubjectsPage() {
       title="Kelola Mata Pelajaran"
       description="Tambah dan kelola mata pelajaran per kelas."
     >
-      <div className="rounded-md border">
-        <SubjectsClient data={subjectList} classList={classList} />
-      </div>
+      <SubjectsClient data={subjectList} classList={classList} />
     </PageShell>
   );
 }

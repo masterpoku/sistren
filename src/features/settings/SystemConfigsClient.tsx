@@ -1,6 +1,6 @@
 "use client";
 
-import { Pencil, Plus, Trash } from "@phosphor-icons/react";
+import { Plus } from "@phosphor-icons/react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { useState, useTransition } from "react";
 import {
@@ -9,7 +9,7 @@ import {
 } from "@/actions/settings";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DataTable } from "@/components/ui/data-table";
+import { ActionCell, DataTable } from "@/components/ui/data-table";
 import {
     Dialog,
     DialogContent,
@@ -134,24 +134,11 @@ export function SystemConfigsClient({ configs }: SystemConfigsClientProps) {
             id: "actions",
             header: "Aksi",
             cell: ({ row }) => (
-                <div className="flex items-center gap-1">
-                    <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setEditing(row.original)}
-                        disabled={isPending}
-                    >
-                        <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleDelete(row.original.key)}
-                        disabled={isPending}
-                    >
-                        <Trash className="h-4 w-4 text-destructive" />
-                    </Button>
-                </div>
+                <ActionCell
+                    onEdit={() => setEditing(row.original)}
+                    onDelete={() => handleDelete(row.original.key)}
+                    deleteConfirmMessage={`Hapus konfigurasi '${row.original.key}'?`}
+                />
             ),
         },
     ];
@@ -218,16 +205,14 @@ export function SystemConfigsClient({ configs }: SystemConfigsClientProps) {
                 </Dialog>
             </div>
 
-            <div className="rounded-md border">
-                <DataTable
-                    columns={columns}
-                    data={configs}
-                    searchKey="key"
-                    searchPlaceholder="Cari konfigurasi..."
-                    exportFilename="system-configs"
-                    emptyMessage="Belum ada konfigurasi."
-                />
-            </div>
+            <DataTable
+                columns={columns}
+                data={configs}
+                searchKey="key"
+                searchPlaceholder="Cari konfigurasi..."
+                exportFilename="system-configs"
+                emptyMessage="Belum ada konfigurasi."
+            />
 
             <Dialog
                 open={editing !== null}

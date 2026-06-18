@@ -53,7 +53,13 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           >
             {t.title && <div className="font-medium">{t.title}</div>}
             {t.description && (
-              <div className="text-sm text-muted-foreground">
+              <div
+                className={`text-sm ${
+                  t.variant === "destructive"
+                    ? "text-destructive-foreground"
+                    : "text-muted-foreground"
+                }`}
+              >
                 {t.description}
               </div>
             )}

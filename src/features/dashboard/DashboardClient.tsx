@@ -297,6 +297,8 @@ export function DashboardClient({
         </p>
       </div>
 
+      <QuickMenu roleLevel={roleLevel} />
+
       {(isSiswa || isAlumni) && (
         <>
           <div className="grid gap-4 md:grid-cols-3">
@@ -633,8 +635,6 @@ export function DashboardClient({
           </div>
         </>
       )}
-
-      <QuickMenu roleLevel={roleLevel} />
 
       {recentAnnouncements.length > 0 && (
         <Card>

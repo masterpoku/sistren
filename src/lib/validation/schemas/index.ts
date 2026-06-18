@@ -11,4 +11,5 @@ export * from "./paymentItems";
 export * from "./payments";
 export * from "./profile";
 export * from "./register";
+export * from "./schoolDocuments";
 export * from "./settings";
