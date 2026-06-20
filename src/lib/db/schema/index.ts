@@ -11,6 +11,7 @@ export * from "./majors";
 export * from "./notifications";
 export * from "./payment_methods";
 export * from "./paymentItems";
+export * from "./paymentSlips";
 export * from "./payments";
 export * from "./permissions";
 export * from "./profiles";
