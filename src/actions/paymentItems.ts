@@ -86,13 +86,16 @@ export async function getActivePaymentItems() {
 export async function createPaymentItem(formData: FormData) {
   await verifyRoleLevel(80);
 
+  const rawSemesterId = formData.get("semesterId");
+  const formSemesterId = rawSemesterId && rawSemesterId !== "__none__" ? rawSemesterId : null;
+
   const parsed = createPaymentItemSchema.safeParse({
     code: formData.get("code"),
     name: formData.get("name"),
     description: (formData.get("description") as string)?.trim() || null,
     standardPrice: formData.get("standardPrice"),
     type: formData.get("type") || "one_time",
-    semesterId: formData.get("semesterId") || null,
+    semesterId: formSemesterId,
     isActive: formData.get("isActive") !== "false",
   });
   if (!parsed.success) {
@@ -128,6 +131,9 @@ export async function createPaymentItem(formData: FormData) {
 export async function updatePaymentItem(itemId: string, formData: FormData) {
   await verifyRoleLevel(80);
 
+  const rawSemesterId = formData.get("semesterId");
+  const formSemesterId = rawSemesterId && rawSemesterId !== "__none__" ? rawSemesterId : null;
+
   const parsed = updatePaymentItemSchema.safeParse({
     itemId,
     code: formData.get("code"),
@@ -135,7 +141,7 @@ export async function updatePaymentItem(itemId: string, formData: FormData) {
     description: (formData.get("description") as string)?.trim() || null,
     standardPrice: formData.get("standardPrice"),
     type: formData.get("type") || "one_time",
-    semesterId: formData.get("semesterId") || null,
+    semesterId: formSemesterId,
     isActive: formData.get("isActive") !== "false",
   });
   if (!parsed.success) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -39,15 +39,21 @@ export function RecordPaymentForm({
     paymentItems,
     recordAction,
 }: Props) {
-    const descRef = useRef<HTMLInputElement>(null);
-    const priceRef = useRef<HTMLInputElement>(null);
+    const [itemValue, setItemValue] = useState("");
+    const [price, setPrice] = useState("");
+    const [description, setDescription] = useState("");
 
     function handleItemChange(itemId: string) {
-        if (!itemId) return;
+        setItemValue(itemId);
+        if (!itemId) {
+            setDescription("");
+            setPrice("");
+            return;
+        }
         const item = paymentItems.find((i) => i.id === Number(itemId));
         if (!item) return;
-        if (descRef.current) descRef.current.value = item.description ?? item.name;
-        if (priceRef.current) priceRef.current.value = item.standardPrice;
+        setDescription(item.description ?? item.name);
+        setPrice(item.standardPrice);
     }
 
     async function handleSubmit(formData: FormData) {
@@ -55,10 +61,7 @@ export function RecordPaymentForm({
     }
 
     return (
-        <form
-            action={handleSubmit}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4"
-        >
+        <form action={handleSubmit} className="grid gap-3">
             <div className="space-y-2">
                 <Label htmlFor="studentId">Siswa</Label>
                 <Select name="studentId" required>
@@ -77,12 +80,15 @@ export function RecordPaymentForm({
 
             <div className="space-y-2">
                 <Label htmlFor="paymentItemId">Item (opsional)</Label>
-                <Select name="paymentItemId" onValueChange={handleItemChange}>
+                <Select
+                    name="paymentItemId"
+                    value={itemValue}
+                    onValueChange={handleItemChange}
+                >
                     <SelectTrigger>
                         <SelectValue placeholder="Pilih item" />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="">— Pilih item —</SelectItem>
                         {paymentItems.map((item) => (
                             <SelectItem key={item.id} value={String(item.id)}>
                                 {item.code} — {item.name}
@@ -97,41 +103,41 @@ export function RecordPaymentForm({
                 <Input
                     id="description"
                     name="description"
-                    ref={descRef}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
                     placeholder="SPP Bulan Juli 2025"
                     required
                 />
             </div>
 
-            <div className="space-y-2">
-                <Label htmlFor="price">Jumlah (Rp)</Label>
-                <Input
-                    id="price"
-                    name="price"
-                    ref={priceRef}
-                    type="number"
-                    step="1000"
-                    placeholder="150000"
-                    required
-                />
+            <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                    <Label htmlFor="price">Jumlah (Rp)</Label>
+                    <Input
+                        id="price"
+                        name="price"
+                        type="number"
+                        step="1000"
+                        value={price}
+                        onChange={(e) => setPrice(e.target.value)}
+                        placeholder="150000"
+                        required
+                    />
+                </div>
+
+                <div className="space-y-2">
+                    <Label htmlFor="quantity">Jumlah Bulan</Label>
+                    <Input
+                        id="quantity"
+                        name="quantity"
+                        type="number"
+                        defaultValue="1"
+                        min="1"
+                    />
+                </div>
             </div>
 
-            <div className="space-y-2">
-                <Label htmlFor="quantity">Jumlah Bulan</Label>
-                <Input
-                    id="quantity"
-                    name="quantity"
-                    type="number"
-                    defaultValue="1"
-                    min="1"
-                />
-            </div>
-
-            <div className="lg:col-span-5 flex items-end">
-                <Button type="submit" className="w-full sm:w-auto">
-                    Catat Pembayaran
-                </Button>
-            </div>
+            <Button type="submit">Catat Pembayaran</Button>
         </form>
     );
 }

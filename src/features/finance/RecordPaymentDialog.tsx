@@ -39,7 +39,7 @@ export function RecordPaymentDialog({
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>{trigger}</DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-3xl">
                 <DialogHeader>
                     <DialogTitle>Catat Pembayaran</DialogTitle>
                 </DialogHeader>

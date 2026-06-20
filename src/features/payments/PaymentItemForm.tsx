@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -33,6 +34,10 @@ type Props = {
 };
 
 export function PaymentItemForm({ item, semesters }: Props) {
+  const [semesterValue, setSemesterValue] = useState(
+    item?.semesterId ? String(item.semesterId) : "__none__"
+  );
+
   return (
     <div className="grid gap-4 py-2">
       <div className="grid grid-cols-2 gap-4">
@@ -100,13 +105,14 @@ export function PaymentItemForm({ item, semesters }: Props) {
           <Label htmlFor="semesterId">Semester (opsional)</Label>
           <Select
             name="semesterId"
-            defaultValue={item?.semesterId ? String(item.semesterId) : "none"}
+            value={semesterValue}
+            onValueChange={setSemesterValue}
           >
             <SelectTrigger>
               <SelectValue placeholder="Semua semester" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">Semua semester</SelectItem>
+              <SelectItem value="__none__">Semua semester</SelectItem>
               {semesters.map((s) => (
                 <SelectItem key={s.id} value={String(s.id)}>
                   {s.name}
