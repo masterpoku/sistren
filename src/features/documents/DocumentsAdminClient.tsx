@@ -34,7 +34,7 @@ type SchoolDocumentRow = {
     fileSize: number;
     category: string | null;
     isPublic: boolean;
-    uploadedBy: string;
+    uploadedBy: string | null;
     uploaderName: string | null;
     createdAt: Date | string;
 };

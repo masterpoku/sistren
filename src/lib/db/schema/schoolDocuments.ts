@@ -28,8 +28,8 @@ export const schoolDocuments = mysqlTable("school_documents", {
     category: varchar("category", { length: 50 }),
     isPublic: boolean("is_public").default(false).notNull(),
     uploadedBy: varchar("uploaded_by", { length: 36 })
-        .notNull()
         .references(() => users.id, { onDelete: "set null" }),
+    /** Nullable because ON DELETE SET NULL */
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").onUpdateNow().notNull(),
     deletedAt: timestamp("deleted_at"),

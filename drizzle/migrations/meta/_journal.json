@@ -29,6 +29,13 @@
       "when": 1781753770124,
       "tag": "0003_mushy_moon_knight",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1781930736495,
+      "tag": "0004_lonely_vance_astro",
+      "breakpoints": true
     }
   ]
 }
