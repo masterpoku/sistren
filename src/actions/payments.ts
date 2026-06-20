@@ -5,12 +5,13 @@ import { revalidatePath } from "next/cache";
 import { getAuthContext } from "@/lib/auth/permissions";
 import { verifyRoleLevel, verifySession } from "@/lib/auth/verify-session";
 import { db } from "@/lib/db";
-import { paymentMethods, payments, users } from "@/lib/db/schema";
+import { paymentMethods, payments, paymentSlips, users } from "@/lib/db/schema";
 import {
   idSchema,
   paymentMethodSchema,
   recordPaymentSchema,
 } from "@/lib/validation/schemas/payments";
+import { uploadPaymentSlipSchema } from "@/lib/validation/schemas/paymentSlips";
 
 export async function getPaymentMethods() {
   await verifyRoleLevel(80);
@@ -284,6 +285,193 @@ export async function cancelPayment(paymentId: string) {
     .update(payments)
     .set({ status: "cancelled" })
     .where(eq(payments.id, parsed.data));
+
+  revalidatePath("/finance");
+  return { success: true };
+}
+
+// ─── Payment Slips ───────────────────────────────────────────────
+
+const SLIP_MAX_SIZE = 5 * 1024 * 1024; // 5MB
+const ALLOWED_MIME_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+  "application/pdf",
+];
+
+export async function getPaymentSlips(opts?: {
+  studentId?: string;
+  paymentId?: number;
+  status?: string;
+}) {
+  const session = await verifySession();
+  const ctx = await getAuthContext(session.userId);
+  if (!ctx) return [];
+
+  const conditions = [isNull(paymentSlips.deletedAt)];
+  if (ctx.roleLevel < 80) {
+    conditions.push(eq(paymentSlips.studentId, session.userId));
+  }
+  if (opts?.studentId) {
+    conditions.push(eq(paymentSlips.studentId, opts.studentId));
+  }
+  if (opts?.paymentId) {
+    conditions.push(eq(paymentSlips.paymentId, opts.paymentId));
+  }
+  if (opts?.status) {
+    conditions.push(
+      eq(paymentSlips.status, opts.status as "pending" | "approved" | "rejected")
+    );
+  }
+
+  return db
+    .select({
+      id: paymentSlips.id,
+      paymentId: paymentSlips.paymentId,
+      studentId: paymentSlips.studentId,
+      slipFilename: paymentSlips.slipFilename,
+      fileSize: paymentSlips.fileSize,
+      mimeType: paymentSlips.mimeType,
+      uploadedAt: paymentSlips.uploadedAt,
+      status: paymentSlips.status,
+      reviewedBy: paymentSlips.reviewedBy,
+      reviewedAt: paymentSlips.reviewedAt,
+      rejectionReason: paymentSlips.rejectionReason,
+    })
+    .from(paymentSlips)
+    .where(and(...conditions))
+    .orderBy(desc(paymentSlips.uploadedAt));
+}
+
+export async function getPaymentSlipForDownload(slipId: number) {
+  const session = await verifySession();
+  const ctx = await getAuthContext(session.userId);
+  if (!ctx) return { error: "Tidak terautentikasi." };
+
+  const [slip] = await db
+    .select()
+    .from(paymentSlips)
+    .where(and(eq(paymentSlips.id, slipId), isNull(paymentSlips.deletedAt)))
+    .limit(1);
+
+  if (!slip) return { error: "Bukti bayar tidak ditemukan." };
+  if (ctx.roleLevel < 80 && slip.studentId !== session.userId) {
+    return { error: "Anda tidak memiliki izin." };
+  }
+
+  const { decryptBlob } = await import("@/lib/crypto");
+  let decrypted: Buffer;
+  try {
+    decrypted = decryptBlob(Buffer.from(slip.encryptedData, "base64"));
+  } catch {
+    return { error: "File korup atau tidak dapat dibaca." };
+  }
+  return { file: decrypted, fileName: slip.slipFilename, mimeType: slip.mimeType };
+}
+
+export async function uploadPaymentSlip(formData: FormData) {
+  const session = await verifySession();
+  const ctx = await getAuthContext(session.userId);
+  if (!ctx || ctx.roleLevel < 40) return { error: "Anda tidak memiliki izin." };
+
+  const parsed = uploadPaymentSlipSchema.safeParse({ paymentId: formData.get("paymentId") });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Data tidak valid" };
+  }
+
+  const paymentId = Number(parsed.data.paymentId);
+  if (Number.isNaN(paymentId)) return { error: "ID pembayaran tidak valid." };
+
+  const [payment] = await db
+    .select({ id: payments.id, studentId: payments.studentId })
+    .from(payments)
+    .where(and(eq(payments.id, paymentId), isNull(payments.deletedAt)))
+    .limit(1);
+
+  if (!payment) return { error: "Pembayaran tidak ditemukan." };
+  if (payment.studentId !== session.userId && ctx.roleLevel < 80) {
+    return { error: "Pembayaran ini bukan milik Anda." };
+  }
+
+  const file = formData.get("file") as File | null;
+  if (!file) return { error: "File wajib diisi." };
+  if (file.size > SLIP_MAX_SIZE) return { error: "Ukuran file maksimal 5MB." };
+  if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+    return { error: "Tipe file harus JPG, PNG, GIF, WebP, atau PDF." };
+  }
+
+  let buffer: Buffer;
+  try {
+    buffer = Buffer.from(await file.arrayBuffer());
+  } catch {
+    return { error: "Gagal membaca file." };
+  }
+
+  const { encryptBlob } = await import("@/lib/crypto");
+  let encrypted: Buffer;
+  try {
+    encrypted = encryptBlob(buffer);
+  } catch {
+    return { error: "Gagal mengenkripsi file." };
+  }
+
+  await db.insert(paymentSlips).values({
+    paymentId,
+    studentId: session.userId,
+    encryptedData: encrypted.toString("base64"),
+    slipFilename: file.name,
+    fileSize: file.size,
+    mimeType: file.type,
+    status: "pending",
+  });
+
+  revalidatePath("/finance");
+  return { success: true };
+}
+
+export async function approvePaymentSlip(slipId: string) {
+  await verifyRoleLevel(80);
+  const idParsed = idSchema.safeParse(slipId);
+  if (!idParsed.success) return { error: "ID tidak valid." };
+  const session = await verifySession();
+
+  const [slip] = await db
+    .select({ id: paymentSlips.id, paymentId: paymentSlips.paymentId })
+    .from(paymentSlips)
+    .where(and(eq(paymentSlips.id, idParsed.data), eq(paymentSlips.status, "pending"), isNull(paymentSlips.deletedAt)))
+    .limit(1);
+
+  if (!slip) return { error: "Bukti bayar tidak ditemukan atau sudah diproses." };
+
+  await db.transaction(async (tx) => {
+    await tx.update(paymentSlips).set({ status: "approved", reviewedBy: session.userId, reviewedAt: new Date() }).where(eq(paymentSlips.id, idParsed.data));
+    await tx.update(payments).set({ status: "paid", paidAt: new Date() }).where(eq(payments.id, slip.paymentId));
+  });
+
+  revalidatePath("/finance");
+  return { success: true };
+}
+
+export async function rejectPaymentSlip(slipId: string, reason: string) {
+  await verifyRoleLevel(80);
+  const idParsed = idSchema.safeParse(slipId);
+  if (!idParsed.success) return { error: "ID tidak valid." };
+  if (!reason?.trim() || reason.trim().length > 500) {
+    return { error: "Alasan penolakan wajib diisi (maks 500 karakter)." };
+  }
+  const session = await verifySession();
+
+  const [slip] = await db
+    .select({ id: paymentSlips.id })
+    .from(paymentSlips)
+    .where(and(eq(paymentSlips.id, idParsed.data), eq(paymentSlips.status, "pending"), isNull(paymentSlips.deletedAt)))
+    .limit(1);
+
+  if (!slip) return { error: "Bukti bayar tidak ditemukan atau sudah diproses." };
+
+  await db.update(paymentSlips).set({ status: "rejected", reviewedBy: session.userId, reviewedAt: new Date(), rejectionReason: reason.trim() }).where(eq(paymentSlips.id, idParsed.data));
 
   revalidatePath("/finance");
   return { success: true };
