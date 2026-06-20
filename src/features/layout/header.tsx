@@ -64,7 +64,7 @@ export function AppHeader({ user }: AppHeaderProps) {
       </div>
 
       <div className="flex items-center gap-4">
-        <HeaderSearch />
+        <HeaderSearch roleLevel={user.roleLevel} />
         <HeaderNotifications />
 
         <Separator orientation="vertical" className="h-8 mx-1" />

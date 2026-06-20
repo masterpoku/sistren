@@ -17,34 +17,41 @@ interface NavItem {
     title: string;
     href: string;
     keywords?: string[];
+    minLevel?: number;
 }
 
+// Nav items annotated with minimum role level from ROLE_LEVEL_REQUIREMENTS.
+// Items with no minLevel are accessible to all authenticated users.
 const NAV_ITEMS: NavItem[] = [
     { title: "Dashboard", href: "/dashboard" },
-    { title: "Kalender", href: "/calendar", keywords: ["calendar", "acara"] },
-    { title: "Akademik", href: "/academic", keywords: ["akademik", "academic"] },
-    { title: "Kelas", href: "/academic/classes", keywords: ["class", "kelas"] },
-    { title: "Mapel", href: "/academic/subjects", keywords: ["subject", "mata pelajaran"] },
-    { title: "Jurusan", href: "/academic/majors", keywords: ["major", "jurusan"] },
-    { title: "Semester", href: "/academic/semesters" },
-    { title: "Tugas Guru", href: "/academic/assignments", keywords: ["assignment", "tugas"] },
-    { title: "Nilai", href: "/academic/grades", keywords: ["grade", "nilai"] },
+    { title: "Kalender", href: "/calendar", keywords: ["calendar", "acara"], minLevel: 40 },
+    { title: "Akademik", href: "/academic", keywords: ["akademik", "academic"], minLevel: 60 },
+    { title: "Kelas", href: "/academic/classes", keywords: ["class", "kelas"], minLevel: 60 },
+    { title: "Mapel", href: "/academic/subjects", keywords: ["subject", "mata pelajaran"], minLevel: 60 },
+    { title: "Jurusan", href: "/academic/majors", keywords: ["major", "jurusan"], minLevel: 60 },
+    { title: "Semester", href: "/academic/semesters", minLevel: 60 },
+    { title: "Tugas Guru", href: "/academic/assignments", keywords: ["assignment", "tugas"], minLevel: 60 },
+    { title: "Nilai", href: "/academic/grades", keywords: ["grade", "nilai"], minLevel: 60 },
     { title: "Keuangan", href: "/finance", keywords: ["finance", "uang"] },
-    { title: "Katalog Bayar", href: "/payments/catalog", keywords: ["katalog", "payment"] },
-    { title: "Metode Bayar", href: "/payments/methods" },
+    { title: "Katalog Bayar", href: "/payments/catalog", keywords: ["katalog", "payment"], minLevel: 80 },
+    { title: "Metode Bayar", href: "/payments/methods", minLevel: 80 },
     { title: "Siswa", href: "/students", keywords: ["student", "siswa"] },
     { title: "Guru", href: "/teachers", keywords: ["teacher", "guru"] },
-    { title: "Pengguna", href: "/users", keywords: ["user", "pengguna"] },
+    { title: "Pengguna", href: "/users", keywords: ["user", "pengguna"], minLevel: 80 },
     { title: "Pengumuman", href: "/announcements", keywords: ["announcement"] },
-    { title: "Approvals", href: "/admin/approvals" },
-    { title: "Staff", href: "/admin/users" },
+    { title: "Approvals", href: "/admin/approvals", minLevel: 80 },
+    { title: "Staff", href: "/admin/users", minLevel: 80 },
     { title: "Transkrip", href: "/alumni/transcript" },
     { title: "Roles", href: "/roles" },
-    { title: "Permissions", href: "/permissions" },
-    { title: "Pengaturan", href: "/settings/system", keywords: ["settings"] },
+    { title: "Permissions", href: "/permissions", minLevel: 100 },
+    { title: "Pengaturan", href: "/settings/system", keywords: ["settings"], minLevel: 100 },
 ];
 
-export function HeaderSearch() {
+interface HeaderSearchProps {
+    roleLevel: number;
+}
+
+export function HeaderSearch({ roleLevel }: HeaderSearchProps) {
     const [open, setOpen] = React.useState(false);
     const router = useRouter();
 
@@ -58,6 +65,10 @@ export function HeaderSearch() {
         document.addEventListener("keydown", onKey);
         return () => document.removeEventListener("keydown", onKey);
     }, []);
+
+    const visibleItems = NAV_ITEMS.filter(
+        (item) => (item.minLevel ?? 0) <= roleLevel
+    );
 
     return (
         <>
@@ -78,7 +89,7 @@ export function HeaderSearch() {
                 <CommandList>
                     <CommandEmpty>Tidak ada menu yang cocok.</CommandEmpty>
                     <CommandGroup heading="Menu">
-                        {NAV_ITEMS.map((item) => (
+                        {visibleItems.map((item) => (
                             <CommandItem
                                 key={item.href}
                                 value={`${item.title} ${item.keywords?.join(" ") ?? ""}`}
