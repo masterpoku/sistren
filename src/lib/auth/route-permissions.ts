@@ -61,7 +61,7 @@ export const ROUTE_PERMISSIONS: Record<string, string> = {
 
   // Payments
   "/finance": "payments.read_any",
-  "/payments/catalog": "payments.read_own",
+  "/payments/catalog": "payments.manage",
   "/payments/create": "payments.create",
   "/payments/:id/edit": "payments.update",
   "/payments/:id/approve": "payments.approve",
@@ -108,9 +108,10 @@ export const PUBLIC_ROUTES = [
 export const ROLE_LEVEL_REQUIREMENTS: Record<string, number> = {
   "/users": 80, // administrator minimum
   "/academic": 60, // guru minimum
-  "/finance": 80, // administrator minimum
+  "/finance": 40, // siswa (40) + admin (80) can view own/all payments
   "/admin": 80, // administrator minimum
   "/admin/users": 80, // administrator minimum
+  "/payments/catalog": 80, // administrator minimum
   "/permissions": 100, // superadmin only
   "/settings": 100, // superadmin only
   "/settings/school": 80, // administrator minimum

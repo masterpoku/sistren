@@ -1,15 +1,19 @@
 import { and, eq, isNull } from "drizzle-orm";
-import { getPayments, recordPayment } from "@/actions/payments";
+import { getPayments, getPaymentSlips, recordPayment } from "@/actions/payments";
 import { FinanceClient } from "@/features/finance/FinanceClient";
-import { verifyRoleLevel } from "@/lib/auth/verify-session";
+import { getAuthContext } from "@/lib/auth/permissions";
+import { verifySession } from "@/lib/auth/verify-session";
 import { db } from "@/lib/db";
 import { paymentItems, roles, users } from "@/lib/db/schema";
 
 export default async function FinancePage() {
-  await verifyRoleLevel(80);
+  const session = await verifySession();
+  const ctx = await getAuthContext(session.userId);
+  const canManage = (ctx?.roleLevel ?? 0) >= 80;
 
-  const [paymentList, studentRows, catalogItems] = await Promise.all([
+  const [paymentList, slips, studentRows, catalogItems] = await Promise.all([
     getPayments(),
+    getPaymentSlips(canManage ? {} : {}),
     db
       .select({ id: users.id, name: users.name, email: users.email })
       .from(users)
@@ -34,6 +38,8 @@ export default async function FinancePage() {
       studentRows={studentRows}
       catalogItems={catalogItems}
       recordPayment={recordPayment}
+      canManage={canManage}
+      slips={slips}
     />
   );
 }
