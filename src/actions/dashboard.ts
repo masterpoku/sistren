@@ -229,13 +229,19 @@ export async function getTodaySchedule(
 export async function getTeacherSessionsToday(_teacherId: string): Promise<number> {
   await verifySession();
 
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  const end = new Date();
+  end.setHours(23, 59, 59, 999);
+
   const [row] = await db
     .select({ count: sql<number>`COUNT(DISTINCT ${calendarEvents.id})` })
     .from(calendarEvents)
     .where(
       and(
         isNull(calendarEvents.deletedAt),
-        sql`(${calendarEvents.startAt} BETWEEN ${new Date(new Date().setHours(0, 0, 0, 0))} AND ${new Date(new Date().setHours(23, 59, 59, 999))})`
+        gte(calendarEvents.startAt, start),
+        lte(calendarEvents.startAt, end)
       )
     );
 
