@@ -1,5 +1,9 @@
 "use client";
 
+// Note: Select.Item value must be non-empty string. Use "__none__" as sentinel
+// for placeholder/empty-state items in controlled Radix Selects.
+// Radix rejects value="" at runtime.
+
 import { CaretDown, CaretUp, Check } from "@phosphor-icons/react";
 import * as SelectPrimitive from "@radix-ui/react-select";
 import type * as React from "react";

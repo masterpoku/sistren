@@ -1,6 +1,17 @@
 "use client";
 
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "./alert-dialog";
+import {
   CaretDown,
   Export,
   File,
@@ -154,12 +165,6 @@ export function ActionCell({
   deleteLabel = "Hapus",
   deleteConfirmMessage = "Yakin hapus data ini?",
 }: ActionCellProps) {
-  const handleDelete = () => {
-    if (confirm(deleteConfirmMessage)) {
-      onDelete?.();
-    }
-  };
-
   return (
     <div className="flex items-center gap-2">
       {onEdit && (
@@ -180,10 +185,28 @@ export function ActionCell({
         </Button>
       ))}
       {onDelete && (
-        <Button size="sm" variant="destructive" onClick={handleDelete}>
-          <Trash className="h-4 w-4 mr-1" />
-          {deleteLabel}
-        </Button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button size="sm" variant="destructive">
+              <Trash className="h-4 w-4 mr-1" />
+              {deleteLabel}
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Konfirmasi</AlertDialogTitle>
+              <AlertDialogDescription>
+                {deleteConfirmMessage}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Batal</AlertDialogCancel>
+              <AlertDialogAction onClick={onDelete}>
+                Ya, hapus
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       )}
     </div>
   );
