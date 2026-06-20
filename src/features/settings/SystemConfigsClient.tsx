@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 import {
     Select,
     SelectContent,
@@ -28,7 +29,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
 import {
     ALL_SYSTEM_CONFIG_KEYS,
     SYSTEM_CONFIG_DESCRIPTIONS,
@@ -91,7 +91,6 @@ export function SystemConfigsClient({ configs }: SystemConfigsClientProps) {
     }
 
     function handleDelete(key: string) {
-        if (!confirm(`Hapus konfigurasi '${key}'?`)) return;
         startTransition(async () => {
             await deleteSystemConfig(key);
             toast({ description: "Konfigurasi dihapus." });

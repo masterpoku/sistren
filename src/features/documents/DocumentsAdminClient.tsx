@@ -3,6 +3,16 @@
 import { DownloadSimple, FileText, Trash } from "@phosphor-icons/react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { useRef, useState, useTransition } from "react";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
 import {
@@ -67,6 +77,7 @@ function formatDate(d: Date | string): string {
 
 export default function DocumentsAdminClient({ data }: DocumentsAdminClientProps) {
     const [open, setOpen] = useState(false);
+    const [pendingDelete, setPendingDelete] = useState<SchoolDocumentRow | null>(null);
     const [isPending, startTransition] = useTransition();
     const [dragOver, setDragOver] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -177,11 +188,7 @@ export default function DocumentsAdminClient({ data }: DocumentsAdminClientProps
                         type="button"
                         size="sm"
                         variant="ghost"
-                        onClick={() => {
-                            if (confirm(`Hapus dokumen '${row.original.title}'?`)) {
-                                handleDelete(row.original.id);
-                            }
-                        }}
+                        onClick={() => setPendingDelete(row.original)}
                     >
                         <Trash className="h-4 w-4 text-destructive" />
                     </Button>
@@ -293,6 +300,33 @@ export default function DocumentsAdminClient({ data }: DocumentsAdminClientProps
                 exportFilename="dokumen-sekolah"
                 emptyMessage="Belum ada dokumen."
             />
+
+            <AlertDialog
+                open={pendingDelete !== null}
+                onOpenChange={(o) => !o && setPendingDelete(null)}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Hapus Dokumen</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Yakin hapus dokumen "{pendingDelete?.title}"? Tindakan ini tidak bisa dibatalkan.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setPendingDelete(null)}>
+                            Batal
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={() => {
+                                if (pendingDelete) handleDelete(pendingDelete.id);
+                                setPendingDelete(null);
+                            }}
+                        >
+                            Ya, hapus
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }
