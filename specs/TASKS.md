@@ -2,9 +2,71 @@
 
 > Append-only cross-session goal tracker. Add new goals, never delete old ones.
 > Archive completed goals by moving to an "## Archived" section. Keep only the 5 most recent entries.
-> Last updated: 2026-06-20 — Sprint 22: RBAC fixes. Sprint 23: Radix SelectItem audit. Sprint 24: Permissions page not wired. Sprint 25: Header search not permission-filtered. Sprint 26: Student manual payment slip upload + validation.
+> Last updated: 2026-06-21 — Sprint 27: RPP validation spec'd. Sprint 28: Student transfer/promotion spec drafting. Sprint 29: Attendance spec drafting. Sprint 26: Payment slip pending.
 
 ## Active Goals
+
+### Sprint 27 — RPP Document Validation (FR-028)
+
+**Status:** spec drafted
+**Date:** 2026-06-21
+**Source:** Client requirement (item 2) — new feature.
+
+**Sprint goal:** Teacher uploads RPP documents. Waka Kurikulum reviews — approves or rejects with reason. Status lifecycle: draft → submitted → approved | rejected | archived. Notification via existing push system.
+
+- [ ] **1.1 Design `rpp_documents` schema** — New Drizzle table: `id` (auto), `teacherId` (FK to users), `classId` (FK to classes — scope TBD with client), `subjectId` (FK to subjects), `title`, `description`, `documentId` (FK to school_documents — encrypted file), `status` enum (draft/submitted/approved/rejected/archived), `reviewedBy` (nullable FK), `reviewedAt`, `rejectionReason` (nullable text), `createdAt`, `updatedAt`, `deletedAt`. `M src/lib/db/schema/rppDocuments.ts`
+- [ ] **1.2 Create RPP actions** — `uploadRpp` (teacher, creates draft), `submitRpp` (changes draft → submitted), `reviewRpp` (approve/reject waka), `getRppDocuments` (teacher sees own, waka sees all submitted), `archiveRpp`. Permission check: `documents.review_rpp` for review actions. `M src/actions/rpp.ts`
+- [ ] **1.3 Build teacher upload page** — Guru page under `/academic/rpp` or submenu. Upload form: title, class, subject, file upload drag-drop, description, submit/draft button. Shows status badge per row. `M src/features/rpp/RppTeacherClient.tsx`
+- [ ] **1.4 Build Waka review queue page** — List of submitted RPPs awaiting review. Each row: teacher, class, subject, title, download link, approve/reject buttons. Reject opens dialog with reason input. `M src/features/rpp/RppReviewClient.tsx`
+- [ ] **1.5 Wire notification on status change** — When approved/rejected, create notification row for the teacher via existing notifications schema. `M src/actions/rpp.ts` (add notification creation)
+- [ ] **1.6 Add navigation** — Sidebar links: Guru sees "RPP Saya" (guru), Waka sees "Validasi RPP" (waka). Both gated by permission/role. `M src/features/layout/sidebar.tsx`
+- [ ] **1.7 Add route gates + permissions** — Add `documents.review_rpp` permission to seed. Add `/academic/rpp/*` routes to ROUTE_PERMISSIONS. `M src/lib/auth/route-permissions.ts`, `M seed.ts`
+- [ ] **1.8 Verify** — Login as guru: upload RPP → draft status → submit → submitted status → visible in waka queue. Login as waka: see pending queue → approve → notification sent to guru. Login as reviewed guru: see approval status. Rejected: reason visible, re-upload allowed. Build green.
+
+**Files touched:** 1 new schema, 1 new action file, 2 new feature components, 1 sidebar update, 1 route-permissions update, 1 seed update.
+
+---
+
+### Sprint 28 — Student Class Transfer & Promotion (FR-015)
+
+**Status:** spec drafting
+**Date:** 2026-06-21
+**Source:** Client requirement (item 3) — FR-015 Not Started.
+
+**Sprint goal:** Batch class promotion (entire class to next grade) + individual class transfer (pindah kelas) + multi-bulk student transfer + graduation.
+
+- [ ] **1.1 Design promotion schema/mapping** — Assess if new table needed for promotion mappings (origin class → target class) or handled via enrollment updates. Likely reuse existing enrollment schema with status transitions. `M src/lib/db/schema/`
+- [ ] **1.2 Create promotion actions** — `promoteClass` (select origin class ID → target class ID → promote all students), `transferStudent` (single student → new class with enrollment update), `bulkTransferStudents` (multi-select → common target class), `graduateStudent` (terminal enrollment transition). `M src/actions/students.ts`
+- [ ] **1.3 Build batch promotion UI** — Select origin class dropdown → select target class dropdown → confirm with summary (N students to promote) → execute. Result: success/toast count. `M src/features/students/PromoteDialog.tsx`
+- [ ] **1.4 Build individual transfer UI** — Student search field → target class dropdown → confirm. `M src/features/students/TransferDialog.tsx`
+- [ ] **1.5 Build bulk transfer UI** — Multi-select student rows → target class dropdown → confirm. `M src/features/students/BulkTransferDialog.tsx`
+- [ ] **1.6 Add graduation action on student page** — Graduation button (ActionCell or page action) with confirmation. Updates enrollment status to graduated. `M src/features/students/GraduateAction.tsx`
+- [ ] **1.7 Add sidebar nav or submenu** — "Pindah Kelas / Naik Kelas" under siswa section or submenu in Students page. `M src/features/layout/sidebar.tsx`
+- [ ] **1.8 Verify** — Login as admin: batch promote a class → all students moved. Transfer single student → enrollment updated. Bulk transfer → multi students moved. Graduation → enrollment terminal. Build green.
+
+**Files touched:** New action lines in `src/actions/students.ts`, 3 new dialog components, sidebar update, route-permissions if needed.
+
+---
+
+### Sprint 29 — Student Attendance Tracking (FR-011)
+
+**Status:** spec drafting
+**Date:** 2026-06-21
+**Source:** Client requirement (item 6) — placeholder exists, no implementation.
+
+**Sprint goal:** Attendance tracking per session per student. Teacher marks attendance via dedicated page. Status values: Present, Sick, Permit, Absent, Late. Summary reports.
+
+- [ ] **1.1 Design attendance schema** — Drizzle table: `id`, `enrollmentId` (FK), `sessionDate`, `status` (enum: present/sick/permit/absent/late), `notes`, `recordedById` (FK), `createdAt`. Unique: (enrollmentId, sessionDate). `M src/lib/db/schema/attendance.ts`
+- [ ] **1.2 Create attendance actions** — `markAttendance` (upsert per student), `getAttendanceByClass` (date range), `getStudentAttendance` (per student). RBAC: teacher marks own class, admin sees all. `M src/actions/attendance.ts`
+- [ ] **1.3 Build teacher attendance page** — Teacher selects class → sees student roster → marks present/sick/permit/absent/late per student for selected date. Submit/review flow. `M src/features/attendance/AttendanceClient.tsx` (replace placeholder)
+- [ ] **1.4 Add summary view** — Attendance statistics per class per month. Percentage breakdowns. `M src/features/attendance/`
+- [ ] **1.5 Add sidebar nav item** — "Absensi" nav item gated at level 60. `M src/features/layout/sidebar.tsx`
+- [ ] **1.6 Route gating + permissions** — Add `/attendance` to route permissions if missing. `M src/lib/auth/route-permissions.ts`
+- [ ] **1.7 Verify** — Login as guru: select class, mark attendance → records saved. Login as admin: view attendance reports. Build green.
+
+**Files touched:** 2 new schema files, 1 new action file, 1 modified feature file, 1 modified sidebar, 1 route-permissions file.
+
+---
 
 ### Sprint 26 — Student Manual Payment Slip Upload + Validation
 
