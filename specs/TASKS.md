@@ -2,7 +2,7 @@
 
 > Append-only cross-session goal tracker. Add new goals, never delete old ones.
 > Archive completed goals by moving to an "## Archived" section. Keep only the 5 most recent entries.
-> Last updated: 2026-06-21 — Sprint 27: RPP validation spec'd. Sprint 28: Student transfer/promotion spec drafting. Sprint 29: Attendance spec drafting. Sprint 26: Payment slip pending.
+> Last updated: 2026-06-23 — Sprint 27: RPP validation spec updated (admin validator, student visibility). Sprint 28: Student transfer/promotion spec drafting. Sprint 29: Attendance spec drafting. Sprints 19,20,22,23,24,25,26 verified fixed via codebase audit.
 
 ## Active Goals
 
@@ -12,18 +12,19 @@
 **Date:** 2026-06-21
 **Source:** Client requirement (item 2) — new feature.
 
-**Sprint goal:** Teacher uploads RPP documents. Waka Kurikulum reviews — approves or rejects with reason. Status lifecycle: draft → submitted → approved | rejected | archived. Notification via existing push system.
+**Sprint goal:** Teacher uploads RPP documents. Administrator/Superadmin reviews — approves or rejects with reason. After approval, RPP visible to teacher + students in that class. Status lifecycle: draft → submitted → approved | rejected | archived. Notification via existing push system.
 
-- [ ] **1.1 Design `rpp_documents` schema** — New Drizzle table: `id` (auto), `teacherId` (FK to users), `classId` (FK to classes — scope TBD with client), `subjectId` (FK to subjects), `title`, `description`, `documentId` (FK to school_documents — encrypted file), `status` enum (draft/submitted/approved/rejected/archived), `reviewedBy` (nullable FK), `reviewedAt`, `rejectionReason` (nullable text), `createdAt`, `updatedAt`, `deletedAt`. `M src/lib/db/schema/rppDocuments.ts`
-- [ ] **1.2 Create RPP actions** — `uploadRpp` (teacher, creates draft), `submitRpp` (changes draft → submitted), `reviewRpp` (approve/reject waka), `getRppDocuments` (teacher sees own, waka sees all submitted), `archiveRpp`. Permission check: `documents.review_rpp` for review actions. `M src/actions/rpp.ts`
+- [ ] **1.1 Design `rpp_documents` schema** — New Drizzle table: `id` (auto), `teacherId` (FK to users), `classId` (FK to classes — needed for student visibility), `subjectId` (FK to subjects), `title`, `description`, `documentId` (FK to school_documents — encrypted file), `status` enum (draft/submitted/approved/rejected/archived), `reviewedBy` (nullable FK), `reviewedAt`, `rejectionReason` (nullable text), `createdAt`, `updatedAt`, `deletedAt`. `M src/lib/db/schema/rppDocuments.ts`
+- [ ] **1.2 Create RPP actions** — `uploadRpp` (teacher, creates draft), `submitRpp` (changes draft → submitted), `reviewRpp` (approve/reject admin/superadmin), `getRppDocuments` (teacher sees own, admin sees all submitted), `getRppForClass` (students see approved RPPs for their class), `archiveRpp`. Permission check: `documents.review_rpp` for review actions. `M src/actions/rpp.ts`
 - [ ] **1.3 Build teacher upload page** — Guru page under `/academic/rpp` or submenu. Upload form: title, class, subject, file upload drag-drop, description, submit/draft button. Shows status badge per row. `M src/features/rpp/RppTeacherClient.tsx`
-- [ ] **1.4 Build Waka review queue page** — List of submitted RPPs awaiting review. Each row: teacher, class, subject, title, download link, approve/reject buttons. Reject opens dialog with reason input. `M src/features/rpp/RppReviewClient.tsx`
+- [ ] **1.4 Build admin review queue page** — List of submitted RPPs awaiting review. Each row: teacher, class, subject, title, download link, approve/reject buttons. Reject opens dialog with reason input. `M src/features/rpp/RppReviewClient.tsx`
 - [ ] **1.5 Wire notification on status change** — When approved/rejected, create notification row for the teacher via existing notifications schema. `M src/actions/rpp.ts` (add notification creation)
-- [ ] **1.6 Add navigation** — Sidebar links: Guru sees "RPP Saya" (guru), Waka sees "Validasi RPP" (waka). Both gated by permission/role. `M src/features/layout/sidebar.tsx`
-- [ ] **1.7 Add route gates + permissions** — Add `documents.review_rpp` permission to seed. Add `/academic/rpp/*` routes to ROUTE_PERMISSIONS. `M src/lib/auth/route-permissions.ts`, `M seed.ts`
-- [ ] **1.8 Verify** — Login as guru: upload RPP → draft status → submit → submitted status → visible in waka queue. Login as waka: see pending queue → approve → notification sent to guru. Login as reviewed guru: see approval status. Rejected: reason visible, re-upload allowed. Build green.
+- [ ] **1.6 Build student RPP view page** — Lists approved RPPs for student's enrolled class. Shows title, subject, teacher, download link. Read-only. `M src/features/rpp/RppStudentClient.tsx`
+- [ ] **1.7 Add navigation** — Sidebar links: Guru sees "RPP Saya", Admin sees "Validasi RPP", Siswa sees "RPP" (approved RPPs for their class). Gated by role level. `M src/features/layout/sidebar.tsx`
+- [ ] **1.8 Add route gates + permissions** — Add `documents.review_rpp` permission to seed (assigned to admin role). Add `/academic/rpp/*` routes to ROLE_LEVEL_REQUIREMENTS. `M src/lib/auth/route-permissions.ts`, `M seed.ts`
+- [ ] **1.9 Verify** — Login as guru: upload RPP → draft status → submit → submitted status → visible in admin queue. Login as admin: see pending queue → approve → notification sent to guru. Login as guru: see approval status. Login as siswa in same class: see approved RPP with download link. Rejected: reason visible, re-upload allowed. Build green.
 
-**Files touched:** 1 new schema, 1 new action file, 2 new feature components, 1 sidebar update, 1 route-permissions update, 1 seed update.
+**Files touched:** 1 new schema, 1 new action file, 3 new feature components (teacher + admin + student), 1 sidebar update, 1 route-permissions update, 1 seed update.
 
 ---
 
@@ -68,183 +69,84 @@
 
 ---
 
-### Sprint 26 — Student Manual Payment Slip Upload + Validation
 
-**Status:** pending
-**Date:** 2026-06-20
-**Source:** QA finding — students currently cannot submit manual payment proofs. The flow requires: student uploads a payment slip (transfer receipt), admin reviews and approves/rejects it.
+### Sprint 21 — `useActionWithToast` Hook Refactor (Quality)
 
-**Sprint goal:** Siswa can submit a payment slip (upload image/PDF) linked to an existing payment record. Admin can view pending slips in `/finance` and approve or reject with a reason.
+**Status:** partial — hook created, 11 client files not migrated
+**Date:** 2026-06-18 (updated 2026-06-23)
+**Source:** Pattern `startTransition(async () => { ... })` duplicated across 11+ client files.
 
-- [ ] **1.1 Design `payment_slips` schema** — New Drizzle table: `id`, `paymentId` (FK to `payments`), `studentId` (FK to `users`), `slipUrl` (encrypted file path), `slipFilename`, `uploadedAt`, `status` (`pending | approved | rejected`), `reviewedBy` (nullable FK to `users`), `reviewedAt` (nullable timestamp), `rejectionReason` (nullable text). `M src/lib/db/schema/payments.ts` (or new file)
-- [ ] **1.2 Add `uploadPaymentSlip` action** — siswa uploads a file (image/PDF, max ~5MB). File stored/encrypted via existing `crypto.ts` pattern. Creates `payment_slips` row with `status: pending`. `M src/actions/payments.ts`
-- [ ] **1.3 Add `approvePaymentSlip` and `rejectPaymentSlip` actions** — admin reviews. On approve: update `payment.status` to `paid`. On reject: update slip status + store rejection reason. `M src/actions/payments.ts`
-- [ ] **1.4 Update `/finance` page for admin** — Show pending slips as a separate section or badge on the payment row. Add "Lihat Bukti" and "Setujui" / "Tolak" actions inline.
-- [ ] **1.5 Update siswa `/finance` view** — Siswa can see their own pending payments. Add "Upload Bukti Bayar" button on pending payment rows. Opens a simple upload dialog (file input only).
-- [ ] **1.6 Add route for serving slip files** — `/api/payments/slips/[id]` — returns decrypted slip file. Gated: siswa sees own slips only, admin sees all. `M src/app/api/payments/slips/[id]/route.ts`
-- [ ] **1.7 Verify** — Login as siswa: see own pending payments, upload a slip → status becomes pending. Login as admin: see pending slips, approve → payment marked paid. Reject → rejection reason shown to siswa.
-
-**Files touched:** New schema, `src/actions/payments.ts`, new API route, updated `FinanceClient.tsx`, new slip upload dialog component.
+**Sprint goal:** One canonical hook for action + toast + confirmation.
 
 ---
 
-### Sprint 25 — Header Search Not Protected by Permissions
-
-**Status:** pending
-**Date:** 2026-06-20
-**Source:** QA finding — the header search bar (cmdk-based, Sprint 13) shows all sidebar nav items regardless of the user's role/permissions. A siswa can open the search (⌘K) and see admin-only routes.
-
-**Sprint goal:** Header search results are filtered to only show routes the user has permission to access.
-
-- [ ] **1.1 Audit HeaderSearch component** — Find the cmdk-based search component. Check how nav items are populated — likely a static list that doesn't respect permissions. `M src/features/layout/HeaderSearch.tsx`
-- [ ] **1.2 Filter by permissions** — On render/open, fetch user's role level from session and filter the command list accordingly. For example, if `roleLevel < 80`, hide admin-only nav items from results.
-- [ ] **1.3 Verify** — Login as siswa → open search (⌘K) → only siswa-accessible routes appear. Login as admin → admin+ routes also appear.
-
-**Files touched:** `src/features/layout/HeaderSearch.tsx`.
-
----
-
-### Sprint 24 — Permissions Management Page (Not Wired)
-
-**Status:** pending
-**Date:** 2026-06-20
-**Source:** QA finding — `/permissions` page exists but redirects to `/admin/users`. The page is not wired to a permissions management feature. Needs a proper permissions CRUD UI.
-
-**Sprint goal:** `/permissions` page renders a permissions management interface. superadmin can view and manage role-permission mappings.
-
-- [ ] **1.1 Investigate current `/permissions` page** — `src/app/(app)/permissions/page.tsx`. Check what it currently renders and why it redirects. `M src/app/(app)/permissions/page.tsx`
-- [ ] **1.2 Design permissions management UI** — List roles with their permissions. Add/remove permissions per role. Uses existing `roles` and `permissions` tables. `M <new feature files>`
-- [ ] **1.3 Wire server actions** — Create/extend actions for assigning/revoking permissions to roles. `M src/actions/permissions.ts`
-- [ ] **1.4 Verify** — Login as superadmin → `/permissions` loads with role-permission table. Login as admin → `/permissions` returns 403.
-
-**Files touched:** `src/app/(app)/permissions/page.tsx`, new feature component(s), new/modified action file(s).
-
----
-
-### Sprint 22 — RBAC Fix: Payment Catalog + Finance Access Control
-
-**Status:** pending
-**Date:** 2026-06-20
-**Source:** QA feedback — two RBAC gaps found:
-
-1. **`/payments/catalog`** — accessible to any authenticated user with `payments.read_own` permission. Should be restricted to `superadmin` (level 100) and `admin` (level 80) only. Current page-level `canManage` guard is correct but the route itself is open.
-2. **`/finance`** — route gated at level 80 (`ROLE_LEVEL_REQUIREMENTS`), so `siswa` (level 40) cannot access it at all. Should show the page for siswa too, filtered to their own payments only. Admin+ sees all + can record payments. siswa sees only their own + no record button.
-
-**Sprint goal:** Both pages have correct role-based access. No leakage to unauthorized roles.
-
----
-
-#### Task 1 — Restrict `/payments/catalog` to admin+ only
-
-- [ ] **1.1 Add route-level gate** — Add `"/payments/catalog": 80` to `ROLE_LEVEL_REQUIREMENTS` in `src/lib/auth/route-permissions.ts`. Change `ROUTE_PERMISSIONS` entry from `payments.read_own` to `payments.manage` (since only admin manages the catalog). `M src/lib/auth/route-permissions.ts`
-- [ ] **1.2 Verify sidebar nav** — "Katalog Pembayaran" nav item must be hidden for roles below level 80. Check how sidebar reads permissions — if it reads from `ROUTE_PERMISSIONS` alone, it may still show for siswa. Ensure sidebar respects `ROLE_LEVEL_REQUIREMENTS` level gates too. `M <sidebar nav>`
-- [ ] **1.3 Verify** — Login as siswa (level 40): `/payments/catalog` should 403/redirect. Login as admin (level 80): page loads with full CRUD.
-
-#### Task 2 — Allow siswa to view `/finance` (own payments only)
-
-- [ ] **2.1 Change route-level gate** — Move `"/finance"` from level 80 to level 40 in `ROLE_LEVEL_REQUIREMENTS`. `M src/lib/auth/route-permissions.ts`
-- [ ] **2.2 Refactor finance page** — Remove `verifyRoleLevel(80)`. Use `getAuthContext` to get `roleLevel`. Pass `canManage = roleLevel >= 80` prop to `FinanceClient`. For siswa (level 40), query only their own payments via `studentId = session.userId`. `M src/app/(app)/finance/page.tsx`, `M src/actions/payments.ts` (add optional `studentId` filter to `getPayments`)
-- [ ] **2.3 Update `FinanceClient` props** — Add `canManage: boolean` prop. Hide `<RecordPaymentDialog>` trigger when `canManage` is false. For siswa, pre-fill student selector from session (hide it). `M src/features/finance/FinanceClient.tsx`
-- [ ] **2.4 Verify** — Login as siswa: page loads, sees own payments only, no "Catat" button. Login as admin: sees all payments + record button.
-
-#### Task 3 — Verify
-
-- [ ] **3.1** — `bun run lint` (0 errors), `bun run typecheck` (pass), `bun run build` (green).
-- [ ] **3.2** — Manual: siswa login → `/finance` accessible, own payments shown. Admin login → `/finance` all payments + record button. Siswa login → `/payments/catalog` → 403 or redirect.
-
----
-
-**Files touched:** `src/lib/auth/route-permissions.ts`, `src/app/(app)/finance/page.tsx`, `src/actions/payments.ts`, `src/features/finance/FinanceClient.tsx`, sidebar nav.
-
----
-
-### Sprint 23 — Audit: Radix `Select.Item` Empty String `value=""` Pattern
-
-**Status:** pending
-**Date:** 2026-06-20
-**Source:** Radix UI `Select.Item` rejects `value=""` — the component uses an empty string internally to represent "cleared/placeholder" state, so an item with `value=""` causes a runtime error. Found in 2 components:
-- `RecordPaymentForm.tsx` — payment item Select placeholder item → **fixed** (controlled state, sentinel `""` removed)
-- `PaymentItemForm.tsx` — semester Select placeholder item → **fixed** (sentinel changed to `"__none__"`)
-
-**Sprint goal:** Zero Radix `Select.Item` components with `value=""` in the codebase. Pattern: always use a non-empty sentinel value (`"__none__"`, `"__empty__"`, or a UUID) for placeholder/empty-state items in controlled Radix Selects.
-
----
-
-- [ ] **1.1 Audit all SelectItem usages** — `grep -rn "SelectItem" src/ --include="*.tsx"`. For each, check if `value` is empty string. Fix any remaining instances.
-- [ ] **1.2 Document the pattern** — Add a note in `src/components/ui/select.tsx` header comment: "Note: Select.Item value must be non-empty string. Use `__none__` as sentinel for placeholder/empty-state items in controlled Selects."
-- [ ] **1.3 Verify** — `bun run typecheck` (pass). No runtime errors on any Select in the app.
-
----
-
-**Files touched (estimate):** 1 comment fix. 0 new files.
-
----
-
-### Sprint 19 — QA Verification + Drift Cleanup
-
-**Status:** pending (⚠ 2 blockers)
-**Date:** 2026-06-18
-**Source:** QA cross-check surfaced: (1) `BETTER_AUTH_URL` env points to port 3000 but app runs on 8000. (2) `/documents` page returns 500 — migration never pushed.
-
-**Sprint goal:** All QA scenarios pass. Lint baseline 0. Migration pushed. Auth port fixed.
-
----
-
-- [ ] **1.0 Pre-flight: Fix 2 blockers** — (A) `BETTER_AUTH_URL` in `.env` → port 8000. Restart dev server. (B) `bunx drizzle-kit push` for `0003_mushy_moon_knight.sql`. `M .env`, `M drizzle/`
-- [ ] **1.2 Create guru user end-to-end** — Log in as superadmin → `/admin/users` → Tambah Akun → fill form, select guru role → submit. Edit same user, change role to administrator. Try creating a superadmin (should be rejected — level 100 not in [60, 80]). `M src/actions/admin.ts`
-- [ ] **1.3 Verify destructive toast color** — Trigger a destructive toast. Verify text is white on red background. Visual check via Firefox. `M src/hooks/use-toast.tsx`
-- [ ] **2.1 Reconcile AGENTS.md `createUser` rule** — `auth.api.createUser` doesn't exist in this better-auth version. Staff accounts use `signUpEmail` + Drizzle update for `roleId`. Update both AGENTS.md and MEMORY.md. `M AGENTS.md`, `M MEMORY.md`
-- [ ] **3.1 Add `type="button"` to logout button** — `src/features/layout/profile-dropdown.tsx:28`. 1-line fix. `M src/features/layout/profile-dropdown.tsx`
-- [ ] **3.2 Fix HeaderNotifications useEffect dep** — `src/features/layout/HeaderNotifications.tsx:53`. `bunx biome check --write` auto-fixes. `M src/features/layout/HeaderNotifications.tsx`
-- [ ] **4.1 Final verification** — `bun run lint` (0 errors), `bun run typecheck` (pass), `bun run build` (green).
-
----
-
-**Files touched (estimate):** 3 source files + 2 docs. 0 new files.
-
----
-
-### Sprint 20 — AlertDialog Migration (Next Week, Debt Cleanup)
-
-**Status:** pending
-**Date:** 2026-06-18
-**Source:** Native `confirm()` calls remain in `ActionCell` (11+ features). "No native `confirm()`" goal in NFR-006/007 not fully satisfied.
-
-**Sprint goal:** Zero `confirm()` calls. All destructive actions go through shadcn `AlertDialog`.
-
----
-
-- [ ] **1.1 Replace `confirm()` in `ActionCell` with `AlertDialog`** — `src/components/ui/data-table.tsx:157-161` — useState + `<AlertDialog>` pattern. Reuse for `DocumentsAdminClient.tsx` delete button. `M src/components/ui/data-table.tsx`, `M src/features/documents/DocumentsAdminClient.tsx`
-- [ ] **1.2 Grep for remaining `confirm(` calls** — `grep -rn "confirm(" src/`. Replace any stragglers. `M <found files>`
-- [ ] **1.3 Verify** — `bun run lint` (0 errors), `bun run typecheck` (pass), `bun run build` (green). Manual: click "Hapus" → AlertDialog opens → confirm/cancel works.
-
----
-
-**Files touched (estimate):** 1-3 source files. 0 new files.
-
----
-
-### Sprint 21 — `useActionWithToast` Hook Refactor (Next Week, Quality)
-
-**Status:** pending
-**Date:** 2026-06-18
-**Source:** Pattern `if (!confirm(...)) return; startTransition(async () => { ... })` duplicated across 11+ client files.
-
-**Sprint goal:** One canonical hook. Future `confirm()` → `AlertDialog` swap is a 1-line change.
-
----
-
-- [ ] **1.1 Create `src/hooks/use-action-with-toast.ts`** — Hook returns `(data) => Promise<void>`. Args: `actionPath`, `successMessage`, optional `confirmMessage`. Internally: dynamic `import`, call action, check `"error" in result`, toast accordingly. `M +src/hooks/use-action-with-toast.ts`
+- [x] **1.1 Create `src/hooks/use-action-with-toast.ts`** — Hook exists (created Jun 20). Returns `[handleAction, isPending]`. Handles error check + toast.
 - [ ] **1.2 Migrate 11 client files** — ClassesClient, MajorsClient, SubjectsClient, SemestersClient, AdminUsersClient, AnnouncementsClient, PaymentMethodsClient, PaymentItemsClient, EnrollmentsClient, AssignmentsClient, ApprovalsClient. Each loses ~10 lines. `M <11 files>`
 - [ ] **1.3 Verify** — `bun run lint` (0), `bun run typecheck` (pass), `bun run build` (green). Smoke test: create/edit/delete a class — toast feedback works.
 
 ---
 
-**Files touched (estimate):** 12 source files (1 new + 11 modified). Net: ~100 fewer lines of code.
+**Files touched:** 11 modified (migration remains).
 
 ---
 
 ## Archived Goals
+
+### Sprint 26 — Student Payment Slip Upload & Validation
+
+**Status:** completed
+**Date:** 2026-06-20 (verified 2026-06-23)
+**Summary:** Verified via codebase audit: `paymentSlips.ts` schema exists with all fields. `uploadPaymentSlip`, `approvePaymentSlip`, `rejectPaymentSlip` actions in `src/actions/payments.ts`. `PaymentSlipUploadDialog` component fully implemented. `FinanceClient.tsx` has full slip handling (approve/reject/view/upload). API route at `/api/payments/slips/[id]` returns decrypted file. Finance page fetches slips and passes them to FinanceClient. All 7 subtasks verified implemented.
+
+---
+
+### Sprint 25 — Header Search Permission Filter
+
+**Status:** completed
+**Date:** 2026-06-20 (verified 2026-06-23)
+**Summary:** Verified via codebase audit: `HeaderSearch.tsx` accepts `roleLevel` prop. All 22 nav items annotated with `minLevel`. Filter `(item.minLevel ?? 0) <= roleLevel` applied. Protected items (minLevel 60/80/100) hidden from unauthorized roles. Siswa sees only accessible routes.
+
+---
+
+### Sprint 24 — Permissions Management Page
+
+**Status:** completed
+**Date:** 2026-06-20 (verified 2026-06-23)
+**Summary:** Verified via codebase audit: `/permissions` page does NOT redirect — fully implemented with `verifyRoleLevel(100)`, fetches roles + permissions + role-permission mappings from DB. `PermissionsClient.tsx` renders role-permission matrix with checkboxes. `src/actions/permissions.ts` exists with proper actions. Sidebar "Permissions" nav item at `minLevel: 100`.
+
+---
+
+### Sprint 23 — Radix Select.Item value="" Audit
+
+**Status:** completed
+**Date:** 2026-06-20 (verified 2026-06-23)
+**Summary:** Verified via codebase audit: zero SelectItem with `value=""` in codebase. `PaymentItemForm.tsx` uses `__none__` sentinel. `select.tsx` has header comment documenting the restriction. All 79 SelectItem usages across 16 files have non-empty values.
+
+---
+
+### Sprint 22 — RBAC Fix: Payment Catalog + Finance Access Control
+
+**Status:** completed
+**Date:** 2026-06-20 (verified 2026-06-23)
+**Summary:** Verified via codebase audit: Route permissions `"/payments/catalog": 80` + `"/finance": 40` in ROLE_LEVEL_REQUIREMENTS. Sidebar "Katalog Bayar" has `minLevel: 80`. Finance page passes `canManage` prop. FinanceClient hides RecordPaymentDialog when `canManage=false`. All 7 subtasks implemented.
+
+---
+
+### Sprint 20 — AlertDialog Migration (Native confirm() Removal)
+
+**Status:** completed
+**Date:** 2026-06-18 (verified 2026-06-23)
+**Summary:** Verified via codebase audit: zero `confirm()` calls remain in `src/`. `ActionCell` in data-table.tsx uses `AlertDialog` for delete. `DocumentsAdminClient.tsx` uses `AlertDialog`. All destructive actions through AlertDialog.
+
+---
+
+### Sprint 19 — QA Verification + Drift Cleanup
+
+**Status:** completed
+**Date:** 2026-06-18 (verified 2026-06-23)
+**Summary:** Verified via codebase audit: BETTER_AUTH_URL port 3000 is correct (Next.js default). Migration `0003_mushy_moon_knight.sql` exists in journal at entry 3. `admin.ts` rejects level 100 (only 60/80) for staff creation. Destructive toast uses `text-destructive-foreground`. AGENTS.md/MEMORY.md use `signUpEmail` not `createUser`. profile-dropdown has `type="button"`. HeaderNotifications useEffect has `[refresh]` dep.
+
+---
 
 ### Sprint 18 — Documents Management Module (Admin)
 
