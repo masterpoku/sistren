@@ -87,7 +87,9 @@ export async function uploadDocument(formData: FormData) {
     documentType: formData.get("documentType"),
   });
   if (!file || !parsed.success) {
-    return { error: parsed.error?.issues[0]?.message ?? "File dan data wajib diisi." };
+    return {
+      error: parsed.error?.issues[0]?.message ?? "File dan data wajib diisi.",
+    };
   }
   const { studentId, documentType } = parsed.data;
 

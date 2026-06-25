@@ -29,13 +29,13 @@ export function SchoolSettingsForm({
 
   function handleSubmit(formData: FormData) {
     const data: Record<string, string> = {};
-    const schoolNameVal = formData.get(SYSTEM_CONFIG_KEYS.SCHOOL_NAME) as string;
+    const schoolNameVal = formData.get(
+      SYSTEM_CONFIG_KEYS.SCHOOL_NAME
+    ) as string;
     const schoolAddressVal = formData.get(
       SYSTEM_CONFIG_KEYS.SCHOOL_ADDRESS
     ) as string;
-    const headmasterVal = formData.get(
-      SYSTEM_CONFIG_KEYS.HEADMASTER
-    ) as string;
+    const headmasterVal = formData.get(SYSTEM_CONFIG_KEYS.HEADMASTER) as string;
     const npsnVal = formData.get(SYSTEM_CONFIG_KEYS.NPSN) as string;
     const nssVal = formData.get(SYSTEM_CONFIG_KEYS.NSS) as string;
 

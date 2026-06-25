@@ -7,90 +7,90 @@ import { db } from "@/lib/db";
 import { notifications } from "@/lib/db/schema";
 
 export interface NotificationItem {
-    id: number;
-    title: string;
-    message: string;
-    type: string | null;
-    readAt: Date | null;
-    createdAt: Date;
+  id: number;
+  title: string;
+  message: string;
+  type: string | null;
+  readAt: Date | null;
+  createdAt: Date;
 }
 
 export async function listNotifications(
-    limit = 20
+  limit = 20
 ): Promise<{ items: NotificationItem[]; unread: number } | { error: string }> {
-    const session = await verifySession();
+  const session = await verifySession();
 
-    const rows = await db
-        .select({
-            id: notifications.id,
-            title: notifications.title,
-            message: notifications.message,
-            type: notifications.type,
-            readAt: notifications.readAt,
-            createdAt: notifications.createdAt,
-        })
-        .from(notifications)
-        .where(
-            and(
-                eq(notifications.userId, session.userId),
-                isNull(notifications.deletedAt)
-            )
-        )
-        .orderBy(desc(notifications.createdAt))
-        .limit(limit);
+  const rows = await db
+    .select({
+      id: notifications.id,
+      title: notifications.title,
+      message: notifications.message,
+      type: notifications.type,
+      readAt: notifications.readAt,
+      createdAt: notifications.createdAt,
+    })
+    .from(notifications)
+    .where(
+      and(
+        eq(notifications.userId, session.userId),
+        isNull(notifications.deletedAt)
+      )
+    )
+    .orderBy(desc(notifications.createdAt))
+    .limit(limit);
 
-    const unread = rows.filter((r) => r.readAt === null).length;
+  const unread = rows.filter((r) => r.readAt === null).length;
 
-    return { items: rows, unread };
+  return { items: rows, unread };
 }
 
 export async function getUnreadCount(): Promise<number> {
-    const session = await verifySession();
+  const session = await verifySession();
 
-    const rows = await db
-        .select({ id: notifications.id })
-        .from(notifications)
-        .where(
-            and(
-                eq(notifications.userId, session.userId),
-                isNull(notifications.readAt),
-                isNull(notifications.deletedAt)
-            )
-        );
+  const rows = await db
+    .select({ id: notifications.id })
+    .from(notifications)
+    .where(
+      and(
+        eq(notifications.userId, session.userId),
+        isNull(notifications.readAt),
+        isNull(notifications.deletedAt)
+      )
+    );
 
-    return rows.length;
+  return rows.length;
 }
 
 export async function markRead(notificationId: number) {
-    const session = await verifySession();
+  const session = await verifySession();
 
-    await db
-        .update(notifications)
-        .set({ readAt: new Date() })
-        .where(
-            and(
-                eq(notifications.id, notificationId),
-                eq(notifications.userId, session.userId)
-            )
-        );
+  await db
+    .update(notifications)
+    .set({ readAt: new Date() })
+    .where(
+      and(
+        eq(notifications.id, notificationId),
+        eq(notifications.userId, session.userId)
+      )
+    );
 
-    revalidatePath("/", "layout");
-    return { success: true };
+  revalidatePath("/", "layout");
+  return { success: true };
 }
 
 export async function markAllRead() {
-    const session = await verifySession();
+  const session = await verifySession();
 
-    await db
-        .update(notifications)
-        .set({ readAt: new Date() })
-        .where(
-            and(
-                eq(notifications.userId, session.userId),
-                isNull(notifications.readAt)
-            )
-        );
+  await db
+    .update(notifications)
+    .set({ readAt: new Date() })
+    .where(
+      and(
+        eq(notifications.userId, session.userId),
+        isNull(notifications.readAt)
+      )
+    );
 
-    revalidatePath("/", "layout");
-    return { success: true };
+  revalidatePath("/", "layout");
+  return { success: true };
 }

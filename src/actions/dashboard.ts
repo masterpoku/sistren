@@ -1,6 +1,7 @@
 "use server";
 
 import { and, avg, desc, eq, gte, isNull, lte, sql } from "drizzle-orm";
+import { getAuthContext } from "@/lib/auth/permissions";
 import { verifySession } from "@/lib/auth/verify-session";
 import { db } from "@/lib/db";
 import {
@@ -14,7 +15,6 @@ import {
   subjects,
   users,
 } from "@/lib/db/schema";
-import { getAuthContext } from "@/lib/auth/permissions";
 
 const MONTH_NAMES_ID = [
   "Jan",
@@ -55,7 +55,11 @@ export async function getRegistrationStatsByMonth(
   await verifySession();
 
   const now = new Date();
-  const start = new Date(now.getFullYear(), now.getMonth() - (monthsBack - 1), 1);
+  const start = new Date(
+    now.getFullYear(),
+    now.getMonth() - (monthsBack - 1),
+    1
+  );
 
   const rows = await db
     .select({
@@ -65,12 +69,12 @@ export async function getRegistrationStatsByMonth(
     })
     .from(enrollments)
     .where(
-      and(
-        gte(enrollments.createdAt, start),
-        isNull(enrollments.deletedAt)
-      )
+      and(gte(enrollments.createdAt, start), isNull(enrollments.deletedAt))
     )
-    .groupBy(sql`YEAR(${enrollments.createdAt})`, sql`MONTH(${enrollments.createdAt})`);
+    .groupBy(
+      sql`YEAR(${enrollments.createdAt})`,
+      sql`MONTH(${enrollments.createdAt})`
+    );
 
   const byKey = new Map<string, number>();
   for (const r of rows) {
@@ -104,7 +108,9 @@ export async function getStudentGpaHistory(
     .from(grades)
     .innerJoin(enrollments, eq(grades.enrollmentId, enrollments.id))
     .innerJoin(semesters, eq(enrollments.semesterId, semesters.id))
-    .where(and(eq(enrollments.studentId, userId), isNull(enrollments.deletedAt)))
+    .where(
+      and(eq(enrollments.studentId, userId), isNull(enrollments.deletedAt))
+    )
     .groupBy(semesters.id, semesters.name, semesters.academicYear)
     .orderBy(semesters.academicYear);
 
@@ -121,7 +127,9 @@ export async function getStudentCurrentGpa(userId: string): Promise<number> {
     .select({ avgScore: avg(grades.score) })
     .from(grades)
     .innerJoin(enrollments, eq(grades.enrollmentId, enrollments.id))
-    .where(and(eq(enrollments.studentId, userId), isNull(enrollments.deletedAt)));
+    .where(
+      and(eq(enrollments.studentId, userId), isNull(enrollments.deletedAt))
+    );
 
   if (!row?.avgScore) return 0;
   return Math.round(Number(row.avgScore) * 100) / 100;
@@ -189,9 +197,7 @@ export async function getStudentSppStatus(
   return first.status === "paid" ? "paid" : "unpaid";
 }
 
-export async function getTodaySchedule(
-  userId: string
-): Promise<TodayEvent[]> {
+export async function getTodaySchedule(userId: string): Promise<TodayEvent[]> {
   await verifySession();
 
   const ctx = await getAuthContext(userId);
@@ -226,7 +232,9 @@ export async function getTodaySchedule(
   return rows;
 }
 
-export async function getTeacherSessionsToday(_teacherId: string): Promise<number> {
+export async function getTeacherSessionsToday(
+  _teacherId: string
+): Promise<number> {
   await verifySession();
 
   const start = new Date();
@@ -279,9 +287,7 @@ export async function getTeacherClassAverages(
     })
     .from(grades)
     .innerJoin(classes, sql`${classes.id} = ${grades.enrollmentId}`)
-    .where(
-      and(eq(grades.teacherId, teacherId), isNull(grades.deletedAt))
-    )
+    .where(and(eq(grades.teacherId, teacherId), isNull(grades.deletedAt)))
     .groupBy(classes.id, classes.name)
     .orderBy(classes.name);
 

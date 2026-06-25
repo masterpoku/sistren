@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { GraduationCap, Warning } from "@phosphor-icons/react";
+import { useState } from "react";
+import { registerAction } from "@/actions/register";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -11,9 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { registerAction } from "@/actions/register";
 
 type Religion = { id: number; name: string };
 

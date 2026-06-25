@@ -3,13 +3,12 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DataTable } from "@/components/ui/data-table";
-import { ActionCell } from "@/components/ui/data-table";
+import { ActionCell, DataTable } from "@/components/ui/data-table";
 import { PageShell } from "@/components/ui/page-shell";
-import { useToast } from "@/hooks/use-toast";
 import { BulkEnrollmentForm } from "@/features/enrollments/BulkEnrollmentForm";
 import { EnrollmentDialog } from "@/features/enrollments/EnrollmentDialog";
 import { StatusChangeForm } from "@/features/enrollments/StatusChangeForm";
+import { useActionWithToast } from "@/hooks/use-action-with-toast";
 
 type Enrollment = {
   id: number;
@@ -42,17 +41,13 @@ function EnrollmentsActions({
   semesterList: { id: number; name: string; academicYear: string }[];
   classList: { id: number; name: string }[];
 }) {
-  const { toast } = useToast();
-
-  async function handleDelete() {
-    const { deleteEnrollment } = await import("@/actions/enrollments");
-    const result = await deleteEnrollment(String(enrollment.id));
-    if (result && "error" in result && result.error) {
-      toast({ variant: "destructive", description: result.error });
-      return;
-    }
-    toast({ description: "Pendaftaran dihapus." });
-  }
+  const [handleDelete] = useActionWithToast(
+    async () => {
+      const { deleteEnrollment } = await import("@/actions/enrollments");
+      return await deleteEnrollment(String(enrollment.id));
+    },
+    { successMessage: "Pendaftaran dihapus." }
+  );
 
   return (
     <div className="flex items-center gap-2">
@@ -123,7 +118,9 @@ export function EnrollmentsClient({
         const status = row.getValue("status") as string;
         const colorClass = STATUS_COLORS[status] ?? "bg-gray-100 text-gray-800";
         return (
-          <span className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-medium ${colorClass}`}>
+          <span
+            className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-medium ${colorClass}`}
+          >
             {status}
           </span>
         );

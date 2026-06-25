@@ -57,7 +57,9 @@ export function AppHeader({ user }: AppHeaderProps) {
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem className="min-w-0">
-              <BreadcrumbPage className="capitalize truncate">{title}</BreadcrumbPage>
+              <BreadcrumbPage className="capitalize truncate">
+                {title}
+              </BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>

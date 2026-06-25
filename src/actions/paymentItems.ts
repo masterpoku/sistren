@@ -87,7 +87,8 @@ export async function createPaymentItem(formData: FormData) {
   await verifyRoleLevel(80);
 
   const rawSemesterId = formData.get("semesterId");
-  const formSemesterId = rawSemesterId && rawSemesterId !== "__none__" ? rawSemesterId : null;
+  const formSemesterId =
+    rawSemesterId && rawSemesterId !== "__none__" ? rawSemesterId : null;
 
   const parsed = createPaymentItemSchema.safeParse({
     code: formData.get("code"),
@@ -132,7 +133,8 @@ export async function updatePaymentItem(itemId: string, formData: FormData) {
   await verifyRoleLevel(80);
 
   const rawSemesterId = formData.get("semesterId");
-  const formSemesterId = rawSemesterId && rawSemesterId !== "__none__" ? rawSemesterId : null;
+  const formSemesterId =
+    rawSemesterId && rawSemesterId !== "__none__" ? rawSemesterId : null;
 
   const parsed = updatePaymentItemSchema.safeParse({
     itemId,
@@ -154,7 +156,10 @@ export async function updatePaymentItem(itemId: string, formData: FormData) {
     .select({ id: paymentItems.id })
     .from(paymentItems)
     .where(
-      and(eq(paymentItems.id, parsed.data.itemId), isNull(paymentItems.deletedAt))
+      and(
+        eq(paymentItems.id, parsed.data.itemId),
+        isNull(paymentItems.deletedAt)
+      )
     )
     .limit(1);
 

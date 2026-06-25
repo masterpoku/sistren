@@ -5,13 +5,13 @@ import { revalidatePath } from "next/cache";
 import { getAuthContext } from "@/lib/auth/permissions";
 import { verifyRoleLevel, verifySession } from "@/lib/auth/verify-session";
 import { db } from "@/lib/db";
-import { paymentMethods, payments, paymentSlips, users } from "@/lib/db/schema";
+import { paymentMethods, paymentSlips, payments, users } from "@/lib/db/schema";
+import { uploadPaymentSlipSchema } from "@/lib/validation/schemas/paymentSlips";
 import {
   idSchema,
   paymentMethodSchema,
   recordPaymentSchema,
 } from "@/lib/validation/schemas/payments";
-import { uploadPaymentSlipSchema } from "@/lib/validation/schemas/paymentSlips";
 
 export async function getPaymentMethods() {
   await verifyRoleLevel(80);
@@ -322,7 +322,10 @@ export async function getPaymentSlips(opts?: {
   }
   if (opts?.status) {
     conditions.push(
-      eq(paymentSlips.status, opts.status as "pending" | "approved" | "rejected")
+      eq(
+        paymentSlips.status,
+        opts.status as "pending" | "approved" | "rejected"
+      )
     );
   }
 
@@ -368,7 +371,11 @@ export async function getPaymentSlipForDownload(slipId: number) {
   } catch {
     return { error: "File korup atau tidak dapat dibaca." };
   }
-  return { file: decrypted, fileName: slip.slipFilename, mimeType: slip.mimeType };
+  return {
+    file: decrypted,
+    fileName: slip.slipFilename,
+    mimeType: slip.mimeType,
+  };
 }
 
 export async function uploadPaymentSlip(formData: FormData) {
@@ -376,7 +383,9 @@ export async function uploadPaymentSlip(formData: FormData) {
   const ctx = await getAuthContext(session.userId);
   if (!ctx || ctx.roleLevel < 40) return { error: "Anda tidak memiliki izin." };
 
-  const parsed = uploadPaymentSlipSchema.safeParse({ paymentId: formData.get("paymentId") });
+  const parsed = uploadPaymentSlipSchema.safeParse({
+    paymentId: formData.get("paymentId"),
+  });
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Data tidak valid" };
   }
@@ -440,14 +449,31 @@ export async function approvePaymentSlip(slipId: string) {
   const [slip] = await db
     .select({ id: paymentSlips.id, paymentId: paymentSlips.paymentId })
     .from(paymentSlips)
-    .where(and(eq(paymentSlips.id, idParsed.data), eq(paymentSlips.status, "pending"), isNull(paymentSlips.deletedAt)))
+    .where(
+      and(
+        eq(paymentSlips.id, idParsed.data),
+        eq(paymentSlips.status, "pending"),
+        isNull(paymentSlips.deletedAt)
+      )
+    )
     .limit(1);
 
-  if (!slip) return { error: "Bukti bayar tidak ditemukan atau sudah diproses." };
+  if (!slip)
+    return { error: "Bukti bayar tidak ditemukan atau sudah diproses." };
 
   await db.transaction(async (tx) => {
-    await tx.update(paymentSlips).set({ status: "approved", reviewedBy: session.userId, reviewedAt: new Date() }).where(eq(paymentSlips.id, idParsed.data));
-    await tx.update(payments).set({ status: "paid", paidAt: new Date() }).where(eq(payments.id, slip.paymentId));
+    await tx
+      .update(paymentSlips)
+      .set({
+        status: "approved",
+        reviewedBy: session.userId,
+        reviewedAt: new Date(),
+      })
+      .where(eq(paymentSlips.id, idParsed.data));
+    await tx
+      .update(payments)
+      .set({ status: "paid", paidAt: new Date() })
+      .where(eq(payments.id, slip.paymentId));
   });
 
   revalidatePath("/finance");
@@ -466,12 +492,27 @@ export async function rejectPaymentSlip(slipId: string, reason: string) {
   const [slip] = await db
     .select({ id: paymentSlips.id })
     .from(paymentSlips)
-    .where(and(eq(paymentSlips.id, idParsed.data), eq(paymentSlips.status, "pending"), isNull(paymentSlips.deletedAt)))
+    .where(
+      and(
+        eq(paymentSlips.id, idParsed.data),
+        eq(paymentSlips.status, "pending"),
+        isNull(paymentSlips.deletedAt)
+      )
+    )
     .limit(1);
 
-  if (!slip) return { error: "Bukti bayar tidak ditemukan atau sudah diproses." };
+  if (!slip)
+    return { error: "Bukti bayar tidak ditemukan atau sudah diproses." };
 
-  await db.update(paymentSlips).set({ status: "rejected", reviewedBy: session.userId, reviewedAt: new Date(), rejectionReason: reason.trim() }).where(eq(paymentSlips.id, idParsed.data));
+  await db
+    .update(paymentSlips)
+    .set({
+      status: "rejected",
+      reviewedBy: session.userId,
+      reviewedAt: new Date(),
+      rejectionReason: reason.trim(),
+    })
+    .where(eq(paymentSlips.id, idParsed.data));
 
   revalidatePath("/finance");
   return { success: true };

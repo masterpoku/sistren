@@ -1,9 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { useState, useTransition } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,15 +12,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { DataTable } from "@/components/ui/data-table";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
-  STATUS_LABELS,
+  DataTable,
   formatCurrency,
+  STATUS_LABELS,
   type StatusConfig,
 } from "@/components/ui/data-table";
 import { PageShell } from "@/components/ui/page-shell";
-import { useToast } from "@/hooks/use-toast";
 import { RecordPaymentDialog } from "@/features/finance/RecordPaymentDialog";
+import { useToast } from "@/hooks/use-toast";
 import { PaymentSlipUploadDialog } from "./PaymentSlipUploadDialog";
 
 type PaymentRow = {
@@ -94,7 +94,9 @@ export function FinanceClient({
         toast({ variant: "destructive", description: result.error });
         return;
       }
-      toast({ description: "Bukti bayar disetujui. Pembayaran ditandai lunas." });
+      toast({
+        description: "Bukti bayar disetujui. Pembayaran ditandai lunas.",
+      });
     });
   }
 
@@ -102,7 +104,10 @@ export function FinanceClient({
     if (!rejectTarget || !rejectReason.trim()) return;
     startTransition(async () => {
       const { rejectPaymentSlip } = await import("@/actions/payments");
-      const result = await rejectPaymentSlip(String(rejectTarget.id), rejectReason);
+      const result = await rejectPaymentSlip(
+        String(rejectTarget.id),
+        rejectReason
+      );
       if ("error" in result) {
         toast({ variant: "destructive", description: result.error });
         return;
@@ -156,15 +161,12 @@ export function FinanceClient({
             header: "Bukti Bayar",
             cell: ({ row }: { row: { original: PaymentRow } }) => {
               const slip = slipMap.get(row.original.id);
-              if (!slip) return <span className="text-muted-foreground text-xs">—</span>;
+              if (!slip)
+                return <span className="text-muted-foreground text-xs">—</span>;
               if (slip.status === "pending") {
                 return (
                   <div className="flex items-center gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      asChild
-                    >
+                    <Button size="sm" variant="outline" asChild>
                       <a
                         href={`/api/payments/slips/${slip.id}`}
                         target="_blank"
@@ -317,7 +319,12 @@ export function FinanceClient({
             onChange={(e) => setRejectReason(e.target.value)}
           />
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => { setRejectTarget(null); setRejectReason(""); }}>
+            <AlertDialogCancel
+              onClick={() => {
+                setRejectTarget(null);
+                setRejectReason("");
+              }}
+            >
               Batal
             </AlertDialogCancel>
             <AlertDialogAction

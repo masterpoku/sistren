@@ -5,11 +5,11 @@ import { uploadDocument } from "@/actions/documents";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 
@@ -31,58 +31,58 @@ interface DocumentUploadFormProps {
 }
 
 export function DocumentUploadForm({ studentId }: DocumentUploadFormProps) {
-    const [isPending, startTransition] = useTransition();
-    const { toast } = useToast();
+  const [isPending, startTransition] = useTransition();
+  const { toast } = useToast();
 
-    function handleSubmit(formData: FormData) {
-        startTransition(async () => {
-            const result = await uploadDocument(formData);
-            if (result && "error" in result && result.error) {
-                toast({ variant: "destructive", description: result.error });
-            }
-        });
-    }
+  function handleSubmit(formData: FormData) {
+    startTransition(async () => {
+      const result = await uploadDocument(formData);
+      if (result && "error" in result && result.error) {
+        toast({ variant: "destructive", description: result.error });
+      }
+    });
+  }
 
-    return (
-        <form
-            action={handleSubmit}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
-        >
-            <input type="hidden" name="studentId" value={studentId} />
+  return (
+    <form
+      action={handleSubmit}
+      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+    >
+      <input type="hidden" name="studentId" value={studentId} />
 
-            <div className="space-y-2">
-                <Label htmlFor="documentType">Jenis Dokumen</Label>
-                <Select name="documentType" required>
-                    <SelectTrigger>
-                        <SelectValue placeholder="Pilih dokumen" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {DOCUMENT_TYPES.map((dt) => (
-                            <SelectItem key={dt.value} value={dt.value}>
-                                {dt.label}
-                            </SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-            </div>
+      <div className="space-y-2">
+        <Label htmlFor="documentType">Jenis Dokumen</Label>
+        <Select name="documentType" required>
+          <SelectTrigger>
+            <SelectValue placeholder="Pilih dokumen" />
+          </SelectTrigger>
+          <SelectContent>
+            {DOCUMENT_TYPES.map((dt) => (
+              <SelectItem key={dt.value} value={dt.value}>
+                {dt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
-            <div className="space-y-2">
-                <Label htmlFor="file">File (PDF/Gambar, maks 16MB)</Label>
-                <input
-                    type="file"
-                    id="file"
-                    name="file"
-                    accept=".pdf,.jpg,.jpeg,.png"
-                    required
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:font-medium"
-                />
-            </div>
+      <div className="space-y-2">
+        <Label htmlFor="file">File (PDF/Gambar, maks 16MB)</Label>
+        <input
+          type="file"
+          id="file"
+          name="file"
+          accept=".pdf,.jpg,.jpeg,.png"
+          required
+          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-sm file:font-medium"
+        />
+      </div>
 
-            <div className="flex items-end">
-                <Button type="submit" className="w-full" disabled={isPending}>
-                    {isPending ? "Mengunggah..." : "Unggah"}
-                </Button>
-            </div>
-        </form>
-    );
+      <div className="flex items-end">
+        <Button type="submit" className="w-full" disabled={isPending}>
+          {isPending ? "Mengunggah..." : "Unggah"}
+        </Button>
+      </div>
+    </form>
+  );
 }

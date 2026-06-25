@@ -48,6 +48,32 @@ const navItems: NavItem[] = [
     minLevel: 40,
   },
   { title: "Akademik", href: "/academic", icon: GraduationCap, minLevel: 40 },
+  { title: "RPP Saya", href: "/academic/rpp", icon: File, minLevel: 60 },
+  {
+    title: "Validasi RPP",
+    href: "/academic/rpp/admin",
+    icon: File,
+    minLevel: 80,
+  },
+  {
+    title: "RPP",
+    href: "/academic/rpp/student",
+    icon: File,
+    minLevel: 40,
+    maxLevel: 40,
+  },
+  {
+    title: "Absensi",
+    href: "/academic/attendance",
+    icon: Calendar,
+    minLevel: 40,
+  },
+  {
+    title: "Pindah Kelas",
+    href: "/students/promote",
+    icon: Student,
+    minLevel: 80,
+  },
   { title: "Keuangan", href: "/finance", icon: Wallet },
   {
     title: "Katalog Bayar",

@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -13,6 +12,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 
 interface PaymentSlipUploadDialogProps {
   paymentId: number;
@@ -34,7 +34,10 @@ export function PaymentSlipUploadDialog({
 
   function handleSubmit(formData: FormData) {
     if (!selectedFile) {
-      toast({ variant: "destructive", description: "Pilih file terlebih dahulu." });
+      toast({
+        variant: "destructive",
+        description: "Pilih file terlebih dahulu.",
+      });
       return;
     }
     formData.set("file", selectedFile);
@@ -42,7 +45,10 @@ export function PaymentSlipUploadDialog({
       const { uploadPaymentSlip } = await import("@/actions/payments");
       const result = await uploadPaymentSlip(formData);
       if ("error" in result) {
-        toast({ variant: "destructive", description: result.error ?? "Gagal mengunggah" });
+        toast({
+          variant: "destructive",
+          description: result.error ?? "Gagal mengunggah",
+        });
         return;
       }
       setOpen(false);
@@ -67,7 +73,8 @@ export function PaymentSlipUploadDialog({
           <DialogHeader>
             <DialogTitle>Upload Bukti Bayar</DialogTitle>
             <DialogDescription>
-              Unggah foto atau PDF bukti transfer. Maksimal 5MB. Format: JPG, PNG, GIF, WebP, PDF.
+              Unggah foto atau PDF bukti transfer. Maksimal 5MB. Format: JPG,
+              PNG, GIF, WebP, PDF.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
@@ -99,10 +106,7 @@ export function PaymentSlipUploadDialog({
             >
               Batal
             </Button>
-            <Button
-              type="submit"
-              disabled={isPending || !selectedFile}
-            >
+            <Button type="submit" disabled={isPending || !selectedFile}>
               {isPending ? "Mengunggah..." : "Unggah"}
             </Button>
           </DialogFooter>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { bulkUpsertGrades, getGrades } from "@/actions/grades";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,19 +8,19 @@ import { DataTableShell } from "@/components/ui/data-table";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 
@@ -119,12 +119,7 @@ export function GradesClient({
     } finally {
       setIsLoading(false);
     }
-  }, [
-    selectedClass,
-    selectedSubject,
-    selectedSemester,
-    toast,
-  ]);
+  }, [selectedClass, selectedSubject, selectedSemester, toast]);
 
   useEffect(() => {
     if (selectedClass && selectedSubject && selectedSemester) {

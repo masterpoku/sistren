@@ -36,6 +36,9 @@ export const ROUTE_PERMISSIONS: Record<string, string> = {
   // Academic
   "/academic": "classes.manage",
   "/academic/classes": "classes.manage",
+  "/academic/rpp": "documents.create",
+  "/academic/rpp/admin": "documents.review_rpp",
+  "/academic/rpp/student": "documents.read",
   "/academic/majors": "majors.manage",
   "/academic/subjects": "subjects.manage",
   "/academic/semesters": "semesters.manage",
@@ -81,6 +84,7 @@ export const ROUTE_PERMISSIONS: Record<string, string> = {
   // Academic
   "/academic/enrollments": "enrollments.read",
   "/academic/grades": "grades.read_any",
+  "/academic/attendance": "attendance.read",
 
   // Calendar
   "/calendar": "calendar.read",
@@ -118,6 +122,11 @@ export const ROLE_LEVEL_REQUIREMENTS: Record<string, number> = {
   "/settings/system": 100, // superadmin only
   "/system-configs": 100, // superadmin only
   "/calendar": 40,
+  "/academic/rpp": 60,
+  "/academic/rpp/admin": 80,
+  "/academic/rpp/student": 40,
+  "/students/promote": 80,
+  "/academic/attendance": 40,
 };
 
 /**

@@ -1,16 +1,11 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useToast } from "@/hooks/use-toast";
 
 type Role = {
   id: number;
@@ -29,7 +24,13 @@ type Permission = {
   scope: string | null;
 };
 
-const LEVEL_LABELS: Record<number, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+const LEVEL_LABELS: Record<
+  number,
+  {
+    label: string;
+    variant: "default" | "secondary" | "destructive" | "outline";
+  }
+> = {
   100: { label: "Superadmin", variant: "destructive" },
   80: { label: "Admin", variant: "default" },
   60: { label: "Guru", variant: "secondary" },
@@ -83,7 +84,9 @@ export function PermissionsClient({
       if (!("success" in result)) {
         // Rollback optimistic update
         setAssigned((prev) =>
-          isAssigned ? [...prev, permissionId] : prev.filter((id) => id !== permissionId)
+          isAssigned
+            ? [...prev, permissionId]
+            : prev.filter((id) => id !== permissionId)
         );
         toast({
           variant: "destructive",
@@ -140,7 +143,10 @@ export function PermissionsClient({
                       }`}
                     >
                       <span className="truncate">{role.name}</span>
-                      <Badge variant={lc.variant} className="shrink-0 text-[10px]">
+                      <Badge
+                        variant={lc.variant}
+                        className="shrink-0 text-[10px]"
+                      >
                         {lc.label}
                       </Badge>
                     </button>

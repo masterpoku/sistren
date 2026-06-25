@@ -150,3 +150,4 @@ bun.lockb
 # Agent working files (keep locally)
 PLAN.md
 MEMORY.md
+.pi/

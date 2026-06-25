@@ -43,6 +43,20 @@
       "when": 1781974342052,
       "tag": "0005_exotic_norman_osborn",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1782391707479,
+      "tag": "0006_fantastic_nehzno",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1782392816110,
+      "tag": "0007_mean_gorilla_man",
+      "breakpoints": true
     }
   ]
 }

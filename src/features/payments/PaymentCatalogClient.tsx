@@ -1,27 +1,25 @@
 "use client";
 
 import { Pencil, Trash } from "@phosphor-icons/react";
+import type { ColumnDef } from "@tanstack/react-table";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
-import type { ColumnDef } from "@tanstack/react-table";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { DataTable } from "@/components/ui/data-table";
-import {
-  PAYMENT_TYPE_LABELS,
-  PAYMENT_TYPE_VARIANTS,
-  formatCurrency,
-  type BadgeVariant,
-} from "@/components/ui/data-table";
-import {
-  PaymentItemDialog,
-} from "@/features/payments/PaymentItemDialog";
-import { PaymentItemForm } from "@/features/payments/PaymentItemForm";
 import {
   createPaymentItem,
   deletePaymentItem,
   updatePaymentItem,
 } from "@/actions/paymentItems";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  type BadgeVariant,
+  DataTable,
+  formatCurrency,
+  PAYMENT_TYPE_LABELS,
+  PAYMENT_TYPE_VARIANTS,
+} from "@/components/ui/data-table";
+import { PaymentItemDialog } from "@/features/payments/PaymentItemDialog";
+import { PaymentItemForm } from "@/features/payments/PaymentItemForm";
 import { useToast } from "@/hooks/use-toast";
 
 export interface PaymentCatalogItem {

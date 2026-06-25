@@ -6,7 +6,10 @@ import { auth } from "@/lib/auth";
 import { verifyRoleLevel } from "@/lib/auth/verify-session";
 import { db } from "@/lib/db";
 import { roles, users } from "@/lib/db/schema";
-import { createStaffAccountSchema, updateStaffAccountSchema } from "@/lib/validation/schemas/admin";
+import {
+  createStaffAccountSchema,
+  updateStaffAccountSchema,
+} from "@/lib/validation/schemas/admin";
 
 export async function approveStudent(userId: string) {
   await verifyRoleLevel(80);

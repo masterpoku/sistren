@@ -58,9 +58,10 @@ export function PaymentItemDialog({
   const isEdit = mode === "edit";
 
   async function handleSubmit(formData: FormData) {
-    const result = isEdit && item?.id
-      ? await updateAction(String(item.id), formData)
-      : await createAction(formData);
+    const result =
+      isEdit && item?.id
+        ? await updateAction(String(item.id), formData)
+        : await createAction(formData);
     if (result && "error" in result) {
       toast({ variant: "destructive", description: result.error });
       return;

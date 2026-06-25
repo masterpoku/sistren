@@ -1,8 +1,12 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useTransition } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
+import { useRouter } from "next/navigation";
+import {
+  createPaymentItem,
+  deletePaymentItem,
+  updatePaymentItem,
+} from "@/actions/paymentItems";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -11,12 +15,7 @@ import {
   formatCurrency,
   type StatusConfig,
 } from "@/components/ui/data-table";
-import { useToast } from "@/hooks/use-toast";
-import {
-  createPaymentItem,
-  deletePaymentItem,
-  updatePaymentItem,
-} from "@/actions/paymentItems";
+import { useActionWithToast } from "@/hooks/use-action-with-toast";
 import { PaymentItemDialog } from "./PaymentItemDialog";
 import { PaymentItemForm } from "./PaymentItemForm";
 
@@ -57,25 +56,33 @@ interface PaymentItemsClientProps {
   semesters: Semester[];
 }
 
+function PaymentItemDeleteAction({
+  id,
+  router,
+}: {
+  id: number;
+  router: ReturnType<typeof useRouter>;
+}) {
+  const [handleDelete] = useActionWithToast(
+    async () => {
+      const result = await deletePaymentItem(String(id));
+      if (result && "error" in result) {
+        return result;
+      }
+      router.refresh();
+      return { success: true };
+    },
+    { successMessage: "Item berhasil dihapus." }
+  );
+
+  return <ActionCell onDelete={handleDelete} />;
+}
+
 export function PaymentItemsClient({
   items,
   semesters,
 }: PaymentItemsClientProps) {
   const router = useRouter();
-  const { toast } = useToast();
-  const [, startTransition] = useTransition();
-
-  function handleDelete(id: number) {
-    startTransition(async () => {
-      const result = await deletePaymentItem(String(id));
-      if (result && "error" in result) {
-        toast({ variant: "destructive", description: result.error });
-      } else {
-        toast({ description: "Item berhasil dihapus." });
-        router.refresh();
-      }
-    });
-  }
 
   const columns: ColumnDef<PaymentItem>[] = [
     {
@@ -192,7 +199,7 @@ export function PaymentItemsClient({
               semesters={semesters}
             />
           </PaymentItemDialog>
-          <ActionCell onDelete={() => handleDelete(row.original.id)} />
+          <PaymentItemDeleteAction id={row.original.id} router={router} />
         </div>
       ),
     },

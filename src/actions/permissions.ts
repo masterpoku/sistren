@@ -46,19 +46,13 @@ export async function getRolePermissions(roleId: number) {
     .select({ permissionId: rolePermissions.permissionId })
     .from(rolePermissions)
     .where(
-      and(
-        eq(rolePermissions.roleId, roleId),
-        isNull(rolePermissions.deletedAt)
-      )
+      and(eq(rolePermissions.roleId, roleId), isNull(rolePermissions.deletedAt))
     );
 
   return assigned.map((r) => r.permissionId);
 }
 
-export async function assignPermission(
-  roleId: number,
-  permissionId: number
-) {
+export async function assignPermission(roleId: number, permissionId: number) {
   await verifyRoleLevel(100);
 
   const [existing] = await db
@@ -91,10 +85,7 @@ export async function assignPermission(
   return { success: true };
 }
 
-export async function revokePermission(
-  roleId: number,
-  permissionId: number
-) {
+export async function revokePermission(roleId: number, permissionId: number) {
   await verifyRoleLevel(100);
 
   await db

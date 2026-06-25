@@ -1,5 +1,9 @@
 import { and, eq, isNull } from "drizzle-orm";
-import { getPayments, getPaymentSlips, recordPayment } from "@/actions/payments";
+import {
+  getPaymentSlips,
+  getPayments,
+  recordPayment,
+} from "@/actions/payments";
 import { FinanceClient } from "@/features/finance/FinanceClient";
 import { getAuthContext } from "@/lib/auth/permissions";
 import { verifySession } from "@/lib/auth/verify-session";

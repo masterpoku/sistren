@@ -1,17 +1,54 @@
 "use client";
 
-export function AttendanceClient() {
+import { PageShell } from "@/components/ui/page-shell";
+import { AttendanceReportClient } from "@/features/attendance/AttendanceReportClient";
+import { AttendanceStudentClient } from "@/features/attendance/AttendanceStudentClient";
+import { AttendanceTeacherClient } from "@/features/attendance/AttendanceTeacherClient";
+
+interface RosterItem {
+  enrollmentId: number;
+  studentId: string;
+  studentName: string;
+}
+
+interface StudentItem {
+  sessionDate: Date;
+  status: string;
+  notes: string | null;
+}
+
+interface AttendanceClientProps {
+  roleLevel: number;
+  classes: { id: number; name: string }[];
+  roster: RosterItem[];
+  studentItems: StudentItem[];
+}
+
+export function AttendanceClient({
+  roleLevel,
+  classes,
+  roster,
+  studentItems,
+}: AttendanceClientProps) {
+  const isStudent = roleLevel < 60;
+
   return (
-    <div className="flex flex-col gap-6 p-4 md:p-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Absensi</h1>
-        <p className="text-muted-foreground">Kelola kehadiran siswa.</p>
-      </div>
-      <div className="rounded-lg border-2 border-dashed p-8 text-center">
-        <p className="text-muted-foreground">
-          Modul Absensi — dalam pengembangan.
-        </p>
-      </div>
-    </div>
+    <PageShell
+      title="Absensi"
+      description={
+        isStudent
+          ? "Lihat catatan kehadiran Anda."
+          : "Catat dan kelola absensi siswa."
+      }
+    >
+      {isStudent ? (
+        <AttendanceStudentClient items={studentItems} />
+      ) : (
+        <div className="space-y-6">
+          <AttendanceTeacherClient classes={classes} initialRoster={roster} />
+          {roleLevel >= 80 && <AttendanceReportClient classes={classes} />}
+        </div>
+      )}
+    </PageShell>
   );
 }

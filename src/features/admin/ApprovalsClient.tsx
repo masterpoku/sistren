@@ -1,9 +1,8 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { DataTable } from "@/components/ui/data-table";
-import { ActionCell } from "@/components/ui/data-table";
-import { formatDate } from "@/components/ui/data-table";
+import { ActionCell, DataTable, formatDate } from "@/components/ui/data-table";
+import { useActionWithToast } from "@/hooks/use-action-with-toast";
 
 type PendingStudent = {
   id: string;
@@ -35,28 +34,7 @@ export const columns: ColumnDef<PendingStudent>[] = [
   {
     id: "actions",
     header: "Aksi",
-    cell: ({ row }) => (
-      <ActionCell
-        onCustom={[
-          {
-            label: "Setujui",
-            variant: "default",
-            onClick: async () => {
-              const { approveStudent } = await import("@/actions/admin");
-              await approveStudent(row.original.id);
-            },
-          },
-          {
-            label: "Tolak",
-            variant: "destructive",
-            onClick: async () => {
-              const { rejectStudent } = await import("@/actions/admin");
-              await rejectStudent(row.original.id);
-            },
-          },
-        ]}
-      />
-    ),
+    cell: ({ row }) => <ApprovalActions id={row.original.id} />,
   },
 ];
 
@@ -77,4 +55,40 @@ export function ApprovalsClient({ data }: ApprovalsClientProps) {
       />
     </div>
   );
+}
+
+function ApproveAction({ id }: { id: string }) {
+  const [handleApprove] = useActionWithToast(
+    async () => {
+      const { approveStudent } = await import("@/actions/admin");
+      return await approveStudent(id);
+    },
+    { successMessage: "Siswa disetujui." }
+  );
+  return {
+    label: "Setujui",
+    variant: "default" as const,
+    onClick: handleApprove,
+  };
+}
+
+function RejectAction({ id }: { id: string }) {
+  const [handleReject] = useActionWithToast(
+    async () => {
+      const { rejectStudent } = await import("@/actions/admin");
+      return await rejectStudent(id);
+    },
+    { successMessage: "Siswa ditolak." }
+  );
+  return {
+    label: "Tolak",
+    variant: "destructive" as const,
+    onClick: handleReject,
+  };
+}
+
+function ApprovalActions({ id }: { id: string }) {
+  const approve = ApproveAction({ id });
+  const reject = RejectAction({ id });
+  return <ActionCell onCustom={[approve, reject]} />;
 }

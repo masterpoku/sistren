@@ -353,9 +353,7 @@ async function seedSystemConfigs() {
     const [existing] = await db
       .select({ id: systemConfigs.id })
       .from(systemConfigs)
-      .where(
-        and(eq(systemConfigs.key, c.key), isNull(systemConfigs.deletedAt))
-      )
+      .where(and(eq(systemConfigs.key, c.key), isNull(systemConfigs.deletedAt)))
       .limit(1);
 
     if (existing) {

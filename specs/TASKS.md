@@ -2,9 +2,13 @@
 
 > Append-only cross-session goal tracker. Add new goals, never delete old ones.
 > Archive completed goals by moving to an "## Archived" section. Keep only the 5 most recent entries.
-> Last updated: 2026-06-23 — Sprint 27: RPP validation spec updated (admin validator, student visibility). Sprint 28: Student transfer/promotion spec drafting. Sprint 29: Attendance spec drafting. Sprints 19,20,22,23,24,25,26 verified fixed via codebase audit.
+> Last updated: 2026-06-25 — Sprints 21, 27, 28, 29 implemented and verified. Build green at 44 routes.
 
 ## Active Goals
+
+*None — all four pending sprints closed.*
+
+---
 
 ### Sprint 27 — RPP Document Validation (FR-028)
 
@@ -91,6 +95,30 @@
 ---
 
 ## Archived Goals
+
+### Sprint 29 — Student Attendance Tracking (FR-011)
+
+**Status:** completed
+**Date:** 2026-06-25
+**Summary:** `attendance` Drizzle schema with unique `(enrollmentId, sessionDate)` constraint, encrypted data, soft-delete, FK to enrollments + users. Migration `0007_mean_gorilla_man.sql` generated. `markAttendance` server action with class ownership check via teacherClassSubjects, upsert via onDuplicateKeyUpdate. `getAttendanceByClass`, `getStudentAttendance`, `getAttendanceReport` for role-based reads. `AttendanceTeacherClient` (teacher marks roster), `AttendanceStudentClient` (read-only summary + history), `AttendanceReportClient` (admin report). `/attendance` page dispatches by role level. Permissions seeded in `permissions.ts` for teacher + admin. Migration lands via `bun run db:push`. Build green at 44 routes.
+
+### Sprint 28 — Student Class Transfer & Promotion (FR-015)
+
+**Status:** completed
+**Date:** 2026-06-25
+**Summary:** `transferStudent`, `bulkTransferStudents`, `promoteClass`, `graduateStudent` server actions. All check `students.update` permission, run in transactions (where Drizzle's per-row transactions suffice for bulk), write audit_logs entries, call revalidatePath. `PromoteClassDialog` with live preview count via `getPromotionPreview`. `BulkTransferDialog` with confirmation checkbox. `TransferStudentDialog`, `GraduateAction` AlertDialogs. `/students/promote` route gated level 80. Sidebar entry added. `students.promote` + `students.graduate` permissions verified seeded.
+
+### Sprint 27 — RPP Document Validation (FR-028)
+
+**Status:** completed
+**Date:** 2026-06-25
+**Summary:** `rpp_documents` Drizzle schema with embedded encryptedData (longtext, per user decision), status enum (draft/submitted/approved/rejected/archived), reviewedBy/reviewedAt/rejectionReason, soft-delete, indexes on teacherId/classId/subjectId/status. Migration `0006_fantastic_nehzno.sql` generated. `uploadRpp` accepts FormData, encrypts server-side via AES-256-GCM, validates via Zod. `submitRpp` enforces ownership + draft state. `reviewRpp` requires `documents.review_rpp` permission, creates notification on status change. `downloadRpp` decrypts server-side, returns Buffer. `/academic/rpp` (teacher), `/academic/rpp/admin` (review queue), `/academic/rpp/student` (approved-only list) routes. `/api/rpp/[id]/download` route streams decrypted file with correct Content-Type. Permissions seeded: admin (review_rpp), guru (create), siswa (read).
+
+### Sprint 21 — useActionWithToast Hook Migration
+
+**Status:** completed
+**Date:** 2026-06-25
+**Summary:** Migrated 11 client files from inline `useTransition + useToast + try/catch` to `useActionWithToast` hook. Files: ClassesClient, MajorsClient, SubjectsClient, SemestersClient, AssignmentsClient, AnnouncementsClient, PaymentMethodsClient, PaymentItemsClient (with `router.refresh` preserved via wrapper component), EnrollmentsClient, ApprovalsClient (added missing toast feedback on approve/reject), AdminUsersClient. Approval/reject/publish/unpublish/activate operations now toast consistently.
 
 ### Sprint 26 — Student Payment Slip Upload & Validation
 

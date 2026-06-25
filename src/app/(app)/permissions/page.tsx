@@ -1,4 +1,8 @@
-import { getPermissions, getRolePermissions, getRoles } from "@/actions/permissions";
+import {
+  getPermissions,
+  getRolePermissions,
+  getRoles,
+} from "@/actions/permissions";
 import { PageShell } from "@/components/ui/page-shell";
 import { PermissionsClient } from "@/features/admin/PermissionsClient";
 import { verifyRoleLevel } from "@/lib/auth/verify-session";

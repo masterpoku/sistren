@@ -35,7 +35,10 @@ export const academicConfigSchema = z.object({
   [SYSTEM_CONFIG_KEYS.ACADEMIC_YEAR]: z
     .string()
     .regex(/^\d{4}\/\d{4}$/, "Format: YYYY/YYYY"),
-  [SYSTEM_CONFIG_KEYS.CURRENT_SEMESTER_ID]: numericString(1, Number.MAX_SAFE_INTEGER),
+  [SYSTEM_CONFIG_KEYS.CURRENT_SEMESTER_ID]: numericString(
+    1,
+    Number.MAX_SAFE_INTEGER
+  ),
 });
 
 export const paymentConfigSchema = z.object({

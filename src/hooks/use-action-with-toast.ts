@@ -23,7 +23,10 @@ export function useActionWithToast(
       if (result && typeof result === "object" && "error" in result) {
         toast({
           variant: "destructive",
-          description: (result as { error: string }).error ?? options.errorMessage ?? "Terjadi kesalahan.",
+          description:
+            (result as { error: string }).error ??
+            options.errorMessage ??
+            "Terjadi kesalahan.",
         });
         return;
       }

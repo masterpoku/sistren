@@ -265,7 +265,11 @@ export function DashboardClient({
   const isAdmin = roleLevel >= 80;
 
   const sppLabel =
-    sppStatus === "paid" ? "Lunas" : sppStatus === "unpaid" ? "Belum Bayar" : "—";
+    sppStatus === "paid"
+      ? "Lunas"
+      : sppStatus === "unpaid"
+        ? "Belum Bayar"
+        : "—";
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6">
@@ -351,7 +355,10 @@ export function DashboardClient({
                               />
                             </linearGradient>
                           </defs>
-                          <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            vertical={false}
+                          />
                           <XAxis dataKey="semester" />
                           <YAxis domain={[0, 100]} />
                           <ChartTooltipContent />
@@ -474,7 +481,10 @@ export function DashboardClient({
                     >
                       <ResponsiveContainer width="100%" height="100%">
                         <LineChart data={registrationStats}>
-                          <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            vertical={false}
+                          />
                           <XAxis dataKey="name" />
                           <YAxis allowDecimals={false} />
                           <ChartTooltipContent />
@@ -577,7 +587,10 @@ export function DashboardClient({
                     >
                       <ResponsiveContainer width="100%" height="100%">
                         <LineChart data={teacherClassAverages}>
-                          <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            vertical={false}
+                          />
                           <XAxis dataKey="semester" />
                           <YAxis domain={[0, 100]} />
                           <ChartTooltipContent />
@@ -644,7 +657,10 @@ export function DashboardClient({
           <CardContent>
             <ul className="space-y-2">
               {recentAnnouncements.map((a) => (
-                <li key={a.id} className="flex items-center justify-between text-sm">
+                <li
+                  key={a.id}
+                  className="flex items-center justify-between text-sm"
+                >
                   <span className="truncate">{a.title}</span>
                   <span className="text-xs text-muted-foreground shrink-0 ml-4">
                     {relativeTime(a.createdAt)}

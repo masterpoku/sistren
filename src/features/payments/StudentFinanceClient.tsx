@@ -1,8 +1,5 @@
 "use client";
 
-import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
-import type { ColumnDef } from "@tanstack/react-table";
 import {
   Bank,
   Building,
@@ -12,6 +9,8 @@ import {
   Wallet,
   WarningCircle,
 } from "@phosphor-icons/react";
+import type { ColumnDef } from "@tanstack/react-table";
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,6 +21,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
+  DataTable,
+  formatCurrency,
+  formatDate,
+  STATUS_LABELS,
+  type StatusConfig,
+} from "@/components/ui/data-table";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -29,14 +35,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { DataTable } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
-import {
-  STATUS_LABELS,
-  formatCurrency,
-  formatDate,
-  type StatusConfig,
-} from "@/components/ui/data-table";
+import { useToast } from "@/hooks/use-toast";
 
 interface Payment {
   id: number;
@@ -80,7 +80,8 @@ const INVOICE_COLUMNS: ColumnDef<Payment>[] = [
     header: "Status",
     cell: ({ row }) => {
       const status = row.getValue("status") as string;
-      const config: StatusConfig = STATUS_LABELS[status ?? "draft"] ?? STATUS_LABELS.draft;
+      const config: StatusConfig =
+        STATUS_LABELS[status ?? "draft"] ?? STATUS_LABELS.draft;
       const StatusIcon = STATUS_ICONS[status ?? "draft"] ?? Clock;
       return (
         <Badge variant={config.variant}>
@@ -133,7 +134,7 @@ interface StudentFinanceClientProps {
 
 export function StudentFinanceClient({ payments }: StudentFinanceClientProps) {
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
-const [paymentOpen, setPaymentOpen] = useState(false);
+  const [paymentOpen, setPaymentOpen] = useState(false);
   const { toast } = useToast();
 
   const totalTagihan = payments
@@ -277,7 +278,9 @@ const [paymentOpen, setPaymentOpen] = useState(false);
                   className="w-full"
                   disabled={!selectedMethod}
                   onClick={() => {
-                    toast({ description: `Pembayaran via ${selectedMethod} akan diproses.` });
+                    toast({
+                      description: `Pembayaran via ${selectedMethod} akan diproses.`,
+                    });
                     setPaymentOpen(false);
                   }}
                 >

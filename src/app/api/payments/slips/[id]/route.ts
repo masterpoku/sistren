@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 import { getPaymentSlipForDownload } from "@/actions/payments";
 
-export async function GET(
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const slipId = Number(id);
 

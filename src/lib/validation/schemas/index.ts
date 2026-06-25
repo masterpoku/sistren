@@ -1,6 +1,7 @@
 export * from "./academic";
 export * from "./admin";
 export * from "./announcements";
+export * from "./attendance";
 export * from "./auth";
 export * from "./calendar";
 export * from "./documents";
@@ -10,6 +11,8 @@ export * from "./notifications";
 export * from "./paymentItems";
 export * from "./payments";
 export * from "./profile";
+export * from "./promotion";
 export * from "./register";
+export * from "./rppDocuments";
 export * from "./schoolDocuments";
 export * from "./settings";
