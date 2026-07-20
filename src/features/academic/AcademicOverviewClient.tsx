@@ -3,32 +3,47 @@
 import {
   BookOpen,
   Calendar,
+  GitBranch,
   GraduationCap,
   Users,
 } from "@phosphor-icons/react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+
+type ClassItem = { id: number; name: string; code: string };
+type SubjectItem = { id: number; name: string; code: string | null };
+type SemesterItem = {
+  id: number;
+  name: string;
+  academicYear: string;
+  isActive: boolean | null;
+};
 
 interface AcademicStats {
   classCount: number;
-  majorCount: number;
   subjectCount: number;
   semesterCount: number;
+  majorCount: number;
   activeSemesterName?: string;
   activeSemesterYear?: string;
+  classes: ClassItem[];
+  subjects: SubjectItem[];
+  semesters: SemesterItem[];
+  roleLevel: number;
+  assignedSubjectIds: number[];
 }
 
 export function AcademicOverviewClient({
   classCount,
-  majorCount,
   subjectCount,
   semesterCount,
+  majorCount,
   activeSemesterName,
   activeSemesterYear,
 }: AcademicStats) {
   return (
-    <div className="flex flex-col gap-6 p-4 md:p-6">
+    <div className="flex flex-col gap-6">
       {activeSemesterName ? (
         <div className="rounded-lg bg-primary/10 border border-primary/20 p-4">
           <p className="text-sm font-medium text-primary">Semester Aktif</p>
@@ -55,22 +70,22 @@ export function AcademicOverviewClient({
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Jurusan</CardTitle>
-            <BookOpen className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{majorCount}</p>
-            <p className="text-xs text-muted-foreground">Program keahlian</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Mapel</CardTitle>
             <BookOpen className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">{subjectCount}</p>
             <p className="text-xs text-muted-foreground">Mata pelajaran</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Jurusan</CardTitle>
+            <GitBranch className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <p className="text-2xl font-bold">{majorCount}</p>
+            <p className="text-xs text-muted-foreground">Program keahlian</p>
           </CardContent>
         </Card>
         <Card>
@@ -85,7 +100,7 @@ export function AcademicOverviewClient({
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <Link href="/academic/classes">
           <Button
             variant="outline"
@@ -93,15 +108,6 @@ export function AcademicOverviewClient({
           >
             <GraduationCap className="h-6 w-6" />
             <span>Kelola Kelas</span>
-          </Button>
-        </Link>
-        <Link href="/academic/majors">
-          <Button
-            variant="outline"
-            className="w-full h-auto py-4 flex flex-col gap-2"
-          >
-            <BookOpen className="h-6 w-6" />
-            <span>Kelola Jurusan</span>
           </Button>
         </Link>
         <Link href="/academic/subjects">
@@ -120,15 +126,6 @@ export function AcademicOverviewClient({
           >
             <Calendar className="h-6 w-6" />
             <span>Kelola Semester</span>
-          </Button>
-        </Link>
-        <Link href="/academic/grades">
-          <Button
-            variant="outline"
-            className="w-full h-auto py-4 flex flex-col gap-2"
-          >
-            <GraduationCap className="h-6 w-6" />
-            <span>Input Nilai</span>
           </Button>
         </Link>
       </div>

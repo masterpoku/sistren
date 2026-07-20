@@ -10,7 +10,7 @@ import {
 interface EnrollmentFormProps {
   students: { id: string; name: string }[];
   semesters: { id: number; name: string; academicYear: string }[];
-  classes: { id: number; name: string }[];
+  classes: { id: number; name: string; code: string }[];
   defaults?: {
     studentId?: string;
     semesterId?: number;
@@ -77,7 +77,7 @@ export function EnrollmentForm({
           <SelectContent>
             {classes.map((c) => (
               <SelectItem key={c.id} value={String(c.id)}>
-                {c.name}
+                {c.code}
               </SelectItem>
             ))}
           </SelectContent>

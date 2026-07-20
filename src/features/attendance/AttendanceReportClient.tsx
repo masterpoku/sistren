@@ -2,138 +2,183 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { DataTable } from "@/components/ui/data-table";
+import type { ColumnDef } from "@tanstack/react-table";
 
-const STATUS_LABELS: Record<string, string> = {
-  present: "Hadir",
-  sick: "Sakit",
-  permit: "Izin",
-  absent: "Alpha",
-  late: "Terlambat",
+const STATUS_CODES: Record<string, string> = {
+  present: "H",
+  sick: "S",
+  permit: "I",
+  absent: "A",
+  late: "T",
 };
 
 interface AttendanceReportClientProps {
-  classes: { id: number; name: string }[];
+  classes: { id: number; name: string; code: string }[];
+  classId: number;
+  sessionDate: string;
+}
+
+type ReportRow = {
+  status: string;
+  subjectId: number;
+  count: number;
+};
+type RosterItem = {
+  enrollmentId: number;
+  studentId: string;
+  studentName: string;
+};
+type AttendanceRecord = {
+  enrollmentId: number;
+  sessionDate: Date;
+  status: string;
+  subjectId: number;
+};
+type SubjectItem = { id: number; name: string; code: string | null };
+
+interface ReportResult {
+  totals: ReportRow[];
+  roster: RosterItem[];
+  records: AttendanceRecord[];
+  subjects: SubjectItem[];
 }
 
 export function AttendanceReportClient({
   classes,
+  classId,
+  sessionDate,
 }: AttendanceReportClientProps) {
-  const [classId, setClassId] = useState("");
-  const [startDate, setStartDate] = useState(
-    new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
-  );
-  const [endDate, setEndDate] = useState(new Date().toISOString().slice(0, 10));
-  const [totals, setTotals] = useState<Array<{
-    status: string;
-    count: number;
-  }> | null>(null);
+  const [result, setResult] = useState<ReportResult | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function loadReport() {
-    if (!classId) return;
     setLoading(true);
     const mod = await import("@/actions/attendance");
-    const result = await mod.getAttendanceReport({
-      classId: Number(classId),
-      startDate,
-      endDate,
+    const res = await mod.getAttendanceReport({
+      classId,
+      startDate: sessionDate,
+      endDate: sessionDate,
     });
     setLoading(false);
-    if ("totals" in result && result.totals) {
-      setTotals(result.totals);
+    if ("totals" in res) {
+      setResult(res as ReportResult);
     }
   }
 
-  const total = totals?.reduce((acc, t) => acc + Number(t.count), 0) ?? 0;
+  const classCode =
+    classes.find((c) => c.id === classId)?.code ?? "kelas";
+  const filenameBase = `absensi-${classCode}-${sessionDate}`;
+
+  // Build summary-per-subject data
+  const summaryData =
+    result?.subjects.map((s) => {
+      const rows = result.totals.filter((t) => t.subjectId === s.id);
+      const get = (st: string) =>
+        Number(rows.find((r) => r.status === st)?.count ?? 0);
+      const hadir = get("present");
+      const sakit = get("sick");
+      const izin = get("permit");
+      const alpha = get("absent");
+      const telat = get("late");
+      const total = hadir + sakit + izin + alpha + telat;
+      return {
+        mapel: s.name,
+        hadir,
+        sakit,
+        izin,
+        alpha,
+        telat,
+        total,
+      };
+    }) ?? [];
+
+  const summaryColumns: ColumnDef<(typeof summaryData)[number]>[] = [
+    { accessorKey: "mapel", header: "Mata Pelajaran" },
+    { accessorKey: "hadir", header: "Hadir" },
+    { accessorKey: "sakit", header: "Sakit" },
+    { accessorKey: "izin", header: "Izin" },
+    { accessorKey: "alpha", header: "Alpha" },
+    { accessorKey: "telat", header: "Terlambat" },
+    { accessorKey: "total", header: "Total" },
+  ];
+
+  // Build pivot: student x date
+  const dates = Array.from(
+    new Set((result?.records ?? []).map((r) => r.sessionDate.toISOString().slice(0, 10)))
+  ).sort();
+
+  const pivotData =
+    result?.roster.map((student) => {
+      const row: Record<string, string> = { siswa: student.studentName };
+      for (const d of dates) {
+        const rec = (result.records ?? []).find(
+          (r) =>
+            r.enrollmentId === student.enrollmentId &&
+            r.sessionDate.toISOString().slice(0, 10) === d
+        );
+        row[d] = rec ? STATUS_CODES[rec.status] ?? rec.status : "";
+      }
+      return row;
+    }) ?? [];
+
+  const pivotColumns: ColumnDef<Record<string, string>>[] = [
+    { accessorKey: "siswa", header: "Siswa" },
+    ...dates.map((d) => ({
+      accessorKey: d,
+      header: d.slice(5), // MM-DD
+    })),
+  ];
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Laporan Absensi</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid gap-4 md:grid-cols-4">
-          <div className="grid gap-2">
-            <Label>Kelas</Label>
-            <Select value={classId} onValueChange={setClassId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Pilih kelas" />
-              </SelectTrigger>
-              <SelectContent>
-                {classes.map((c) => (
-                  <SelectItem key={c.id} value={String(c.id)}>
-                    {c.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="grid gap-2">
-            <Label>Dari</Label>
-            <Input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label>Sampai</Label>
-            <Input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-            />
-          </div>
-          <div className="flex items-end">
-            <Button
-              type="button"
-              disabled={loading || !classId}
-              onClick={loadReport}
-            >
-              {loading ? "Memuat..." : "Muat"}
-            </Button>
-          </div>
+      <CardContent className="space-y-6">
+        <div className="flex flex-wrap items-center gap-3">
+          <p className="text-sm text-muted-foreground">
+            Kelas <strong>{classCode}</strong> · {sessionDate}
+          </p>
+          <Button type="button" disabled={loading} onClick={loadReport}>
+            {loading ? "Memuat..." : "Muat Laporan"}
+          </Button>
         </div>
-        {totals && (
-          <div className="space-y-2">
-            <p className="text-sm text-muted-foreground">
-              Total {total} catatan absensi.
-            </p>
-            <div className="space-y-1">
-              {Object.entries(STATUS_LABELS).map(([key, label]) => {
-                const found = totals.find((t) => t.status === key);
-                const count = Number(found?.count ?? 0);
-                const percent =
-                  total > 0 ? Math.round((count / total) * 100) : 0;
-                return (
-                  <div
-                    key={key}
-                    className="flex items-center gap-3 rounded-lg border p-3"
-                  >
-                    <span className="w-20 text-sm">{label}</span>
-                    <div className="flex-1 h-2 bg-muted rounded overflow-hidden">
-                      <div
-                        className="h-full bg-primary"
-                        style={{ width: `${percent}%` }}
-                      />
-                    </div>
-                    <span className="w-16 text-right text-sm">
-                      {count} ({percent}%)
-                    </span>
-                  </div>
-                );
-              })}
+
+        {result && (
+          <div className="space-y-8">
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium">
+                Ringkasan per Mata Pelajaran
+              </h3>
+              <DataTable
+                columns={summaryColumns}
+                data={summaryData}
+                exportFilename={`${filenameBase}-ringkasan`}
+                emptyMessage="Belum ada data absensi."
+              />
             </div>
+
+            {dates.length > 0 && (
+              <div className="space-y-2">
+                <h3 className="text-sm font-medium">
+                  Detail Siswa × Tanggal (H=Hadir, S=Sakit, I=Izin, A=Alpha,
+                  T=Terlambat)
+                </h3>
+                <DataTable
+                  columns={pivotColumns}
+                  data={pivotData}
+                  exportFilename={`${filenameBase}-detail`}
+                  emptyMessage="Belum ada data absensi."
+                />
+              </div>
+            )}
           </div>
         )}
       </CardContent>

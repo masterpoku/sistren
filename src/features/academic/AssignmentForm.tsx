@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/select";
 
 type Teacher = { id: string; name: string };
-type Class = { id: number; name: string };
+type Class = { id: number; name: string; code: string };
 type Subject = { id: number; name: string };
 type Semester = { id: number; name: string; academicYear: string };
 
@@ -51,7 +51,7 @@ export function AssignmentForm({
           <SelectContent>
             {classes.map((c) => (
               <SelectItem key={c.id} value={String(c.id)}>
-                {c.name}
+                {c.code}
               </SelectItem>
             ))}
           </SelectContent>

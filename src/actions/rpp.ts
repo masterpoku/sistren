@@ -262,7 +262,7 @@ export async function getRppDocuments(options?: {
       teacherId: rppDocuments.teacherId,
       teacherName: users.name,
       classId: rppDocuments.classId,
-      className: classes.name,
+      classCode: classes.code,
       subjectId: rppDocuments.subjectId,
       subjectName: subjects.name,
       title: rppDocuments.title,

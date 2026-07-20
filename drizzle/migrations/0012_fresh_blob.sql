@@ -1,0 +1,2 @@
+ALTER TABLE `classes` ADD `homeroom_teacher_id` varchar(36);--> statement-breakpoint
+ALTER TABLE `classes` ADD CONSTRAINT `classes_homeroom_teacher_id_users_id_fk` FOREIGN KEY (`homeroom_teacher_id`) REFERENCES `users`(`id`) ON DELETE no action ON UPDATE no action;

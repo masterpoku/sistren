@@ -19,7 +19,7 @@ import { EnrollmentForm } from "./EnrollmentForm";
 interface EnrollmentDialogProps {
   students: { id: string; name: string }[];
   semesters: { id: number; name: string; academicYear: string }[];
-  classes: { id: number; name: string }[];
+  classes: { id: number; name: string; code: string }[];
   trigger: ReactNode;
   item?: {
     id: number;

@@ -5,7 +5,7 @@ import { users } from "./users";
 export const sessions = mysqlTable(
   "sessions",
   {
-    id: varchar("id", { length: 36 }).primaryKey().default(crypto.randomUUID()),
+    id: varchar("id", { length: 36 }).primaryKey(),
     userId: varchar("user_id", { length: 36 })
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),

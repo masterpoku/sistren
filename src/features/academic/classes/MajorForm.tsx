@@ -3,28 +3,28 @@ import { Label } from "@/components/ui/label";
 
 export interface MajorFormValues {
   name: string;
-  description: string | null;
+  description?: string | null;
 }
 
 export function MajorForm({ item }: { item?: MajorFormValues }) {
   return (
     <div className="grid gap-4 py-2">
       <div className="space-y-2">
-        <Label htmlFor="major-name">Nama Jurusan</Label>
+        <Label htmlFor="mjr-name">Nama Jurusan</Label>
         <Input
-          id="major-name"
+          id="mjr-name"
           name="name"
-          placeholder="IPA, IPS, Bahasa"
+          placeholder="TKJ, RPL, Akuntansi"
           defaultValue={item?.name ?? ""}
           required
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="major-desc">Deskripsi</Label>
+        <Label htmlFor="mjr-description">Deskripsi</Label>
         <Input
-          id="major-desc"
+          id="mjr-description"
           name="description"
-          placeholder="Ilmu Pengetahuan Alam"
+          placeholder="(opsional)"
           defaultValue={item?.description ?? ""}
         />
       </div>

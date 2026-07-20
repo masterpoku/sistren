@@ -17,7 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { AssignmentForm } from "./AssignmentForm";
 
 type Teacher = { id: string; name: string };
-type Class = { id: number; name: string };
+type Class = { id: number; name: string; code: string };
 type Subject = { id: number; name: string };
 type Semester = { id: number; name: string; academicYear: string };
 

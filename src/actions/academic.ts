@@ -44,26 +44,39 @@ export async function createClass(formData: FormData) {
 
   const parsed = classSchema.safeParse({
     name: formData.get("name"),
-    code: formData.get("code"),
+    majorId: formData.get("majorId"),
+    capacity: formData.get("capacity"),
   });
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Data tidak valid" };
   }
-  const { name, code } = parsed.data;
+  const { name, majorId, capacity } = parsed.data;
+
+  const [major] = await db
+    .select({ name: majors.name })
+    .from(majors)
+    .where(eq(majors.id, majorId))
+    .limit(1);
+
+  if (!major) return { error: "Jurusan tidak ditemukan." };
+
+  const code = `${name.trim()}-${major.name.trim()}`;
 
   const [existing] = await db
     .select({ id: classes.id })
     .from(classes)
-    .where(and(eq(classes.code, code.trim()), isNull(classes.deletedAt)))
+    .where(and(eq(classes.code, code), isNull(classes.deletedAt)))
     .limit(1);
 
   if (existing) {
-    return { error: "Kode kelas sudah ada." };
+    return { error: "Kombinasi kelas & jurusan sudah ada." };
   }
 
   await db.insert(classes).values({
     name: name.trim(),
-    code: code.trim(),
+    code,
+    majorId,
+    capacity: capacity ?? null,
   });
 
   revalidatePath("/academic/classes");
@@ -76,17 +89,28 @@ export async function updateClass(classId: string, formData: FormData) {
   const parsed = updateClassSchema.safeParse({
     classId,
     name: formData.get("name"),
-    code: formData.get("code"),
+    majorId: formData.get("majorId"),
+    capacity: formData.get("capacity"),
   });
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Data tidak valid" };
   }
-  const { name, code } = parsed.data;
+  const { name, majorId, capacity } = parsed.data;
+
+  const [major] = await db
+    .select({ name: majors.name })
+    .from(majors)
+    .where(eq(majors.id, majorId))
+    .limit(1);
+
+  if (!major) return { error: "Jurusan tidak ditemukan." };
+
+  const code = `${name.trim()}-${major.name.trim()}`;
 
   const [existing] = await db
     .select({ id: classes.id })
     .from(classes)
-    .where(and(eq(classes.code, code.trim()), isNull(classes.deletedAt)))
+    .where(and(eq(classes.code, code), isNull(classes.deletedAt)))
     .limit(1);
 
   if (existing && existing.id !== parsed.data.classId) {
@@ -95,7 +119,7 @@ export async function updateClass(classId: string, formData: FormData) {
 
   await db
     .update(classes)
-    .set({ name: name.trim(), code: code.trim() })
+    .set({ name: name.trim(), code, majorId, capacity: capacity ?? null })
     .where(eq(classes.id, parsed.data.classId));
 
   revalidatePath("/academic/classes");
@@ -163,7 +187,7 @@ export async function createMajor(formData: FormData) {
     description: description?.trim() || null,
   });
 
-  revalidatePath("/academic/majors");
+  revalidatePath("/academic/classes");
   return { success: true };
 }
 
@@ -187,7 +211,7 @@ export async function updateMajor(majorId: string, formData: FormData) {
     .limit(1);
 
   if (existing && existing.id !== parsed.data.majorId) {
-    return { error: "Nama jurusan sudah digunakan jurusan lain." };
+    return { error: "Nama jurusan sudah digunakan." };
   }
 
   await db
@@ -195,7 +219,7 @@ export async function updateMajor(majorId: string, formData: FormData) {
     .set({ name: name.trim(), description: description?.trim() || null })
     .where(eq(majors.id, parsed.data.majorId));
 
-  revalidatePath("/academic/majors");
+  revalidatePath("/academic/classes");
   return { success: true };
 }
 
@@ -217,7 +241,7 @@ export async function deleteMajor(majorId: string) {
     .set({ deletedAt: new Date() })
     .where(eq(majors.id, Number(majorId)));
 
-  revalidatePath("/academic/majors");
+  revalidatePath("/academic/classes");
   return { success: true };
 }
 
@@ -235,6 +259,7 @@ export async function getSubjects() {
       credits: subjects.credits,
       description: subjects.description,
       className: classes.name,
+      classCode: classes.code,
     })
     .from(subjects)
     .leftJoin(classes, eq(subjects.classId, classes.id))
@@ -493,7 +518,7 @@ export async function getAssignments() {
       subjectId: teacherClassSubjects.subjectId,
       semesterId: teacherClassSubjects.semesterId,
       teacherName: users.name,
-      className: classes.name,
+      classCode: classes.code,
       subjectName: subjects.name,
       semesterName: semesters.name,
       academicYear: semesters.academicYear,

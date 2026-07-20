@@ -9,6 +9,7 @@ import {
   Dialog,
   DialogClose,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -60,6 +61,9 @@ export function StaffAccountDialog({
           <DialogTitle>
             {isEdit ? `Edit: ${item!.name}` : "Tambah Akun Staff"}
           </DialogTitle>
+          <DialogDescription>
+            {isEdit ? "Ubah data pengguna." : "Isi data untuk akun baru."}
+          </DialogDescription>
         </DialogHeader>
         <form action={handleSubmit}>
           <StaffAccountForm item={item} roles={roles} showPassword={!isEdit} />

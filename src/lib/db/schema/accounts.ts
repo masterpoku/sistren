@@ -3,7 +3,7 @@ import { mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
 import { users } from "./index";
 
 export const accounts = mysqlTable("accounts", {
-  id: varchar("id", { length: 36 }).primaryKey().default(crypto.randomUUID()),
+  id: varchar("id", { length: 36 }).primaryKey(),
   userId: varchar("user_id", { length: 36 })
     .notNull()
     .references(() => users.id, {

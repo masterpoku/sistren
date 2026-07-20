@@ -48,12 +48,6 @@ const NAV_ITEMS: NavItem[] = [
     keywords: ["subject", "mata pelajaran"],
     minLevel: 60,
   },
-  {
-    title: "Jurusan",
-    href: "/academic/majors",
-    keywords: ["major", "jurusan"],
-    minLevel: 60,
-  },
   { title: "Semester", href: "/academic/semesters", minLevel: 60 },
   {
     title: "Tugas Guru",
@@ -62,9 +56,9 @@ const NAV_ITEMS: NavItem[] = [
     minLevel: 60,
   },
   {
-    title: "Nilai",
+    title: "Input Nilai",
     href: "/academic/grades",
-    keywords: ["grade", "nilai"],
+    keywords: ["grade", "nilai", "input nilai", "rapor"],
     minLevel: 60,
   },
   { title: "Keuangan", href: "/finance", keywords: ["finance", "uang"] },

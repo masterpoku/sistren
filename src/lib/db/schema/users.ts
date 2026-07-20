@@ -33,7 +33,7 @@ import { userPermissions } from "./user_permissions";
  * - role_id: FK to roles
  */
 export const users = mysqlTable("users", {
-  id: varchar("id", { length: 36 }).primaryKey().default(crypto.randomUUID()),
+  id: varchar("id", { length: 36 }).primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   email: varchar("email", { length: 255 }).unique().notNull(),
   emailVerified: boolean("email_verified").default(false).notNull(),

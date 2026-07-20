@@ -10,6 +10,7 @@ export const attendanceStatusSchema = z.enum([
 
 export const markAttendanceSchema = z.object({
   classId: z.coerce.number().int().positive(),
+  subjectId: z.coerce.number().int().positive(),
   sessionDate: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Format tanggal harus YYYY-MM-DD"),

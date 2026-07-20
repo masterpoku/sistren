@@ -72,6 +72,8 @@ export const profiles = mysqlTable("profiles", {
   // Parents contact
   parentsAddress: text("parents_address"),
   parentsPhone: varchar("parents_phone", { length: 20 }),
+  verificationStatus: varchar("verification_status", { length: 20 }).default("draft"),
+  rejectionReason: text("rejection_reason"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").onUpdateNow(),
   deletedAt: timestamp("deleted_at"),

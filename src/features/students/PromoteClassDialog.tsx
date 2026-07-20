@@ -23,7 +23,7 @@ import {
 import { useActionWithToast } from "@/hooks/use-action-with-toast";
 
 interface PromoteClassDialogProps {
-  classes: { id: number; name: string }[];
+  classes: { id: number; name: string; code: string }[];
   semesters: { id: number; name: string }[];
 }
 
@@ -102,7 +102,7 @@ export function PromoteClassDialog({
               <SelectContent>
                 {classes.map((c) => (
                   <SelectItem key={c.id} value={String(c.id)}>
-                    {c.name}
+                    {c.code}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -153,7 +153,7 @@ export function PromoteClassDialog({
               <SelectContent>
                 {classes.map((c) => (
                   <SelectItem key={c.id} value={String(c.id)}>
-                    {c.name}
+                    {c.code}
                   </SelectItem>
                 ))}
               </SelectContent>

@@ -19,6 +19,7 @@ type DocumentType =
   | "ktpIbu"
   | "kip"
   | "passFoto"
+  | "nisnDocument"
   | "rapor";
 
 const DOCUMENT_TYPES: DocumentType[] = [
@@ -31,6 +32,7 @@ const DOCUMENT_TYPES: DocumentType[] = [
   "ktpIbu",
   "kip",
   "passFoto",
+  "nisnDocument",
   "rapor",
 ];
 
@@ -205,6 +207,7 @@ export async function downloadDocument(
     ktpIbu: "image/jpeg",
     kip: "application/pdf",
     passFoto: "image/jpeg",
+    nisnDocument: "application/pdf",
     rapor: "application/pdf",
   };
 

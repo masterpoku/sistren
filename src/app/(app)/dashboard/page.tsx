@@ -19,7 +19,9 @@ import { verifySession } from "@/lib/auth/verify-session";
 import { db } from "@/lib/db";
 import {
   announcements,
+  classes,
   enrollments,
+  profiles,
   roles,
   semesters,
   teacherClassSubjects,
@@ -34,6 +36,23 @@ export default async function DashboardPage() {
   const roleLevel = ctx.roleLevel;
   const userId = session.userId;
 
+  if (roleLevel === 40) {
+    const [profile] = await db
+      .select({ verificationStatus: profiles.verificationStatus })
+      .from(profiles)
+      .where(and(eq(profiles.userId, userId), isNull(profiles.deletedAt)))
+      .limit(1);
+
+    if (profile) {
+      if (profile.verificationStatus === "draft" || profile.verificationStatus === "rejected") {
+        redirect("/students/profile/complete");
+      }
+      if (profile.verificationStatus === "pending") {
+        redirect("/students/pending");
+      }
+    }
+  }
+
   let stats: {
     totalStudents?: number;
     totalTeachers?: number;
@@ -42,6 +61,8 @@ export default async function DashboardPage() {
     assignedClasses?: number;
     assignedSubjects?: number;
     ownEnrollmentStatus?: string;
+    ownClassName?: string | null;
+    ownClassCode?: string | null;
   } = {};
 
   let registrationStats: Awaited<
@@ -137,15 +158,29 @@ export default async function DashboardPage() {
     recentActivities = await getRecentActivities(20);
   } else if (roleLevel === 40) {
     const [enrollmentRow] = await db
-      .select({ status: enrollments.status })
+      .select({
+        status: enrollments.status,
+        className: classes.name,
+        classCode: classes.code,
+      })
       .from(enrollments)
+      .innerJoin(classes, eq(enrollments.classId, classes.id))
       .where(
-        and(eq(enrollments.studentId, userId), isNull(enrollments.deletedAt))
+        and(
+          eq(enrollments.studentId, userId),
+          eq(enrollments.status, "active"),
+          isNull(enrollments.deletedAt),
+          isNull(classes.deletedAt)
+        )
       )
       .limit(1);
 
     if (enrollmentRow) {
-      stats = { ownEnrollmentStatus: enrollmentRow.status ?? "unknown" };
+      stats = {
+        ownEnrollmentStatus: enrollmentRow.status ?? "unknown",
+        ownClassName: enrollmentRow.className ?? null,
+        ownClassCode: enrollmentRow.classCode ?? null,
+      };
     }
 
     gpaHistory = await getStudentGpaHistory(userId);

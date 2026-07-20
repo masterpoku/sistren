@@ -46,7 +46,7 @@ export interface RppDocument {
   teacherId: string;
   teacherName: string | null;
   classId: number;
-  className: string | null;
+  classCode: string | null;
   subjectId: number;
   subjectName: string | null;
   title: string;
@@ -63,14 +63,14 @@ export interface RppDocument {
 
 interface RppTeacherClientProps {
   documents: RppDocument[];
-  classes: { id: number; name: string }[];
+  classes: { id: number; name: string; code: string }[];
 }
 
 function UploadDialog({
   classes,
   onUploaded,
 }: {
-  classes: { id: number; name: string }[];
+  classes: { id: number; name: string; code: string }[];
   onUploaded?: () => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -128,7 +128,7 @@ function UploadDialog({
               <SelectContent>
                 {classes.map((c) => (
                   <SelectItem key={c.id} value={String(c.id)}>
-                    {c.name}
+                    {c.code}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -251,7 +251,7 @@ function RppRow({ doc }: { doc: RppDocument }) {
           <StatusBadge status={doc.status} />
         </div>
         <p className="text-sm text-muted-foreground">
-          {doc.className ?? "-"} - {doc.subjectName ?? "-"}
+          {doc.classCode ?? "-"} - {doc.subjectName ?? "-"}
         </p>
         {doc.description && (
           <p className="text-sm text-muted-foreground">{doc.description}</p>

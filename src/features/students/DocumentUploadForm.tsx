@@ -22,6 +22,7 @@ const DOCUMENT_TYPES = [
   { value: "ktpAyah", label: "KTP Ayah" },
   { value: "ktpIbu", label: "KTP Ibu" },
   { value: "kip", label: "KIP" },
+  { value: "nisnDocument", label: "NISN" },
   { value: "passFoto", label: "Pas Foto 3x4" },
   { value: "rapor", label: "Rapor" },
 ];

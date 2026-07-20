@@ -1,8 +1,16 @@
 "use client";
 
-import { GraduationCap, Warning } from "@phosphor-icons/react";
+import {
+  CheckCircle,
+  Clipboard,
+  Eye,
+  EyeSlash,
+  GraduationCap,
+  Warning,
+  XCircle,
+} from "@phosphor-icons/react";
 import { useState } from "react";
-import { registerAction } from "@/actions/register";
+import { checkNisn, registerAction } from "@/actions/register";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -15,11 +23,31 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-type Religion = { id: number; name: string };
-
-export default function RegisterForm({ religions }: { religions: Religion[] }) {
+export default function RegisterForm() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [nisnStatus, setNisnStatus] = useState<
+    "idle" | "checking" | "available" | "taken"
+  >("idle");
+  const [registered, setRegistered] = useState<{
+    nisn: string;
+    name: string;
+    email: string;
+    password: string;
+  } | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  async function handleNisnChange(value: string) {
+    if (!value || value.length < 4) {
+      setNisnStatus("idle");
+      return;
+    }
+    setNisnStatus("checking");
+    const result = await checkNisn(value);
+    setNisnStatus(result.exists ? "taken" : "available");
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -30,17 +58,102 @@ export default function RegisterForm({ religions }: { religions: Religion[] }) {
 
     try {
       const result = await registerAction(formData);
-      if (result && "error" in result) {
-        setError(result.error);
+      if (!result) return;
+      if ("error" in result) {
+        setError(result.error ?? null);
+      } else {
+        setRegistered({
+          nisn: result.nisn,
+          name: result.name,
+          email: result.email,
+          password: result.password,
+        });
       }
-    } catch (err: unknown) {
-      if (err instanceof Error && err.message.includes("NEXT_REDIRECT")) {
-        return;
-      }
+    } catch {
       setError("Terjadi kesalahan. Silakan coba lagi.");
     } finally {
       setLoading(false);
     }
+  }
+
+  async function copyData() {
+    if (!registered) return;
+    const text = `NISN: ${registered.nisn}\nNama: ${registered.name}\nEmail: ${registered.email}\nPassword: ${registered.password}`;
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  if (registered) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
+        <div className="w-full max-w-md space-y-8">
+          <div className="text-center space-y-2">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500 text-white shadow-lg">
+              <CheckCircle className="h-7 w-7" />
+            </div>
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+              Pendaftaran Berhasil
+            </h1>
+            <p className="text-slate-500">
+              Simpan data berikut untuk login
+            </p>
+          </div>
+
+          <Card className="border-none shadow-xl">
+            <CardContent className="space-y-4 pt-6">
+              <div className="rounded-lg border bg-slate-50 p-4 space-y-3">
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    NISN
+                  </p>
+                  <p className="text-lg font-bold">{registered.nisn}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Nama
+                  </p>
+                  <p className="text-lg font-bold">{registered.name}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Email
+                  </p>
+                  <p className="text-lg font-bold">{registered.email}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Password
+                  </p>
+                  <p className="text-lg font-bold font-mono tracking-wider">
+                    {registered.password}
+                  </p>
+                </div>
+              </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={copyData}
+              >
+                <Clipboard className="mr-2 h-4 w-4" />
+                {copied ? "Tersalin!" : "Salin Data"}
+              </Button>
+
+              <p className="text-center text-sm text-muted-foreground">
+                Silahkan login untuk melengkapi data diri
+              </p>
+            </CardContent>
+            <CardFooter>
+              <a href="/login" className="w-full">
+                <Button className="w-full h-11">Login</Button>
+              </a>
+            </CardFooter>
+          </Card>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -73,6 +186,44 @@ export default function RegisterForm({ religions }: { religions: Religion[] }) {
               )}
 
               <div className="space-y-2">
+                <Label htmlFor="nisn">NISN</Label>
+                <div className="relative">
+                  <Input
+                    id="nisn"
+                    name="nisn"
+                    placeholder="1234567890"
+                    required
+                    onChange={(e) => handleNisnChange(e.target.value)}
+                    className={
+                      nisnStatus === "taken"
+                        ? "border-destructive pr-10"
+                        : nisnStatus === "available"
+                          ? "border-emerald-500 pr-10"
+                          : ""
+                    }
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2">
+                    {nisnStatus === "checking" && (
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
+                    )}
+                    {nisnStatus === "available" && (
+                      <CheckCircle className="h-4 w-4 text-emerald-500" />
+                    )}
+                    {nisnStatus === "taken" && (
+                      <XCircle className="h-4 w-4 text-destructive" />
+                    )}
+                  </span>
+                </div>
+                {nisnStatus === "taken" && (
+                  <p className="text-xs text-destructive">
+                    NISN sudah terdaftar
+                  </p>
+                )}
+                {nisnStatus === "available" && (
+                  <p className="text-xs text-emerald-500">NISN tersedia</p>
+                )}
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="name">Nama Lengkap</Label>
                 <Input
                   id="name"
@@ -93,102 +244,57 @@ export default function RegisterForm({ religions }: { religions: Religion[] }) {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
-                <Input id="password" name="password" type="password" required />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showPassword ? (
+                      <EyeSlash className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Konfirmasi Password</Label>
-                <Input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  required
-                />
-              </div>
-
-              <div className="border-t pt-4">
-                <p className="text-xs font-medium text-muted-foreground mb-3 uppercase tracking-wider">
-                  Data Siswa
-                </p>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <Label htmlFor="nisn">NISN</Label>
-                    <Input id="nisn" name="nisn" placeholder="1234567890" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="birthPlace">Tempat Lahir</Label>
-                    <Input
-                      id="birthPlace"
-                      name="birthPlace"
-                      placeholder="Bandung"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="birthDate">Tanggal Lahir</Label>
-                    <Input id="birthDate" name="birthDate" type="date" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="gender">Jenis Kelamin</Label>
-                    <select
-                      id="gender"
-                      name="gender"
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      <option value="male">Laki-laki</option>
-                      <option value="female">Perempuan</option>
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="religionId">Agama</Label>
-                    <select
-                      id="religionId"
-                      name="religionId"
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      <option value="">Pilih agama...</option>
-                      {religions.map((r) => (
-                        <option key={r.id} value={r.id}>
-                          {r.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="address">Alamat</Label>
-                    <Input
-                      id="address"
-                      name="address"
-                      placeholder="Jl. Raya No. 1"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="border-t pt-4">
-                <p className="text-xs font-medium text-muted-foreground mb-3 uppercase tracking-wider">
-                  Data Orang Tua
-                </p>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <Label htmlFor="fatherName">Nama Ayah</Label>
-                    <Input
-                      id="fatherName"
-                      name="fatherName"
-                      placeholder="Nama ayah"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="motherName">Nama Ibu</Label>
-                    <Input
-                      id="motherName"
-                      name="motherName"
-                      placeholder="Nama ibu"
-                    />
-                  </div>
+                <div className="relative">
+                  <Input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type={showConfirm ? "text" : "password"}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirm(!showConfirm)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showConfirm ? (
+                      <EyeSlash className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
                 </div>
               </div>
             </CardContent>
             <CardFooter className="flex flex-col gap-4">
-              <Button type="submit" className="w-full h-11" disabled={loading}>
+              <Button
+                type="submit"
+                className="w-full h-11"
+                disabled={
+                  loading || nisnStatus === "taken" || nisnStatus === "checking"
+                }
+              >
                 {loading ? "Memuat..." : "Daftar"}
               </Button>
               <p className="text-center text-sm text-muted-foreground">

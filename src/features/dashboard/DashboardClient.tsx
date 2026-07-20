@@ -67,6 +67,8 @@ interface DashboardClientProps {
     assignedClasses?: number;
     assignedSubjects?: number;
     ownEnrollmentStatus?: string;
+    ownClassName?: string | null;
+    ownClassCode?: string | null;
   };
   registrationStats?: RegistrationStat[];
   gpaHistory?: GpaPoint[];
@@ -305,7 +307,23 @@ export function DashboardClient({
 
       {(isSiswa || isAlumni) && (
         <>
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-4">
+            {isSiswa && (
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardDescription className="text-xs">Kelas</CardDescription>
+                  <Student className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {stats?.ownClassCode ?? "—"}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {stats?.ownClassName ?? ""}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
             <StatCard
               title="Nilai Rata-rata"
               value={currentGpa > 0 ? currentGpa.toFixed(2) : "—"}

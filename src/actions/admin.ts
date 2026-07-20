@@ -146,8 +146,14 @@ export async function updateStaffAccount(userId: string, formData: FormData) {
     .where(and(eq(roles.id, roleId), isNull(roles.deletedAt)))
     .limit(1);
 
-  if (!role || (role.level !== 60 && role.level !== 80)) {
-    return { error: "Role tidak valid. Pilih Guru atau Administrator." };
+  if (!role) {
+    return { error: "Role tidak valid." };
+  }
+
+  if (role.level! >= 80) {
+    return {
+      error: "Tidak dapat menetapkan role Superadmin atau Administrator.",
+    };
   }
 
   const [user] = await db

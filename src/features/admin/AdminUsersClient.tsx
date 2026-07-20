@@ -3,10 +3,9 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ActionCell, DataTable, formatDate } from "@/components/ui/data-table";
+import { DataTable, formatDate } from "@/components/ui/data-table";
 import { PageShell } from "@/components/ui/page-shell";
 import { StaffAccountDialog } from "@/features/admin/StaffAccountDialog";
-import { useActionWithToast } from "@/hooks/use-action-with-toast";
 
 type User = {
   id: string;
@@ -17,51 +16,13 @@ type User = {
   roleLevel: number | null;
   emailVerified: boolean | null;
   createdAt: Date | null;
+  enrollmentId: number | null;
+  semesterId: number | null;
 };
 
 interface AdminUsersClientProps {
   data: User[];
   roles: { id: number; name: string }[];
-}
-
-function UserActions({
-  user,
-  roles,
-}: {
-  user: User;
-  roles: { id: number; name: string }[];
-}) {
-  const [handleDelete] = useActionWithToast(
-    async () => {
-      const { deleteStaffAccount } = await import("@/actions/admin");
-      return await deleteStaffAccount(user.id);
-    },
-    { successMessage: "Akun dihapus." }
-  );
-
-  if (user.roleName === "superadmin") {
-    return null;
-  }
-
-  return (
-    <div className="flex items-center gap-2">
-      <StaffAccountDialog
-        item={{
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          roleId: user.roleId ?? 0,
-        }}
-        roles={roles}
-        trigger={
-          <Button type="button" variant="outline" size="sm">
-            Edit
-          </Button>
-        }
-      />
-      <ActionCell onDelete={handleDelete} />
-    </div>
-  );
 }
 
 export function AdminUsersClient({ data, roles }: AdminUsersClientProps) {
@@ -99,11 +60,6 @@ export function AdminUsersClient({ data, roles }: AdminUsersClientProps) {
       accessorKey: "createdAt",
       header: "Tanggal Dibuat",
       cell: ({ row }) => formatDate(row.getValue("createdAt")),
-    },
-    {
-      id: "actions",
-      header: "Aksi",
-      cell: ({ row }) => <UserActions user={row.original} roles={roles} />,
     },
   ];
 

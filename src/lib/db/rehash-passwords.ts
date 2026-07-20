@@ -45,6 +45,7 @@ async function rehashPasswords() {
       } else {
         // Insert new
         await db.insert(accounts).values({
+          id: crypto.randomUUID(),
           userId: row.id,
           accountId: row.email,
           providerId: "credential",

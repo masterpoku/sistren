@@ -1,17 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { graduateStudent } from "@/actions/promotion";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { useActionWithToast } from "@/hooks/use-action-with-toast";
 
 interface GraduateActionProps {
   studentId: string;
@@ -23,58 +13,20 @@ interface GraduateActionProps {
 export function GraduateAction({
   studentId,
   semesterId,
-  studentName,
+  studentName: _studentName,
   disabled,
 }: GraduateActionProps) {
-  const [open, setOpen] = useState(false);
-
-  const [handleGraduate, isPending] = useActionWithToast(
-    async () => graduateStudent({ studentId, semesterId }),
-    { successMessage: `${studentName} diluluskan.` }
-  );
+  const router = useRouter();
 
   return (
-    <>
-      <Button
-        type="button"
-        size="sm"
-        variant="default"
-        disabled={disabled}
-        onClick={() => setOpen(true)}
-      >
-        Luluskan
-      </Button>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Luluskan Siswa</DialogTitle>
-            <DialogDescription>
-              Apakah Anda yakin ingin meluluskan {studentName}? Aksi ini tidak
-              dapat dibatalkan.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setOpen(false)}
-            >
-              Batal
-            </Button>
-            <Button
-              type="button"
-              variant="default"
-              disabled={isPending}
-              onClick={async () => {
-                await handleGraduate();
-                setOpen(false);
-              }}
-            >
-              {isPending ? "Memproses..." : "Luluskan"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+    <Button
+      type="button"
+      size="sm"
+      variant="default"
+      disabled={disabled}
+      onClick={() => router.push(`/students/${studentId}/graduate?semesterId=${semesterId}`)}
+    >
+      Aksi
+    </Button>
   );
 }

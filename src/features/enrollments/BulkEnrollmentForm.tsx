@@ -15,7 +15,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 
 interface BulkEnrollmentFormProps {
-  classList: { id: number; name: string }[];
+  classList: { id: number; name: string; code: string }[];
   semesterList: { id: number; name: string; academicYear: string }[];
 }
 
@@ -68,7 +68,7 @@ export function BulkEnrollmentForm({
             <SelectContent>
               {classList.map((c) => (
                 <SelectItem key={c.id} value={String(c.id)}>
-                  {c.name}
+                  {c.code}
                 </SelectItem>
               ))}
             </SelectContent>

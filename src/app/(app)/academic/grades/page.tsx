@@ -1,42 +1,55 @@
-import { getClasses, getSemesters, getSubjects } from "@/actions/academic";
-import { PageShell } from "@/components/ui/page-shell";
-import { GradesClient } from "@/features/academic/GradesClient";
-import { getAuthContext } from "@/lib/auth/permissions";
-import { verifySession } from "@/lib/auth/verify-session";
+import { eq, isNull } from "drizzle-orm";
+import { verifyRoleLevel, verifySession } from "@/lib/auth/verify-session";
+import { db } from "@/lib/db";
+import {
+  classes,
+  majors,
+  semesters,
+} from "@/lib/db/schema";
+import { GradeInputClient } from "@/features/academic/GradeInputClient";
 
-export default async function GradesPage() {
+async function getTeacherClasses(userId: string) {
+  const ctx = await (
+    await import("@/lib/auth/permissions")
+  ).getAuthContext(userId);
+
+  const allClasses = await db
+    .select({
+      id: classes.id,
+      name: classes.name,
+      code: classes.code,
+      majorName: majors.name,
+    })
+    .from(classes)
+    .leftJoin(majors, eq(classes.majorId, majors.id))
+    .where(isNull(classes.deletedAt))
+    .orderBy(classes.code);
+
+  if (ctx && ctx.roleLevel >= 100) return allClasses;
+
+  return allClasses.filter((c) => c.id);
+}
+
+export default async function AcademicGradesPage() {
   const session = await verifySession();
-  const ctx = await getAuthContext(session.userId);
-  const roleLevel = ctx?.roleLevel ?? 0;
-  const userId = session.userId;
+  await verifyRoleLevel(60);
 
-  const [classList, subjectList, semesterList] = await Promise.all([
-    getClasses(),
-    getSubjects(),
-    getSemesters(),
-  ]);
+  const userClasses = await getTeacherClasses(session.userId);
 
-  // If teacher (level 60), get assigned subjects
-  const assignedSubjectIds: number[] = [];
-  if (roleLevel === 60) {
-    const { getAssignments } = await import("@/actions/academic");
-    const assignments = await getAssignments();
-    const filtered = assignments.filter((a) => a.teacherId === userId);
-    assignedSubjectIds.push(...filtered.map((a) => a.subjectId));
-  }
+  const semesterList = await db
+    .select({ id: semesters.id, name: semesters.name, academicYear: semesters.academicYear })
+    .from(semesters)
+    .where(isNull(semesters.deletedAt))
+    .orderBy(semesters.id);
+
+  const defaultClassId = userClasses[0]?.id;
 
   return (
-    <PageShell
-      title="Input Nilai"
-      description="Kelola nilai pengetahuan, keterampilan, dan sikap siswa."
-    >
-      <GradesClient
-        classes={classList}
-        subjects={subjectList}
-        semesters={semesterList}
-        roleLevel={roleLevel}
-        assignedSubjectIds={assignedSubjectIds}
-      />
-    </PageShell>
+    <GradeInputClient
+      userClasses={userClasses}
+      semesters={semesterList}
+      defaultClassId={defaultClassId}
+      userId={session.userId}
+    />
   );
 }

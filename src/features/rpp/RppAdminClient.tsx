@@ -105,7 +105,7 @@ function RppReviewRow({ doc }: { doc: RppDocument }) {
           Guru: {doc.teacherName ?? doc.teacherId}
         </p>
         <p className="text-sm text-muted-foreground">
-          {doc.className ?? "-"} - {doc.subjectName ?? "-"}
+          {doc.classCode ?? "-"} - {doc.subjectName ?? "-"}
         </p>
         {doc.description && (
           <p className="text-sm text-muted-foreground">{doc.description}</p>

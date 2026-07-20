@@ -6,6 +6,7 @@ import * as schema from "@/lib/db/schema";
 
 export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
+  trustHost: true,
   secret: process.env.BETTER_AUTH_SECRET,
   database: drizzleAdapter(db, {
     provider: "mysql",
@@ -15,6 +16,7 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: false,
+    autoSignIn: false,
   },
   session: {
     expiresIn: 60 * 60 * 24 * 7, // 7 days

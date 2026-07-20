@@ -1,9 +1,4 @@
-import {
-  getClasses,
-  getMajors,
-  getSemesters,
-  getSubjects,
-} from "@/actions/academic";
+import { getClasses, getMajors, getSemesters, getSubjects } from "@/actions/academic";
 import { getPublicEvents } from "@/actions/calendar";
 import { AcademicOverviewClient } from "@/features/academic/AcademicOverviewClient";
 import { StudentAcademicClient } from "@/features/academic/StudentAcademicClient";
@@ -30,14 +25,23 @@ export default async function AcademicOverviewPage() {
   // Guru/Admin (level >= 60) — admin overview
   await verifySession(); // re-verify for minimum level
 
-  const [classList, majorList, subjectList, semesterList] = await Promise.all([
+  const [classList, subjectList, semesterList, majorList] = await Promise.all([
     getClasses(),
-    getMajors(),
     getSubjects(),
     getSemesters(),
+    getMajors(),
   ]);
 
   const activeSemester = semesterList.find((s) => s.isActive);
+
+  // If teacher (level 60), get assigned subjects
+  const assignedSubjectIds: number[] = [];
+  if (roleLevel === 60) {
+    const { getAssignments } = await import("@/actions/academic");
+    const assignments = await getAssignments();
+    const filtered = assignments.filter((a) => a.teacherId === session.userId);
+    assignedSubjectIds.push(...filtered.map((a) => a.subjectId));
+  }
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6">
@@ -50,11 +54,16 @@ export default async function AcademicOverviewPage() {
 
       <AcademicOverviewClient
         classCount={classList.length}
-        majorCount={majorList.length}
         subjectCount={subjectList.length}
         semesterCount={semesterList.length}
+        majorCount={majorList.length}
         activeSemesterName={activeSemester?.name}
         activeSemesterYear={activeSemester?.academicYear}
+        classes={classList}
+        subjects={subjectList}
+        semesters={semesterList}
+        roleLevel={roleLevel}
+        assignedSubjectIds={assignedSubjectIds}
       />
     </div>
   );

@@ -1,9 +1,9 @@
-import { desc, eq, inArray, isNull } from "drizzle-orm";
+import { and, desc, eq, isNull, notInArray } from "drizzle-orm";
 import { PageShell } from "@/components/ui/page-shell";
 import { AdminUsersClient } from "@/features/admin/AdminUsersClient";
 import { verifyRoleLevel } from "@/lib/auth/verify-session";
 import { db } from "@/lib/db";
-import { roles, users } from "@/lib/db/schema";
+import { enrollments, roles, users } from "@/lib/db/schema";
 
 async function getUsers() {
   return db
@@ -23,22 +23,62 @@ async function getUsers() {
     .orderBy(desc(users.createdAt));
 }
 
-async function getStaffRoles() {
+async function getStudentEnrollments() {
+  const rows = await db
+    .select({
+      studentId: enrollments.studentId,
+      semesterId: enrollments.semesterId,
+      enrollmentId: enrollments.id,
+    })
+    .from(enrollments)
+    .where(
+      and(eq(enrollments.status, "active"), isNull(enrollments.deletedAt))
+    );
+  const map = new Map<string, { semesterId: number; enrollmentId: number }>();
+  for (const r of rows) {
+    if (!map.has(r.studentId)) {
+      map.set(r.studentId, {
+        semesterId: r.semesterId,
+        enrollmentId: r.enrollmentId,
+      });
+    }
+  }
+  return map;
+}
+
+async function getEditableRoles() {
   return db
     .select({ id: roles.id, name: roles.name })
     .from(roles)
-    .where(inArray(roles.level, [60, 80]));
+    .where(
+      and(
+        isNull(roles.deletedAt),
+        notInArray(roles.name, ["superadmin", "administrator"])
+      )
+    );
 }
 
 export default async function AdminUsersPage() {
   await verifyRoleLevel(80);
-  const [userList, roleList] = await Promise.all([getUsers(), getStaffRoles()]);
+  const [userList, roleList, enrollmentMap] = await Promise.all([
+    getUsers(),
+    getEditableRoles(),
+    getStudentEnrollments(),
+  ]);
+  const enriched = userList.map((u) => {
+    const e = enrollmentMap.get(u.id);
+    return {
+      ...u,
+      enrollmentId: e?.enrollmentId ?? null,
+      semesterId: e?.semesterId ?? null,
+    };
+  });
   return (
     <PageShell
       title="Manajemen Pengguna"
       description="Kelola akun staff, role, dan approval."
     >
-      <AdminUsersClient data={userList} roles={roleList} />
+      <AdminUsersClient data={enriched} roles={roleList} />
     </PageShell>
   );
 }

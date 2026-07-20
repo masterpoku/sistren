@@ -1,0 +1,1 @@
+ALTER TABLE `profiles` ADD `rejection_reason` text;

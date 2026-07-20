@@ -18,10 +18,17 @@ import { SubjectForm, type SubjectFormValues } from "./SubjectForm";
 
 interface SubjectDialogProps {
   item?: SubjectFormValues & { id: number };
+  classList: { id: number; name: string; code: string }[];
   trigger: ReactNode;
+  defaultClassId?: number;
 }
 
-export function SubjectDialog({ item, trigger }: SubjectDialogProps) {
+export function SubjectDialog({
+  item,
+  classList,
+  trigger,
+  defaultClassId,
+}: SubjectDialogProps) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
@@ -50,7 +57,7 @@ export function SubjectDialog({ item, trigger }: SubjectDialogProps) {
           </DialogTitle>
         </DialogHeader>
         <form action={handleSubmit}>
-          <SubjectForm item={item} />
+          <SubjectForm item={item} classList={classList} defaultClassId={isEdit ? undefined : defaultClassId} />
           <div className="flex justify-end gap-2 pt-4">
             <DialogClose asChild>
               <Button type="button" variant="outline">

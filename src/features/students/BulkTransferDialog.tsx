@@ -24,7 +24,7 @@ import { useActionWithToast } from "@/hooks/use-action-with-toast";
 interface BulkTransferDialogProps {
   studentIds: string[];
   semesters: { id: number; name: string }[];
-  classes: { id: number; name: string }[];
+  classes: { id: number; name: string; code: string }[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -88,7 +88,7 @@ export function BulkTransferDialog({
               <SelectContent>
                 {classes.map((c) => (
                   <SelectItem key={c.id} value={String(c.id)}>
-                    {c.name}
+                    {c.code}
                   </SelectItem>
                 ))}
               </SelectContent>

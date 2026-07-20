@@ -106,12 +106,11 @@ export async function getStudentGpaHistory(
       avgScore: avg(grades.score),
     })
     .from(grades)
-    .innerJoin(enrollments, eq(grades.enrollmentId, enrollments.id))
-    .innerJoin(semesters, eq(enrollments.semesterId, semesters.id))
+    .innerJoin(semesters, eq(grades.semesterId, semesters.id))
     .where(
-      and(eq(enrollments.studentId, userId), isNull(enrollments.deletedAt))
+      and(eq(grades.studentId, userId), isNull(grades.deletedAt))
     )
-    .groupBy(semesters.id, semesters.name, semesters.academicYear)
+    .groupBy(grades.semesterId, semesters.name, semesters.academicYear)
     .orderBy(semesters.academicYear);
 
   return rows.map((r) => ({
@@ -126,9 +125,8 @@ export async function getStudentCurrentGpa(userId: string): Promise<number> {
   const [row] = await db
     .select({ avgScore: avg(grades.score) })
     .from(grades)
-    .innerJoin(enrollments, eq(grades.enrollmentId, enrollments.id))
     .where(
-      and(eq(enrollments.studentId, userId), isNull(enrollments.deletedAt))
+      and(eq(grades.studentId, userId), isNull(grades.deletedAt))
     );
 
   if (!row?.avgScore) return 0;
@@ -286,7 +284,7 @@ export async function getTeacherClassAverages(
       avgScore: avg(grades.score),
     })
     .from(grades)
-    .innerJoin(classes, sql`${classes.id} = ${grades.enrollmentId}`)
+    .innerJoin(classes, eq(grades.classId, classes.id))
     .where(and(eq(grades.teacherId, teacherId), isNull(grades.deletedAt)))
     .groupBy(classes.id, classes.name)
     .orderBy(classes.name);

@@ -35,9 +35,7 @@ export function MajorDialog({ item, trigger }: MajorDialogProps) {
       toast({ variant: "destructive", description: result.error });
       return;
     }
-    toast({
-      description: isEdit ? "Jurusan diperbarui." : "Jurusan ditambahkan.",
-    });
+    toast({ description: isEdit ? "Jurusan diperbarui." : "Jurusan ditambahkan." });
     setOpen(false);
     router.refresh();
   }

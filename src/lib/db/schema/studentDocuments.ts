@@ -26,6 +26,7 @@ export const studentDocuments = mysqlTable("student_documents", {
   ktpIbu: longtext("ktp_ibu"),
   kip: longtext("kip"),
   passFoto: longtext("pass_foto"),
+  nisnDocument: longtext("nisn_document"),
   rapor: longtext("rapor"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").onUpdateNow().notNull(),

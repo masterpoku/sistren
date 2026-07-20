@@ -2,11 +2,8 @@ import { z } from "zod";
 
 export const classSchema = z.object({
   name: z.string().min(1, "Nama wajib diisi").max(255),
-  code: z.string().min(1, "Kode wajib diisi").max(50),
-});
-
-export const updateClassSchema = classSchema.extend({
-  classId: z.coerce.number().positive(),
+  majorId: z.coerce.number().positive("Jurusan wajib dipilih"),
+  capacity: z.coerce.number().int().min(0).max(100).optional().nullable(),
 });
 
 export const majorSchema = z.object({
@@ -18,11 +15,18 @@ export const updateMajorSchema = majorSchema.extend({
   majorId: z.coerce.number().positive(),
 });
 
+export const updateClassSchema = z.object({
+  name: z.string().min(1, "Nama wajib diisi").max(255),
+  majorId: z.coerce.number().positive("Jurusan wajib dipilih"),
+  capacity: z.coerce.number().int().min(0).max(100).optional().nullable(),
+  classId: z.coerce.number().positive(),
+});
+
 export const subjectSchema = z.object({
   name: z.string().min(1, "Nama wajib diisi").max(255),
   code: z.string().max(50).optional().nullable(),
   classId: z.coerce.number().positive("Kelas wajib dipilih"),
-  majorId: z.coerce.number().positive().optional().nullable(),
+  majorId: z.coerce.number().optional().nullable(),
   credits: z.coerce.number().int().min(0).max(20),
 });
 

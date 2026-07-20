@@ -1,12 +1,5 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 export interface StaffAccountFormValues {
   name: string;
@@ -64,22 +57,22 @@ export function StaffAccountForm({
       ) : null}
       <div className="space-y-2">
         <Label htmlFor="staff-role">Role</Label>
-        <Select
+        <select
+          id="staff-role"
           name="roleId"
-          defaultValue={item?.roleId ? String(item.roleId) : ""}
+          defaultValue={item?.roleId != null ? String(item.roleId) : ""}
+          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           required
         >
-          <SelectTrigger>
-            <SelectValue placeholder="Pilih role" />
-          </SelectTrigger>
-          <SelectContent>
-            {roles.map((r) => (
-              <SelectItem key={r.id} value={String(r.id)}>
-                {r.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          <option value="" disabled>
+            Pilih role
+          </option>
+          {roles.map((r) => (
+            <option key={r.id} value={String(r.id)}>
+              {r.name}
+            </option>
+          ))}
+        </select>
       </div>
     </div>
   );

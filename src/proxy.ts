@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
@@ -9,7 +9,7 @@ import {
   ROUTE_PERMISSIONS,
 } from "@/lib/auth/route-permissions";
 import { db } from "@/lib/db";
-import { users } from "@/lib/db/schema";
+import { profiles, roles, users } from "@/lib/db/schema";
 
 // Pre-sort routes by length (longest first) so more specific paths match first
 const SORTED_ROUTE_ENTRIES = Object.entries(ROUTE_PERMISSIONS).sort(
@@ -63,6 +63,44 @@ export async function proxy(request: NextRequest) {
     const allowed = await hasPermission(session.user.id, requiredPermission);
     if (!allowed) {
       return NextResponse.redirect(new URL("/unauthorized", request.url));
+    }
+  }
+
+  // Verification gate for siswa — block access until profile is verified
+  if (
+    pathname !== "/students/pending" &&
+    pathname !== "/students/profile/complete" &&
+    !pathname.startsWith("/api/")
+  ) {
+    const [siswaRole] = await db
+      .select({ level: roles.level })
+      .from(roles)
+      .innerJoin(users, eq(users.roleId, roles.id))
+      .where(eq(users.id, session.user.id))
+      .limit(1);
+
+    if (siswaRole && siswaRole.level === 40) {
+      const [profile] = await db
+        .select({ verificationStatus: profiles.verificationStatus })
+        .from(profiles)
+        .where(
+          and(eq(profiles.userId, session.user.id), isNull(profiles.deletedAt))
+        )
+        .limit(1);
+
+      if (profile) {
+        const status = profile.verificationStatus;
+        if (status === "pending") {
+          return NextResponse.redirect(
+            new URL("/students/pending", request.url)
+          );
+        }
+        if (status === "draft" || status === "rejected") {
+          return NextResponse.redirect(
+            new URL("/students/profile/complete", request.url)
+          );
+        }
+      }
     }
   }
 

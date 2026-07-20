@@ -3,13 +3,19 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { DataTable } from "@/components/ui/data-table";
+import { GraduateAction } from "./GraduateAction";
 
 type Student = {
   id: string;
   name: string;
   email: string;
   nisn: string | null;
+  roleName: string;
+  enrollmentId: number | null;
+  semesterId: number | null;
+  enrollmentStatus: string | null;
 };
 
 export const columns: ColumnDef<Student>[] = [
@@ -27,15 +33,40 @@ export const columns: ColumnDef<Student>[] = [
     cell: ({ row }) => row.getValue("nisn") ?? "-",
   },
   {
+    accessorKey: "roleName",
+    header: "Role",
+    cell: ({ row }) => {
+      const role = row.getValue("roleName") as string;
+      return (
+        <Badge variant={role === "alumni" ? "secondary" : "default"}>
+          {role}
+        </Badge>
+      );
+    },
+  },
+  {
     id: "actions",
-    header: "Dokumen",
-    cell: ({ row }) => (
-      <Link href={`/students/${row.original.id}/documents`}>
-        <Button size="sm" variant="outline">
-          Dokumen
-        </Button>
-      </Link>
-    ),
+    header: "Aksi",
+    cell: ({ row }) => {
+      const s = row.original;
+      const isAlumni = s.roleName === "alumni";
+      return (
+        <div className="flex gap-2">
+          <Link href={`/students/${s.id}/documents`}>
+            <Button size="sm" variant="outline">
+              Dokumen
+            </Button>
+          </Link>
+          {!isAlumni && s.semesterId ? (
+            <GraduateAction
+              studentId={s.id}
+              semesterId={s.semesterId}
+              studentName={s.name}
+            />
+          ) : null}
+        </div>
+      );
+    },
   },
 ];
 

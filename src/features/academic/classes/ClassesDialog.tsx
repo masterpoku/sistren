@@ -16,12 +16,15 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { ClassesForm, type ClassesFormValues } from "./ClassesForm";
 
+type Major = { id: number; name: string };
+
 interface ClassesDialogProps {
   item?: ClassesFormValues & { id: number };
   trigger: ReactNode;
+  majors: Major[];
 }
 
-export function ClassesDialog({ item, trigger }: ClassesDialogProps) {
+export function ClassesDialog({ item, trigger, majors }: ClassesDialogProps) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
@@ -50,7 +53,7 @@ export function ClassesDialog({ item, trigger }: ClassesDialogProps) {
           </DialogTitle>
         </DialogHeader>
         <form action={handleSubmit}>
-          <ClassesForm item={item} />
+          <ClassesForm item={item} majors={majors} />
           <div className="flex justify-end gap-2 pt-4">
             <DialogClose asChild>
               <Button type="button" variant="outline">

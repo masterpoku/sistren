@@ -48,6 +48,7 @@ const navItems: NavItem[] = [
     minLevel: 40,
   },
   { title: "Akademik", href: "/academic", icon: GraduationCap, minLevel: 40 },
+  { title: "Input Nilai", href: "/academic/grades", icon: GraduationCap, minLevel: 60 },
   { title: "RPP Saya", href: "/academic/rpp", icon: File, minLevel: 60 },
   {
     title: "Validasi RPP",
@@ -69,8 +70,14 @@ const navItems: NavItem[] = [
     minLevel: 40,
   },
   {
-    title: "Pindah Kelas",
-    href: "/students/promote",
+    title: "Pendaftaran",
+    href: "/enrollments",
+    icon: Users,
+    minLevel: 60,
+  },
+  {
+    title: "Manajemen Kelas",
+    href: "/students/manage-class",
     icon: Student,
     minLevel: 80,
   },
@@ -82,6 +89,7 @@ const navItems: NavItem[] = [
     minLevel: 80,
   },
   { title: "Siswa", href: "/students", icon: Student, minLevel: 60 },
+  { title: "Alumni", href: "/alumni", icon: Scroll, minLevel: 60 },
   { title: "Guru", href: "/teachers", icon: Users, minLevel: 60 },
   { title: "Pengguna", href: "/users", icon: UserCircle, minLevel: 80 },
   { title: "Pengumuman", href: "/announcements", icon: Bell },
@@ -165,49 +173,70 @@ export function AppSidebar({ user, onLogout }: AppSidebarProps) {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="gap-1">
-              {navItems
-                .filter((item) => {
-                  if (
-                    item.minLevel !== undefined &&
-                    user.roleLevel < item.minLevel
-                  )
-                    return false;
-                  if (
-                    item.maxLevel !== undefined &&
-                    user.roleLevel > item.maxLevel
-                  )
-                    return false;
-                  return true;
-                })
-                .map((item) => {
-                  const Icon = item.icon;
-                  const isActive = pathname.startsWith(item.href);
-                  return (
-                    <SidebarMenuItem key={item.href}>
-                      <SidebarMenuButton
-                        asChild
-                        isActive={isActive}
-                        tooltip={item.title}
-                        className={cn(
-                          "transition-colors",
-                          isAlumni
-                            ? "hover:bg-yellow-500/40 data-[active=true]:bg-yellow-600/30 data-[active=true]:text-yellow-950"
-                            : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground"
-                        )}
-                      >
-                        <Link
-                          href={item.href}
-                          className="flex items-center gap-2 group-data-[collapsible=icon]:gap-0"
+              {(() => {
+                const activeHref = navItems
+                  .filter((item) => {
+                    if (
+                      item.minLevel !== undefined &&
+                      user.roleLevel < item.minLevel
+                    )
+                      return false;
+                    if (
+                      item.maxLevel !== undefined &&
+                      user.roleLevel > item.maxLevel
+                    )
+                      return false;
+                    return (
+                      pathname === item.href ||
+                      (item.href.length > 1 &&
+                        pathname.startsWith(item.href + "/"))
+                    );
+                  })
+                  .sort((a, b) => b.href.length - a.href.length)[0]?.href;
+                return navItems
+                  .filter((item) => {
+                    if (
+                      item.minLevel !== undefined &&
+                      user.roleLevel < item.minLevel
+                    )
+                      return false;
+                    if (
+                      item.maxLevel !== undefined &&
+                      user.roleLevel > item.maxLevel
+                    )
+                      return false;
+                    return true;
+                  })
+                  .map((item) => {
+                    const Icon = item.icon;
+                    const isActive = item.href === activeHref;
+                    return (
+                      <SidebarMenuItem key={item.href}>
+                        <SidebarMenuButton
+                          asChild
+                          isActive={isActive}
+                          tooltip={item.title}
+                          className={cn(
+                            "transition-colors",
+                            isAlumni
+                              ? "hover:bg-yellow-500/40 data-[active=true]:bg-yellow-600/30 data-[active=true]:text-yellow-950"
+                              : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground"
+                          )}
                         >
-                          <Icon className="h-4 w-4 shrink-0" />
-                          <span className="group-data-[collapsible=icon]:hidden">
-                            {item.title}
-                          </span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  );
-                })}
+                          <Link
+                            href={item.href}
+                            className="flex items-center gap-2 group-data-[collapsible=icon]:gap-0"
+                          >
+                            <Icon className="h-4 w-4 shrink-0" />
+                            <span className="group-data-[collapsible=icon]:hidden">
+                              {item.title}
+                            </span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    );
+                  });
+              })()}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

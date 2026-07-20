@@ -10,14 +10,14 @@ import { useActionWithToast } from "@/hooks/use-action-with-toast";
 type Assignment = {
   id: number;
   teacherName: string;
-  className: string;
+  classCode: string;
   subjectName: string;
   semesterName: string;
   academicYear: string;
 };
 
 type Teacher = { id: string; name: string };
-type Class = { id: number; name: string };
+type Class = { id: number; name: string; code: string };
 type Subject = { id: number; name: string };
 type Semester = { id: number; name: string; academicYear: string };
 
@@ -54,7 +54,7 @@ export function AssignmentsClient({
       header: "Guru",
     },
     {
-      accessorKey: "className",
+      accessorKey: "classCode",
       header: "Kelas",
     },
     {

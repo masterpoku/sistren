@@ -2,11 +2,22 @@
 
 import { and, eq, isNull } from "drizzle-orm";
 import { headers } from "next/headers";
-import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { profiles, users } from "@/lib/db/schema";
+import { profiles, roles, users } from "@/lib/db/schema";
 import { registerSchema } from "@/lib/validation/schemas/register";
+
+export async function checkNisn(nisn: string) {
+  if (!nisn || nisn.length < 4) return { exists: false };
+
+  const [existing] = await db
+    .select({ id: profiles.id })
+    .from(profiles)
+    .where(and(eq(profiles.nisn, nisn), isNull(profiles.deletedAt)))
+    .limit(1);
+
+  return { exists: !!existing };
+}
 
 export async function registerAction(formData: FormData) {
   const raw = {
@@ -78,38 +89,48 @@ export async function registerAction(formData: FormData) {
   if (parsed.data.motherName?.trim())
     profileValues.motherName = parsed.data.motherName;
 
-  // Transaction: create user + profile atomically
   try {
-    let userId = "";
-    await db.transaction(async (tx) => {
-      const userResult = await auth.api.signUpEmail({
-        body: { email, password, name },
-        headers: await headers(),
-      });
-
-      userId = (
-        "id" in userResult ? userResult.id : userResult.user.id
-      ) as string;
-
-      await tx.insert(profiles).values({
-        userId,
-        type: "siswa",
-        nisn: profileValues.nisn,
-        birthPlace: profileValues.birthPlace,
-        birthDate: profileValues.birthDate,
-        gender: profileValues.gender,
-        religionId: profileValues.religionId,
-        address: profileValues.address,
-        fatherName: profileValues.fatherName,
-        motherName: profileValues.motherName,
-      });
+    // Create user via Better Auth first
+    const userResult = await auth.api.signUpEmail({
+      body: { email, password, name },
+      headers: await headers(),
     });
 
-    redirect("/login");
-  } catch (err: unknown) {
-    if (err instanceof Error && err.message.includes("NEXT_REDIRECT")) {
-      throw err;
+    const userId = (
+      "id" in userResult ? userResult.id : userResult.user.id
+    ) as string;
+
+    // Insert profile
+    await db.insert(profiles).values({
+      userId,
+      type: "siswa",
+      nisn: profileValues.nisn,
+      birthPlace: profileValues.birthPlace,
+      birthDate: profileValues.birthDate,
+      gender: profileValues.gender,
+      religionId: profileValues.religionId,
+      address: profileValues.address,
+      fatherName: profileValues.fatherName,
+      motherName: profileValues.motherName,
+    });
+
+    // Set role
+    const [siswaRole] = await db
+      .select({ id: roles.id })
+      .from(roles)
+      .where(and(eq(roles.name, "siswa"), isNull(roles.deletedAt)))
+      .limit(1);
+
+    if (siswaRole) {
+      await db
+        .update(users)
+        .set({ roleId: siswaRole.id })
+        .where(eq(users.id, userId));
     }
-    return { error: "Terjadi kesalahan. Silakan coba lagi." };
+
+    return { success: true, nisn: profileValues.nisn ?? "", name, email, password };
+  } catch (e: unknown) {
+    const message = e instanceof Error ? `${e.message}` : "Terjadi kesalahan";
+    return { error: message };
   }
 }

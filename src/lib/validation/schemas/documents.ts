@@ -10,6 +10,7 @@ export const documentTypeSchema = z.enum([
   "ktpIbu",
   "kip",
   "passFoto",
+  "nisnDocument",
   "rapor",
 ]);
 

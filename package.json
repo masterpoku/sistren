@@ -12,6 +12,8 @@
     "format:check": "biome ci ./src",
     "typecheck": "tsc --noEmit",
     "db:seed": "bun run src/lib/db/seed.ts",
+    "db:seed:manis": "bun run scripts/seed-manis.ts",
+    "db:seed:30": "bun run scripts/seed-30-siswa.ts",
     "db:reset": "bun run src/lib/db/reset.ts",
     "db:test": "bun run src/lib/db/test-connection.ts",
     "db:push": "bunx drizzle-kit push",

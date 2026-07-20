@@ -1,6 +1,8 @@
 "use client";
 
 import {
+  Eye,
+  EyeSlash,
   GraduationCap,
   ShieldCheck,
   Student,
@@ -79,7 +81,17 @@ export default function LoginPage() {
   const { toast } = useToast();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [forgotMsg, setForgotMsg] = useState<string | null>(null);
+  const [registeredMsg] = useState<string | null>(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      return params.has("registered")
+        ? "Pendaftaran berhasil! Silakan login."
+        : null;
+    }
+    return null;
+  });
 
   useEffect(() => {
     authClient.getSession().then((session) => {
@@ -160,6 +172,11 @@ export default function LoginPage() {
           </CardHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <CardContent className="space-y-4">
+              {registeredMsg && (
+                <div className="rounded-md bg-emerald-50 p-3 text-sm text-emerald-700 border border-emerald-200">
+                  {registeredMsg}
+                </div>
+              )}
               {error && (
                 <div className="flex items-center gap-2 rounded-md bg-destructive/10 p-3 text-sm text-destructive">
                   <Warning className="h-4 w-4 shrink-0" />
@@ -196,7 +213,25 @@ export default function LoginPage() {
                     Lupa password?
                   </button>
                 </div>
-                <Input id="password" name="password" type="password" required />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showPassword ? (
+                      <EyeSlash className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
               </div>
             </CardContent>
             <CardFooter className="flex flex-col gap-4">

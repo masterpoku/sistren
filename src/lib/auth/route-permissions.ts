@@ -17,11 +17,13 @@ export const ROUTE_PERMISSIONS: Record<string, string> = {
   "/users/:id/delete": "users.delete",
 
   // Students
+  "/alumni": "students.read",
   "/students": "students.read",
   "/students/create": "students.create",
   "/students/:id/edit": "students.update",
   "/students/:id/delete": "students.delete",
-  "/students/promote": "students.promote",
+  "/students/manage-class": "students.manage_class",
+  "/students/:id/graduate": "students.graduate",
   "/students/graduate": "students.graduate",
   "/students/import": "students.import",
 
@@ -39,7 +41,7 @@ export const ROUTE_PERMISSIONS: Record<string, string> = {
   "/academic/rpp": "documents.create",
   "/academic/rpp/admin": "documents.review_rpp",
   "/academic/rpp/student": "documents.read",
-  "/academic/majors": "majors.manage",
+
   "/academic/subjects": "subjects.manage",
   "/academic/semesters": "semesters.manage",
 
@@ -83,7 +85,6 @@ export const ROUTE_PERMISSIONS: Record<string, string> = {
 
   // Academic
   "/academic/enrollments": "enrollments.read",
-  "/academic/grades": "grades.read_any",
   "/academic/attendance": "attendance.read",
 
   // Calendar
@@ -103,6 +104,7 @@ export const PUBLIC_ROUTES = [
   "/",
   "/_not-found",
   "/api/health",
+  "/absen",
 ];
 
 /**
@@ -125,7 +127,10 @@ export const ROLE_LEVEL_REQUIREMENTS: Record<string, number> = {
   "/academic/rpp": 60,
   "/academic/rpp/admin": 80,
   "/academic/rpp/student": 40,
-  "/students/promote": 80,
+  "/alumni": 60,
+  "/students/manage-class": 80,
+  "/students/profile/complete": 40,
+  "/students/pending": 40,
   "/academic/attendance": 40,
 };
 
@@ -144,7 +149,7 @@ export const PERMISSION_GROUPS = {
     "students.read",
     "students.update",
     "students.delete",
-    "students.promote",
+    "students.manage_class",
     "students.graduate",
     "students.import",
   ],
@@ -156,12 +161,7 @@ export const PERMISSION_GROUPS = {
     "teachers.assign_class",
     "teachers.assign_subject",
   ],
-  ACADEMIC: [
-    "classes.manage",
-    "majors.manage",
-    "subjects.manage",
-    "semesters.manage",
-  ],
+  ACADEMIC: ["classes.manage", "subjects.manage", "semesters.manage"],
   ENROLLMENTS: [
     "enrollments.create",
     "enrollments.read",
