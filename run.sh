@@ -1,1 +1,4 @@
-HOST=0.0.0.0 bun run dev
+NEXT_PUBLIC_APP_URL=http://192.168.1.29:3000 \
+HOSTNAME=0.0.0.0 \
+DEV_ALLOWED_ORIGINS=192.168.1.29,localhost \
+bun run dev
