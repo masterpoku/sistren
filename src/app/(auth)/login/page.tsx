@@ -159,7 +159,7 @@ export default function LoginPage() {
             SISTREN
           </h1>
           <p className="text-slate-500">
-            Sistem Informasi Pesantren - SMK TERPADU
+            Sistem Informasi Pesantren - SMK PESANTREN TERPADU
           </p>
         </div>
 

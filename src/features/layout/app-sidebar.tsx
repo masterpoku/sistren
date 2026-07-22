@@ -147,7 +147,7 @@ export function AppSidebar({ user, onLogout }: AppSidebarProps) {
                 isAlumni ? "text-yellow-900/70" : "text-sidebar-foreground/70"
               )}
             >
-              SMK TERPADU
+              SMK PESANTREN TERPADU
             </span>
           </div>
         </div>
